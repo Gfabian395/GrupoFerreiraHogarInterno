@@ -51,6 +51,10 @@ const Productos = ({ onAddToCart }) => {
     }
   };
 
+  const handleShowModal = (productoId, campo) => {
+    handleIncrementStock(productoId, campo);
+  };
+
   if (loading) {
     return <Load />;
   }
@@ -62,28 +66,28 @@ const Productos = ({ onAddToCart }) => {
       <div className="productos">
         <ul>
           {productos.map(producto => (
-                        <li key={producto.id}>
-                        <img src={producto.imagenUrl} alt={producto.nombre} />
-                        <div>
-                          <h3>{producto.nombre}</h3>
-                          <p>Precio: ${producto.precio}</p>
-                          <p>
-                            Stock Andes 4034: {producto.cantidadDisponibleAndes4034}
-                            <button onClick={() => handleIncrementStock(producto.id, 'cantidadDisponibleAndes4034')}>+</button>
-                          </p>
-                          <p>
-                            Stock Andes 4320: {producto.cantidadDisponibleAndes4320}
-                            <button onClick={() => handleIncrementStock(producto.id, 'cantidadDisponibleAndes4320')}>+</button>
-                          </p>
-                          <button onClick={() => onAddToCart(producto)}>Agregar al Carrito</button>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </>
-            );
-          };
-          
-          export default Productos;
-          
+            <li key={producto.id}>
+              <img src={producto.imagenUrl} alt={producto.nombre} />
+              <div className='detallitos'>
+                <h3>{producto.nombre}</h3>
+                <p>Precio: ${producto.precio}</p>
+                <p>
+                  Stock Andes 4034: {producto.cantidadDisponibleAndes4034}
+                  <button onDoubleClick={() => handleShowModal(producto.id, 'cantidadDisponibleAndes4034')} style={{ marginLeft: '10px' }}> + </button>
+                </p>
+                <p>
+                  Stock Andes 4320: {producto.cantidadDisponibleAndes4320} 
+                  <button onDoubleClick={() => handleShowModal(producto.id, 'cantidadDisponibleAndes4320')} style={{ marginLeft: '10px' }}> + </button>
+                </p>
+                <button onClick={() => onAddToCart(producto)}>Agregar al Carrito</button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+    </>
+  );
+};
+
+export default Productos;

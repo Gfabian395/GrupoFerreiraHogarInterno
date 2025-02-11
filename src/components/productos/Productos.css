@@ -5,6 +5,9 @@
   .productos h2 {
     color: #5c6ac4;
   }
+  .productos h3{
+    font-size: 20px;
+  }
   
   .productos ul {
     list-style-type: none;
@@ -34,14 +37,14 @@
   }
   
   .productos img {
-    width: 100px;
+    width: 250px;
     height: auto;
-    margin-right: 20px;
+    /* margin-right: 20px;*/
   }
   
   .productos button {
-    padding: 10px;
-    font-size: 16px;
+        /* padding: 10px; */
+    /* font-size: 16px; */
     background-color: #007bff;
     color: #fff;
     border: none;
@@ -51,5 +54,14 @@
   
   .productos button:hover {
     background-color: #0056b3;
+  }
+
+  .detallitos{
+    display: flex
+    ;
+        flex-direction: column;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
   }
   

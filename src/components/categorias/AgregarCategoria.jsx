@@ -7,6 +7,7 @@ const AgregarCategoria = () => {
   const [nombre, setNombre] = useState('');
   const [imagenUrl, setImagenUrl] = useState('');
   const [alerta, setAlerta] = useState('');
+  const [mostrarFormulario, setMostrarFormulario] = useState(false);
 
   const handleAddCategoria = async (e) => {
     e.preventDefault();
@@ -23,31 +24,38 @@ const AgregarCategoria = () => {
 
   return (
     <div className="agregar-categoria">
-      <h2>Agregar Categoría</h2>
-      {alerta && <div className="alert alert-success">{alerta}</div>}
-      <form onSubmit={handleAddCategoria}>
-        <div className="form-group">
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Nombre de la Categoría"
-            value={nombre}
-            onChange={(e) => setNombre(e.target.value)}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <input
-            type="url"
-            className="form-control"
-            placeholder="URL de la Imagen"
-            value={imagenUrl}
-            onChange={(e) => setImagenUrl(e.target.value)}
-            required
-          />
-        </div>
-        <button type="submit" className="btn btn-primary">Agregar Categoría</button>
-      </form>
+      <button onClick={() => setMostrarFormulario(!mostrarFormulario)} className="btn btn-secondary">
+        {mostrarFormulario ? 'Ocultar Formulario' : 'Agregar Categoría'}
+      </button>
+      {mostrarFormulario && (
+        <>
+          <h2>Agregar Categoría</h2>
+          {alerta && <div className="alert alert-success">{alerta}</div>}
+          <form onSubmit={handleAddCategoria}>
+            <div className="form-group">
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Nombre de la Categoría"
+                value={nombre}
+                onChange={(e) => setNombre(e.target.value)}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <input
+                type="url"
+                className="form-control"
+                placeholder="URL de la Imagen"
+                value={imagenUrl}
+                onChange={(e) => setImagenUrl(e.target.value)}
+                required
+              />
+            </div>
+            <button type="submit" className="btn btn-primary">Agregar Categoría</button>
+          </form>
+        </>
+      )}
     </div>
   );
 };

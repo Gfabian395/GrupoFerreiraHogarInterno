@@ -5,7 +5,7 @@ import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import './Categorias.css';
 import Load from '../load/Load';
 
-const Categorias = ({ onSelectCategoria }) => {
+const Categorias = ({ onSelectCategoria, currentUser }) => {
   const [categorias, setCategorias] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
@@ -49,8 +49,13 @@ const Categorias = ({ onSelectCategoria }) => {
   };
 
   const promptDeleteCategoria = (id) => {
-    setShowPasswordPrompt(true);
-    setDeleteId(id);
+    if (currentUser.role === 'Jefe') {
+      setShowPasswordPrompt(true);
+      setDeleteId(id);
+    } else {
+      setAlerta('No tiene permiso para eliminar esta categoría.');
+      setTimeout(() => setAlerta(''), 3000);
+    }
   };
 
   const handleSelectCategoria = (id) => {
@@ -65,14 +70,16 @@ const Categorias = ({ onSelectCategoria }) => {
   return (
     <div className="categorias">
       <h2>Categorías</h2>
-      {alerta && <div className="alert alert-success">{alerta}</div>}
+      {alerta && <div className="alert alert-danger">{alerta}</div>}
       <ul>
         {categorias.map(categoria => (
           <li key={categoria.id} onClick={() => handleSelectCategoria(categoria.id)}>
             <img src={categoria.imagenUrl} alt={categoria.nombre} />
             <div>
               <h3>{categoria.nombre}</h3>
-              <button onClick={(e) => { e.stopPropagation(); promptDeleteCategoria(categoria.id); }}>Eliminar</button>
+              {currentUser.role === 'Jefe' && (
+                <button onClick={(e) => { e.stopPropagation(); promptDeleteCategoria(categoria.id); }}>Eliminar</button>
+              )}
             </div>
           </li>
         ))}

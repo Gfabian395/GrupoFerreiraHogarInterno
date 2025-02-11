@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Nav from './components/nav/Nav';
 import Clientes from './components/clientes/Clientes';
@@ -12,10 +12,19 @@ import Carrito from './components/carrito/Carrito';
 import Ventas from './components/ventas/Ventas';
 import FloatingButton from './components/Flotante/FloatingButton';
 import AddCompra from './components/compras/AddCompra'; // Importa el nuevo componente
+import Login from './components/login/Login'; // Importa el componente de Login
 
 function App() {
   const [carrito, setCarrito] = useState([]);
   const [selectedCategoria, setSelectedCategoria] = useState(null);
+  const [usuario, setUsuario] = useState(JSON.parse(localStorage.getItem('usuario')) || null);
+
+  useEffect(() => {
+    const savedUser = localStorage.getItem('usuario');
+    if (savedUser) {
+      setUsuario(JSON.parse(savedUser));
+    }
+  }, []);
 
   const handleAddToCart = (producto) => {
     setCarrito((prevCarrito) => {
@@ -51,31 +60,46 @@ function App() {
     console.log("Eliminar categoría");
   };
 
+  const handleLogin = (user) => {
+    setUsuario(user);
+  };
+
+  const handleLogout = () => {
+    setUsuario(null);
+    localStorage.removeItem('usuario');
+  };
+
   return (
     <Router>
       <div className="App">
-        <Nav cartItemCount={cartItemCount} />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/clientes" element={<Clientes />} />
-          <Route path="/clientes/:clienteId/detalles" element={<ClienteDetalles />} />
-          <Route path="/cuotas" element={<Cuotas monto={100000} />} />
-          <Route path="/categorias" element={
-            <>
-              <AgregarCategoria />
-              <Categorias onSelectCategoria={(id) => setSelectedCategoria(id)} />
-            </>
-          } />
-          <Route path="/categorias/:categoriaId/productos" element={
-            <>
-              <AgregarProducto />
-              <Productos onAddToCart={handleAddToCart} />
-            </>
-          } />
-          <Route path="/carrito" element={<Carrito productos={carrito} onRemoveFromCart={handleRemoveFromCart} onClearCart={handleClearCart} />} />
-          <Route path="/ventas" element={<Ventas carrito={carrito} onClearCart={handleClearCart} />} />
-          <Route path="/add-compra" element={<AddCompra />} /> {/* Nueva ruta para agregar compras */}
-        </Routes>
+        {!usuario ? (
+          <Login onLogin={handleLogin} />
+        ) : (
+          <>
+            <Nav cartItemCount={cartItemCount} onLogout={handleLogout} username={usuario.username} />
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/clientes" element={<Clientes />} />
+              <Route path="/clientes/:clienteId/detalles" element={<ClienteDetalles />} />
+              <Route path="/cuotas" element={<Cuotas monto={100000} />} />
+              <Route path="/categorias" element={
+                <>
+                  <AgregarCategoria />
+                  <Categorias onSelectCategoria={(id) => setSelectedCategoria(id)} role={usuario.role} />
+                </>
+              } />
+              <Route path="/categorias/:categoriaId/productos" element={
+                <>
+                  <AgregarProducto />
+                  <Productos onAddToCart={handleAddToCart} />
+                </>
+              } />
+              <Route path="/carrito" element={<Carrito productos={carrito} onRemoveFromCart={handleRemoveFromCart} onClearCart={handleClearCart} />} />
+              <Route path="/ventas" element={<Ventas carrito={carrito} onClearCart={handleClearCart} />} />
+              <Route path="/add-compra" element={<AddCompra />} /> {/* Nueva ruta para agregar compras */}
+            </Routes>
+          </>
+        )}
       </div>
     </Router>
   );
@@ -88,6 +112,3 @@ const Home = () => (
 );
 
 export default App;
-/* 
-HASTA ACA FUNCIONA PERFECTO ESTE ES EL ORIGINAL
-*/

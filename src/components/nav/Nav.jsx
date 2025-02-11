@@ -1,8 +1,9 @@
 import React from 'react';
 import './Nav.css';
 import { Link, useLocation } from 'react-router-dom';
+import { Icon } from '@mui/material'; // Importar el componente Icon de Material-UI
 
-const Nav = ({ cartItemCount }) => {
+const Nav = ({ cartItemCount, onLogout, username }) => {
   const location = useLocation();
 
   const handleNavClick = () => {
@@ -29,6 +30,11 @@ const Nav = ({ cartItemCount }) => {
           <Link to="/" className={`nav-item nav-link ${location.pathname === '/' ? 'active' : ''}`} onClick={handleNavClick}>Inicio</Link>
           <Link to="/clientes" className={`nav-item nav-link ${location.pathname === '/clientes' ? 'active' : ''}`} onClick={handleNavClick}>Clientes</Link>
           <Link to="/categorias" className={`nav-item nav-link ${location.pathname === '/categorias' ? 'active' : ''}`} onClick={handleNavClick}>Categorías</Link>
+        </div>
+        <div className="navbar-nav ml-auto">
+          <span className="navbar-text">
+            {username} <Icon className="material-icons" onClick={onLogout}>logout</Icon>
+          </span>
         </div>
       </div>
     </nav>

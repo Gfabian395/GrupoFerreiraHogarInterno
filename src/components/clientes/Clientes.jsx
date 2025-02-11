@@ -12,6 +12,7 @@ const Clientes = () => {
   const [editClienteId, setEditClienteId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
+  const [mostrarFormulario, setMostrarFormulario] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -99,78 +100,83 @@ const Clientes = () => {
   return (
     <div className="container">
       <h2 className="my-4">Gestión de Clientes</h2>
-      <form onSubmit={editClienteId ? handleUpdateCliente : handleAddCliente}>
-        <div className="form-group">
-          <input
-            type="text"
-            className="form-control"
-            placeholder="DNI"
-            value={newCliente.dni}
-            onChange={(e) => setNewCliente({ ...newCliente, dni: e.target.value })}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Nombre Completo"
-            value={newCliente.nombreCompleto}
-            onChange={(e) => setNewCliente({ ...newCliente, nombreCompleto: e.target.value })}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Dirección"
-            value={newCliente.direccion}
-            onChange={(e) => setNewCliente({ ...newCliente, direccion: e.target.value })}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Entrecalles"
-            value={newCliente.entrecalles}
-            onChange={(e) => setNewCliente({ ...newCliente, entrecalles: e.target.value })}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <input
-            type="tel"
-            className="form-control"
-            placeholder="Teléfono 1"
-            value={newCliente.telefono1}
-            onChange={(e) => setNewCliente({ ...newCliente, telefono1: e.target.value })}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <input
-            type="tel"
-            className="form-control"
-            placeholder="Teléfono 2"
-            value={newCliente.telefono2}
-            onChange={(e) => setNewCliente({ ...newCliente, telefono2: e.target.value })}
-          />
-        </div>
-        <div className="form-group">
-          <input
-            type="url"
-            className="form-control"
-            placeholder="URL de Imagen"
-            value={newCliente.imagenUrl}
-            onChange={(e) => setNewCliente({ ...newCliente, imagenUrl: e.target.value })}
-          />
-        </div>
-        <button type="submit" className="btn btn-primary">{editClienteId ? 'Actualizar Cliente' : 'Agregar Cliente'}</button>
-      </form>
-      
+      <button onClick={() => setMostrarFormulario(!mostrarFormulario)} className="btn btn-secondary mb-3">
+        {mostrarFormulario ? 'Ocultar Formulario' : 'Agregar Cliente'}
+      </button>
+      {mostrarFormulario && (
+        <form onSubmit={editClienteId ? handleUpdateCliente : handleAddCliente}>
+          <div className="form-group">
+            <input
+              type="text"
+              className="form-control"
+              placeholder="DNI"
+              value={newCliente.dni}
+              onChange={(e) => setNewCliente({ ...newCliente, dni: e.target.value })}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <input
+              type="text"
+              className="form-control"
+              placeholder="Nombre Completo"
+              value={newCliente.nombreCompleto}
+              onChange={(e) => setNewCliente({ ...newCliente, nombreCompleto: e.target.value })}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <input
+              type="text"
+              className="form-control"
+              placeholder="Dirección"
+              value={newCliente.direccion}
+              onChange={(e) => setNewCliente({ ...newCliente, direccion: e.target.value })}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <input
+              type="text"
+              className="form-control"
+              placeholder="Entrecalles"
+              value={newCliente.entrecalles}
+              onChange={(e) => setNewCliente({ ...newCliente, entrecalles: e.target.value })}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <input
+              type="tel"
+              className="form-control"
+              placeholder="Teléfono 1"
+              value={newCliente.telefono1}
+              onChange={(e) => setNewCliente({ ...newCliente, telefono1: e.target.value })}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <input
+              type="tel"
+              className="form-control"
+              placeholder="Teléfono 2"
+              value={newCliente.telefono2}
+              onChange={(e) => setNewCliente({ ...newCliente, telefono2: e.target.value })}
+            />
+          </div>
+          <div className="form-group">
+            <input
+              type="url"
+              className="form-control"
+              placeholder="URL de Imagen"
+              value={newCliente.imagenUrl}
+              onChange={(e) => setNewCliente({ ...newCliente, imagenUrl: e.target.value })}
+            />
+          </div>
+          <button type="submit" className="btn btn-primary">{editClienteId ? 'Actualizar Cliente' : 'Agregar Cliente'}</button>
+        </form>
+      )}
+
       <div className="search-box mt-4">
         <input
           type="text"
@@ -198,6 +204,3 @@ const Clientes = () => {
 }
 
 export default Clientes;
-/* 
-HASTA ACA FUNCIONA PERFECTO ESTE ES EL ORIGINAL
-*/

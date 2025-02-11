@@ -79,7 +79,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/clientes" element={<Clientes currentUser={usuario} />} />
-              <Route path="/clientes/:clienteId/detalles" element={<ClienteDetalles />} />
+              <Route path="/clientes/:clienteId/detalles" element={<ClienteDetalles currentUser={usuario} />} />
               <Route path="/cuotas" element={<Cuotas monto={100000} />} />
               <Route path="/categorias" element={
                 <>
@@ -94,7 +94,8 @@ function App() {
                 </>
               } />
               <Route path="/carrito" element={<Carrito productos={carrito} onRemoveFromCart={handleRemoveFromCart} onClearCart={handleClearCart} />} />
-              <Route path="/ventas" element={<Ventas carrito={carrito} onClearCart={handleClearCart} />} />
+              <Route path="/ventas" element={<Ventas carrito={carrito} onClearCart={handleClearCart} currentUser={usuario} />} />
+              <Route path="/ventas/:ventaId/detalles" element={<ClienteDetalles currentUser={usuario} />} /> {/* Nueva ruta para los detalles de la venta */}
               <Route path="/add-compra" element={<AddCompra />} /> {/* Nueva ruta para agregar compras */}
             </Routes>
           </>
@@ -106,7 +107,7 @@ function App() {
 
 const Home = () => (
   <div>
-    <h2>Bienvenido a la Tienda de Electrodomesticos</h2>
+    <h2>Bienvenido a la Tienda de Videojuegos</h2>
   </div>
 );
 

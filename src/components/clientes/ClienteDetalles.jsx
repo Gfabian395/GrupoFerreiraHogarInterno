@@ -5,7 +5,7 @@ import { collection, query, where, getDocs, updateDoc, doc } from 'firebase/fire
 import Load from '../load/Load';
 import './ClienteDetalles.css';
 
-const ClienteDetalles = () => {
+const ClienteDetalles = ({ currentUser }) => {
   const { clienteId } = useParams();
   const [ventas, setVentas] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -35,9 +35,9 @@ const ClienteDetalles = () => {
     console.log("Ventas updated:", ventas);
   }, [ventas]);
 
-  const handleCuotaPagada = async (ventaId, fecha, monto) => {
+  const handleCuotaPagada = async (ventaId, fecha, monto, usuario) => {
     const nuevaVenta = ventas.find((venta) => venta.id === ventaId);
-    const newPagos = [...nuevaVenta.pagos, { fecha, monto: Math.round(monto / 1000) * 1000 }];
+    const newPagos = [...nuevaVenta.pagos, { fecha, monto: Math.round(monto / 1000) * 1000, usuario }];
     try {
       const ventaRef = doc(db, 'ventas', ventaId);
       await updateDoc(ventaRef, {
@@ -67,7 +67,7 @@ const ClienteDetalles = () => {
       monto = saldo;
     }
 
-    handleCuotaPagada(ventaId, fecha, monto);
+    handleCuotaPagada(ventaId, fecha, monto, currentUser.username);
   };
 
   if (loading) {
@@ -119,7 +119,7 @@ const ClienteDetalles = () => {
                         <td>{new Date(pago.fecha).getFullYear()}</td>
                         <td>${(Math.round(pago.monto / 1000) * 1000).toLocaleString('es-AR')}</td>
                         <td>${(Math.round(Math.max(0, saldoRestante) / 1000) * 1000).toLocaleString('es-AR')}</td>
-                        <td>Control</td>
+                        <td>{pago.usuario}</td>
                       </tr>
                     );
                   })}
@@ -151,6 +151,3 @@ const ClienteDetalles = () => {
 };
 
 export default ClienteDetalles;
-/* 
-HASTA ACA FUNCIONA PERFECTO ESTE ES EL ORIGINAL
-*/

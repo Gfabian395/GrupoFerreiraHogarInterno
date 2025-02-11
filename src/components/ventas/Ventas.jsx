@@ -17,21 +17,19 @@ const configuracionCuotas = [
   { cuotas: 24, interes: 180 }
 ];
 
-const Ventas = ({ carrito, onClearCart }) => {
+const Ventas = ({ carrito, onClearCart, currentUser }) => {
   const [clientes, setClientes] = useState([]);
   const [selectedCliente, setSelectedCliente] = useState('');
   const [cuotas, setCuotas] = useState([]);
   const [cuotasSeleccionadas, setCuotasSeleccionadas] = useState(3);
   const [ventaRealizada, setVentaRealizada] = useState(false);
-  const [vendedor, setVendedor] = useState('');
-  const [showVendedorInput, setShowVendedorInput] = useState(false);
   const [cargarPrimerCuota, setCargarPrimerCuota] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const sucursal = location.state?.sucursal || 'Andes 4034';
   const subtotal = location.state?.subtotal || 0;
   const productos = location.state?.productos || [];
-  const [valorCuota, setValorCuota] = useState(0); // Definir valorCuota en el estado
+  const [valorCuota, setValorCuota] = useState(0);
 
   useEffect(() => {
     const fetchClientes = async () => {
@@ -63,7 +61,7 @@ const Ventas = ({ carrito, onClearCart }) => {
     const resultados = cuotasFiltradas.map(opcion => {
       const { cuotas, interes } = opcion;
       const montoConInteres = subtotal * (1 + interes / 100);
-      const montoCuota = Math.round(montoConInteres / cuotas / 1000) * 1000; // Redondear al múltiplo de 1000 más cercano
+      const montoCuota = Math.round(montoConInteres / cuotas / 1000) * 1000;
       return {
         cuotas,
         montoCuota: montoCuota.toLocaleString('es-AR')
@@ -72,11 +70,10 @@ const Ventas = ({ carrito, onClearCart }) => {
 
     setCuotas(resultados);
 
-    // Calcular valorCuota para las cuotas seleccionadas
     const cuotaSeleccionada = configuracionCuotas.find(c => c.cuotas === cuotasSeleccionadas);
     const interes = cuotaSeleccionada?.interes || 0;
     const totalCredito = subtotal * (1 + interes / 100);
-    const valorCuotaCalculado = Math.round(totalCredito / cuotasSeleccionadas / 1000) * 1000; // Redondear al múltiplo de 1000 más cercano
+    const valorCuotaCalculado = Math.round(totalCredito / cuotasSeleccionadas / 1000) * 1000;
     setValorCuota(valorCuotaCalculado);
   };
 
@@ -141,15 +138,10 @@ const Ventas = ({ carrito, onClearCart }) => {
       return;
     }
 
-    if (!vendedor) {
-      setShowVendedorInput(true);
-      return;
-    }
-
     const cuotaSeleccionada = configuracionCuotas.find(c => c.cuotas === cuotasSeleccionadas);
     const interes = cuotaSeleccionada?.interes || 0;
     const totalCredito = subtotal * (1 + interes / 100);
-    const valorCuotaCalculado = Math.round(totalCredito / cuotasSeleccionadas / 1000) * 1000; // Redondear al múltiplo de 1000 más cercano
+    const valorCuotaCalculado = Math.round(totalCredito / cuotasSeleccionadas / 1000) * 1000;
 
     const ventasCollection = collection(db, 'ventas');
     const venta = {
@@ -160,7 +152,8 @@ const Ventas = ({ carrito, onClearCart }) => {
       fecha: new Date(),
       totalCredito: totalCredito,
       valorCuota: valorCuotaCalculado,
-      pagos: []
+      pagos: [],
+      vendedor: currentUser.username // Agregar el nombre del usuario actual como vendedor
     };
 
     const ventaRef = await addDoc(ventasCollection, venta);
@@ -189,22 +182,20 @@ const Ventas = ({ carrito, onClearCart }) => {
     const clienteInfo = clienteDoc.data();
 
     // Generar y abrir el PDF de la mini factura en el navegador
-    generatePDF(venta, clienteInfo, vendedor);
+    generatePDF(venta, clienteInfo, currentUser.username);
 
     // Registrar pago inicial (si aplica)
     if (cargarPrimerCuota) {
-      const fechaPago = new Date().toISOString().split('T')[0]; // Fecha actual
-      const montoPago = valorCuotaCalculado; // Monto de la primera cuota
-      const pagosIniciales = [{ fecha: fechaPago, monto: montoPago }];
+      const fechaPago = new Date().toISOString().split('T')[0];
+      const montoPago = valorCuotaCalculado;
+      const pagosIniciales = [{ fecha: fechaPago, monto: montoPago, usuario: currentUser.username }];
       await updateDoc(ventaRef, { pagos: pagosIniciales });
     }
 
     setVentaRealizada(true);
     onClearCart();
-    setShowVendedorInput(false);
-    setVendedor('');
     alert('Venta realizada con éxito');
-    navigate(`/clientes/${selectedCliente}/detalles`); // Redirigir a la página de detalles del cliente
+    navigate('/clientes'); // Redirigir a la pantalla de clientes
   };
 
   return (
@@ -220,18 +211,6 @@ const Ventas = ({ carrito, onClearCart }) => {
           ))}
         </select>
       </div>
-      {showVendedorInput && (
-        <div className="form-group">
-          <label htmlFor="vendedor">Nombre del Vendedor:</label>
-          <input
-            id="vendedor"
-            className="form-control"
-            value={vendedor}
-            onChange={(e) => setVendedor(e.target.value)}
-            required
-          />
-        </div>
-      )}
       <div className="form-group">
         <label htmlFor="cuotasSeleccionadas">Seleccionar Cantidad de Cuotas:</label>
         <select id="cuotasSeleccionadas" className="form-control" value={cuotasSeleccionadas} onChange={handleCuotasSeleccionadasChange}>
@@ -269,6 +248,3 @@ const Ventas = ({ carrito, onClearCart }) => {
 };
 
 export default Ventas;
-/* 
-HASTA ACA FUNCIONA PERFECTO ESTE ES EL ORIGINAL
-*/

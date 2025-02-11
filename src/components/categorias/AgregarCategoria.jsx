@@ -3,7 +3,7 @@ import { db } from '../../firebaseConfig';
 import { collection, addDoc } from 'firebase/firestore';
 import './AgregarCategoria.css';
 
-const AgregarCategoria = () => {
+const AgregarCategoria = ({ currentUser }) => {
   const [nombre, setNombre] = useState('');
   const [imagenUrl, setImagenUrl] = useState('');
   const [alerta, setAlerta] = useState('');
@@ -21,6 +21,10 @@ const AgregarCategoria = () => {
       window.location.reload(); // Refrescar la página
     }, 1000);
   };
+
+  if (currentUser.role !== 'jefe') {
+    return null; // Si el usuario no es "jefe", no se muestra nada
+  }
 
   return (
     <div className="agregar-categoria">

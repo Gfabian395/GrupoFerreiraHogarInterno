@@ -5,7 +5,7 @@ import { db } from '../../firebaseConfig';
 import { collection, getDocs, setDoc, deleteDoc, doc } from 'firebase/firestore';
 import Load from '../load/Load';
 
-const Clientes = () => {
+const Clientes = ({ currentUser }) => {
   const [clientes, setClientes] = useState([]);
   const [filteredClientes, setFilteredClientes] = useState([]);
   const [newCliente, setNewCliente] = useState({ dni: '', nombreCompleto: '', direccion: '', entrecalles: '', telefono1: '', telefono2: '', imagenUrl: '' });
@@ -193,8 +193,12 @@ const Clientes = () => {
             <img src={cliente.imagenUrl} alt={cliente.nombreCompleto} className="card-img-top" />
             <div className="card-body">
               <h5 className="card-title">{cliente.nombreCompleto}</h5>
-              <button className="btn btn-warning" onClick={(e) => { e.stopPropagation(); startEditCliente(cliente); }}>Editar</button>
-              <button className="btn btn-danger ml-2" onClick={(e) => { e.stopPropagation(); handleDeleteCliente(cliente.dni); }}>Eliminar</button>
+              {currentUser && currentUser.role === 'jefe' && (
+                <>
+                  <button className="btn btn-warning" onClick={(e) => { e.stopPropagation(); startEditCliente(cliente); }}>Editar</button>
+                  <button className="btn btn-danger ml-2" onClick={(e) => { e.stopPropagation(); handleDeleteCliente(cliente.dni); }}>Eliminar</button>
+                </>
+              )}
             </div>
           </div>
         ))}

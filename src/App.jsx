@@ -10,7 +10,6 @@ import AgregarCategoria from './components/categorias/AgregarCategoria';
 import AgregarProducto from './components/productos/AgregarProducto';
 import Carrito from './components/carrito/Carrito';
 import Ventas from './components/ventas/Ventas';
-import FloatingButton from './components/Flotante/FloatingButton';
 import AddCompra from './components/compras/AddCompra'; // Importa el nuevo componente
 import Login from './components/login/Login'; // Importa el componente de Login
 
@@ -79,19 +78,19 @@ function App() {
             <Nav cartItemCount={cartItemCount} onLogout={handleLogout} username={usuario.username} />
             <Routes>
               <Route path="/" element={<Home />} />
-              <Route path="/clientes" element={<Clientes />} />
+              <Route path="/clientes" element={<Clientes currentUser={usuario} />} />
               <Route path="/clientes/:clienteId/detalles" element={<ClienteDetalles />} />
               <Route path="/cuotas" element={<Cuotas monto={100000} />} />
               <Route path="/categorias" element={
                 <>
-                  <AgregarCategoria />
-                  <Categorias onSelectCategoria={(id) => setSelectedCategoria(id)} role={usuario.role} />
+                  <AgregarCategoria currentUser={usuario} />
+                  <Categorias onSelectCategoria={(id) => setSelectedCategoria(id)} currentUser={usuario} />
                 </>
               } />
               <Route path="/categorias/:categoriaId/productos" element={
                 <>
-                  <AgregarProducto />
-                  <Productos onAddToCart={handleAddToCart} />
+                  <AgregarProducto currentUser={usuario} />
+                  <Productos onAddToCart={handleAddToCart} currentUser={usuario} />
                 </>
               } />
               <Route path="/carrito" element={<Carrito productos={carrito} onRemoveFromCart={handleRemoveFromCart} onClearCart={handleClearCart} />} />
@@ -107,7 +106,7 @@ function App() {
 
 const Home = () => (
   <div>
-    <h2>Welcome to the Video Game Store</h2>
+    <h2>Bienvenido a la Tienda de Electrodomesticos</h2>
   </div>
 );
 

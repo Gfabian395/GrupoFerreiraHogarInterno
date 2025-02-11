@@ -3,17 +3,18 @@ import './Login.css';
 
 // Simulamos una base de datos de usuarios
 const usuariosDB = [
-  { username: 'vendedor1', password: 'password1' },
-  { username: 'vendedor2', password: 'password2' },
-  { username: 'vendedor3', password: 'password3' },
-  { username: 'vendedor4', password: 'password4' },
-  { username: 'vendedor5', password: 'password5' },
-  { username: 'vendedor6', password: 'password6' },
-  { username: 'vendedor7', password: 'password7' },
-  { username: 'vendedor8', password: 'password8' },
-  { username: 'vendedor9', password: 'password9' },
-  { username: 'vendedor10', password: 'password10' },
-  { username: 'jefe', password: 'passwordJefe' },
+  { username: 'Gfabian395', password: 'Gfabian395', role: 'jefe' },
+  { username: 'VaneDavis', password: '554972', role: 'jefe' },
+  { username: 'RoFlrtin', password: 'jose1946', role: 'vendedor' },
+  { username: 'FrancoGF', password: 'Grupof2025', role: 'vendedor' },
+  { username: 'Carmen Galarza', password: 'Gordis2024', role: 'vendedor' },
+  { username: 'Carol B', password: 'Tokyoghoul', role: 'vendedor' },
+  { username: 'TamaraAbigail', password: 'Tamara07', role: 'vendedor' },
+  { username: 'Yuli182', password: '244962', role: 'vendedor' },
+  { username: 'Gustavito02', password: '35520975', role: 'vendedor' },
+  { username: 'Elias G', password: 'Elemento', role: 'vendedor' },
+  { username: 'Micaela G', password: 'Galarza24', role: 'vendedor' },
+  { username: 'prueba', password: 'prueba', role: 'vendedor' },
 ];
 
 const Login = ({ onLogin }) => {
@@ -27,6 +28,9 @@ const Login = ({ onLogin }) => {
     if (usuario) {
       // Guardar la información del usuario en localStorage
       localStorage.setItem('usuario', JSON.stringify(usuario));
+      if (usuario.role === 'jefe') {
+        alert('Bienvenido, jefe!');
+      }
       onLogin(usuario);
     } else {
       setAlerta('Usuario o contraseña incorrectos');

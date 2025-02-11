@@ -3,7 +3,7 @@ import { db } from '../../firebaseConfig';
 import { collection, addDoc, getDocs } from 'firebase/firestore';
 import './AgregarProducto.css';
 
-const AgregarProducto = () => {
+const AgregarProducto = ({ currentUser }) => {
   const [producto, setProducto] = useState({
     nombre: '',
     precio: '',
@@ -50,6 +50,10 @@ const AgregarProducto = () => {
       window.location.reload(); // Refrescar la página
     }, 1000);
   };
+
+  if (currentUser.role !== 'jefe') {
+    return null; // Si el usuario no es "jefe", no se muestra nada
+  }
 
   return (
     <div className="agregar-producto">
@@ -139,7 +143,7 @@ const AgregarProducto = () => {
           </>
         )}
       </div>
-    );
-  };
+  );
+};
 
 export default AgregarProducto;

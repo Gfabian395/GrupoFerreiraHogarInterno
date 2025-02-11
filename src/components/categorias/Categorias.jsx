@@ -49,7 +49,7 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
   };
 
   const promptDeleteCategoria = (id) => {
-    if (currentUser.role === 'Jefe') {
+    if (currentUser && currentUser.role === 'jefe') {
       setShowPasswordPrompt(true);
       setDeleteId(id);
     } else {
@@ -77,7 +77,7 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
             <img src={categoria.imagenUrl} alt={categoria.nombre} />
             <div>
               <h3>{categoria.nombre}</h3>
-              {currentUser.role === 'Jefe' && (
+              {currentUser && currentUser.role === 'jefe' && (
                 <button onClick={(e) => { e.stopPropagation(); promptDeleteCategoria(categoria.id); }}>Eliminar</button>
               )}
             </div>

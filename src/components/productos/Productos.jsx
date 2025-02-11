@@ -5,7 +5,7 @@ import { collection, getDocs, updateDoc, doc } from 'firebase/firestore';
 import Load from '../load/Load';
 import './Productos.css';
 
-const Productos = ({ onAddToCart }) => {
+const Productos = ({ onAddToCart, currentUser }) => {
   const { categoriaId } = useParams();
   const [productos, setProductos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -73,11 +73,15 @@ const Productos = ({ onAddToCart }) => {
                 <p>Precio: ${producto.precio}</p>
                 <p>
                   Stock Andes 4034: {producto.cantidadDisponibleAndes4034}
-                  <button onDoubleClick={() => handleShowModal(producto.id, 'cantidadDisponibleAndes4034')} style={{ marginLeft: '10px' }}> + </button>
+                  {currentUser.role === 'jefe' && (
+                    <button onDoubleClick={() => handleShowModal(producto.id, 'cantidadDisponibleAndes4034')} style={{ marginLeft: '10px' }}> + </button>
+                  )}
                 </p>
                 <p>
                   Stock Andes 4320: {producto.cantidadDisponibleAndes4320} 
-                  <button onDoubleClick={() => handleShowModal(producto.id, 'cantidadDisponibleAndes4320')} style={{ marginLeft: '10px' }}> + </button>
+                  {currentUser.role === 'jefe' && (
+                    <button onDoubleClick={() => handleShowModal(producto.id, 'cantidadDisponibleAndes4320')} style={{ marginLeft: '10px' }}> + </button>
+                  )}
                 </p>
                 <button onClick={() => onAddToCart(producto)}>Agregar al Carrito</button>
               </div>
@@ -85,7 +89,6 @@ const Productos = ({ onAddToCart }) => {
           ))}
         </ul>
       </div>
-
     </>
   );
 };

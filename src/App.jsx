@@ -107,7 +107,7 @@ function App() {
 
 const Home = () => (
   <div>
-    <h2>Bienvenido a la Tienda de Videojuegos</h2>
+    <h2>Bienvenido a la Tienda de Electrodomesticos!!</h2>
   </div>
 );
 

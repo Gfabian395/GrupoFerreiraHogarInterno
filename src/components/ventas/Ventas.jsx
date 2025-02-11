@@ -24,6 +24,8 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
   const [cuotasSeleccionadas, setCuotasSeleccionadas] = useState(3);
   const [ventaRealizada, setVentaRealizada] = useState(false);
   const [cargarPrimerCuota, setCargarPrimerCuota] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredClientes, setFilteredClientes] = useState([]);
   const location = useLocation();
   const navigate = useNavigate();
   const sucursal = location.state?.sucursal || 'Andes 4034';
@@ -37,10 +39,20 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
       const clienteSnapshot = await getDocs(clienteCollection);
       const clienteList = clienteSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setClientes(clienteList);
+      setFilteredClientes(clienteList);
     };
 
     fetchClientes();
   }, []);
+
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+    const filtered = clientes.filter(cliente =>
+      cliente.nombreCompleto.toLowerCase().includes(e.target.value.toLowerCase()) ||
+      cliente.dni.toLowerCase().includes(e.target.value.toLowerCase())
+    );
+    setFilteredClientes(filtered);
+  };
 
   const calcularCuotas = () => {
     if (isNaN(subtotal) || subtotal <= 0) {
@@ -153,12 +165,11 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
       totalCredito: totalCredito,
       valorCuota: valorCuotaCalculado,
       pagos: [],
-      vendedor: currentUser.username // Agregar el nombre del usuario actual como vendedor
+      vendedor: currentUser.username
     };
 
     const ventaRef = await addDoc(ventasCollection, venta);
 
-    // Actualizar stock
     for (const producto of carrito) {
       if (producto.categoriaId) {
         const productoRef = doc(db, `categorias/${producto.categoriaId}/productos`, producto.id);
@@ -176,15 +187,12 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
       }
     }
 
-    // Obtener información del cliente para el comprobante
     const clienteRef = doc(db, 'clientes', selectedCliente);
     const clienteDoc = await getDoc(clienteRef);
     const clienteInfo = clienteDoc.data();
 
-    // Generar y abrir el PDF de la mini factura en el navegador
     generatePDF(venta, clienteInfo, currentUser.username);
 
-    // Registrar pago inicial (si aplica)
     if (cargarPrimerCuota) {
       const fechaPago = new Date().toISOString().split('T')[0];
       const montoPago = valorCuotaCalculado;
@@ -195,7 +203,7 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
     setVentaRealizada(true);
     onClearCart();
     alert('Venta realizada con éxito');
-    navigate('/clientes'); // Redirigir a la pantalla de clientes
+    navigate('/clientes');
   };
 
   return (
@@ -204,9 +212,17 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
       {ventaRealizada && <div className="alert alert-success">¡Venta realizada con éxito!</div>}
       <div className="form-group">
         <label htmlFor="cliente">Seleccionar Cliente:</label>
+        <input
+          type="text"
+          id="cliente-buscador"
+          placeholder="Buscar por DNI o Nombre"
+          value={searchTerm}
+          onChange={handleSearchChange}
+          className="form-control"
+        />
         <select id="cliente" className="form-control" value={selectedCliente} onChange={handleClienteChange}>
           <option value="">-- Selecciona un Cliente --</option>
-          {clientes.map((cliente) => (
+          {filteredClientes.map((cliente) => (
             <option key={cliente.id} value={cliente.id}>{cliente.nombreCompleto}</option>
           ))}
         </select>

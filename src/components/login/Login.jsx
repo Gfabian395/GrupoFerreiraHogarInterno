@@ -11,7 +11,7 @@ const usuariosDB = [
   { username: 'Carol B', password: 'Tokyoghoul', role: 'vendedor' },
   { username: 'TamaraAbigail', password: 'Tamara07', role: 'vendedor' },
   { username: 'Yuli182', password: '244962', role: 'vendedor' },
-  { username: 'Gustavito02', password: '35520975', role: 'vendedor' },
+  { username: 'Gustavito02', password: '36520975', role: 'vendedor' },
   { username: 'Elias G', password: 'Elemento', role: 'vendedor' },
   { username: 'Micaela G', password: 'Galarza24', role: 'vendedor' },
   { username: 'prueba', password: 'prueba', role: 'vendedor' },

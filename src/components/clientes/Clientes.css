@@ -1,0 +1,36 @@
+.container {
+    padding: 20px;
+}
+
+h2 {
+    color: #5c6ac4;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.card-container {
+    display: flex;
+    gap: 20px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
+
+.card {
+    width: 200px;
+}
+
+.card img {
+    width: 100%;
+    height: auto;
+}
+
+.card-body {
+    text-align: center;
+}
+
+.search-box {
+    margin-top: 20px;
+}

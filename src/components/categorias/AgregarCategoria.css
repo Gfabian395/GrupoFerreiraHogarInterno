@@ -1,0 +1,28 @@
+.agregar-categoria {
+  padding: 20px;
+  text-align: center;
+}
+
+.agregar-categoria .form-group {
+  margin-bottom: 15px;
+}
+
+.agregar-categoria .form-control {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.agregar-categoria .btn {
+  padding: 10px 20px;
+  font-size: 16px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.agregar-categoria .btn:hover {
+  background-color: #0056b3;
+}

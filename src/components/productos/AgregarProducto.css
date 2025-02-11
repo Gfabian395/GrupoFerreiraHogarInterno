@@ -1,0 +1,32 @@
+.agregar-producto {
+  padding: 20px;
+  text-align: center;
+}
+
+.agregar-producto h2 {
+  color: #5c6ac4;
+}
+
+.agregar-producto .form-group {
+  margin-bottom: 15px;
+}
+
+.agregar-producto .form-control {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.agregar-producto .btn {
+  padding: 10px 20px;
+  font-size: 16px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.agregar-producto .btn:hover {
+  background-color: #0056b3;
+}

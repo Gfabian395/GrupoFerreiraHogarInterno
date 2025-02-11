@@ -1,0 +1,9 @@
+.calculadora-cuotas {
+    text-align: center;
+}
+
+#resultado p {
+    font-size: 18px;
+    margin-top: 10px;
+    font-weight: bold;
+}

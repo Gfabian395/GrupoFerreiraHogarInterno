@@ -14,6 +14,7 @@ const AgregarProducto = () => {
   });
   const [categorias, setCategorias] = useState([]);
   const [selectedCategoria, setSelectedCategoria] = useState('');
+  const [alerta, setAlerta] = useState('');
 
   useEffect(() => {
     const fetchCategorias = async () => {
@@ -42,11 +43,16 @@ const AgregarProducto = () => {
       imagenUrl: '',
       descripcion: ''
     });
+    setAlerta('Producto agregado con éxito');
+    setTimeout(() => {
+      setAlerta('');
+      window.location.reload(); // Refrescar la página
+    }, 1000);
   };
-
   return (
     <div className="agregar-producto">
       <h2>Agregar Producto</h2>
+      {alerta && <div className="alert alert-success">{alerta}</div>}
       <form onSubmit={handleAddProducto}>
         <div className="form-group">
           <label htmlFor="categoriaSelect">Seleccionar Categoría</label>
@@ -128,6 +134,3 @@ const AgregarProducto = () => {
 };
 
 export default AgregarProducto;
-/* 
-HASTA ACA FUNCIONA PERFECTO ESTE ES EL ORIGINAL
-*/

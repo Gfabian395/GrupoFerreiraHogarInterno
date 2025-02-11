@@ -151,3 +151,6 @@ const ClienteDetalles = () => {
 };
 
 export default ClienteDetalles;
+/* 
+HASTA ACA FUNCIONA PERFECTO ESTE ES EL ORIGINAL
+*/

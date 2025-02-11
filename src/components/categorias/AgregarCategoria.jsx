@@ -6,6 +6,7 @@ import './AgregarCategoria.css';
 const AgregarCategoria = () => {
   const [nombre, setNombre] = useState('');
   const [imagenUrl, setImagenUrl] = useState('');
+  const [alerta, setAlerta] = useState('');
 
   const handleAddCategoria = async (e) => {
     e.preventDefault();
@@ -13,11 +14,17 @@ const AgregarCategoria = () => {
     await addDoc(categoriasCollection, { nombre, imagenUrl });
     setNombre('');
     setImagenUrl('');
+    setAlerta('Categoría agregada con éxito');
+    setTimeout(() => {
+      setAlerta('');
+      window.location.reload(); // Refrescar la página
+    }, 1000);
   };
 
   return (
     <div className="agregar-categoria">
       <h2>Agregar Categoría</h2>
+      {alerta && <div className="alert alert-success">{alerta}</div>}
       <form onSubmit={handleAddCategoria}>
         <div className="form-group">
           <input
@@ -46,6 +53,3 @@ const AgregarCategoria = () => {
 };
 
 export default AgregarCategoria;
-/* 
-HASTA ACA FUNCIONA PERFECTO ESTE ES EL ORIGINAL
-*/

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { db } from '../../firebaseConfig';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, updateDoc, doc } from 'firebase/firestore';
 import Load from '../load/Load';
 import './Productos.css';
 
@@ -9,6 +9,7 @@ const Productos = ({ onAddToCart }) => {
   const { categoriaId } = useParams();
   const [productos, setProductos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [alerta, setAlerta] = useState('');
 
   useEffect(() => {
     const fetchProductos = async () => {
@@ -29,6 +30,27 @@ const Productos = ({ onAddToCart }) => {
     }
   }, [categoriaId]);
 
+  const handleIncrementStock = async (productoId, campo) => {
+    try {
+      const productoRef = doc(db, `categorias/${categoriaId}/productos`, productoId);
+      const producto = productos.find(p => p.id === productoId);
+      const newCantidad = parseInt(producto[campo]) + 1;
+
+      await updateDoc(productoRef, {
+        [campo]: newCantidad
+      });
+
+      setProductos(productos.map(p => p.id === productoId ? { ...p, [campo]: newCantidad } : p));
+
+      setAlerta('Stock actualizado con éxito');
+      setTimeout(() => {
+        setAlerta('');
+      }, 3000);
+    } catch (error) {
+      console.error("Error updating stock: ", error);
+    }
+  };
+
   if (loading) {
     return <Load />;
   }
@@ -36,27 +58,32 @@ const Productos = ({ onAddToCart }) => {
   return (
     <>
       <h2>Productos</h2>
-    <div className="productos">
-      <ul>
-        {productos.map(producto => (
-          <li key={producto.id}>
-            <img src={producto.imagenUrl} alt={producto.nombre} />
-            <div>
-              <h3>{producto.nombre}</h3>
-              <p>Precio: ${producto.precio}</p>
-              <p>Stock Andes 4034: {producto.cantidadDisponibleAndes4034}</p>
-              <p>Stock Andes 4320: {producto.cantidadDisponibleAndes4320}</p>
-              <button onClick={() => onAddToCart(producto)}>Agregar al Carrito</button>
-            </div>
-          </li>
-        ))}
-      </ul>
-    </div>
-    </>
-  );
-};
-
-export default Productos;
-/* 
-HASTA ACA FUNCIONA PERFECTO ESTE ES EL ORIGINAL
-*/
+      {alerta && <div className="alert alert-success">{alerta}</div>}
+      <div className="productos">
+        <ul>
+          {productos.map(producto => (
+                        <li key={producto.id}>
+                        <img src={producto.imagenUrl} alt={producto.nombre} />
+                        <div>
+                          <h3>{producto.nombre}</h3>
+                          <p>Precio: ${producto.precio}</p>
+                          <p>
+                            Stock Andes 4034: {producto.cantidadDisponibleAndes4034}
+                            <button onClick={() => handleIncrementStock(producto.id, 'cantidadDisponibleAndes4034')}>+</button>
+                          </p>
+                          <p>
+                            Stock Andes 4320: {producto.cantidadDisponibleAndes4320}
+                            <button onClick={() => handleIncrementStock(producto.id, 'cantidadDisponibleAndes4320')}>+</button>
+                          </p>
+                          <button onClick={() => onAddToCart(producto)}>Agregar al Carrito</button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </>
+            );
+          };
+          
+          export default Productos;
+          

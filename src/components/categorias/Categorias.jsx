@@ -8,6 +8,10 @@ import Load from '../load/Load';
 const Categorias = ({ onSelectCategoria }) => {
   const [categorias, setCategorias] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
+  const [password, setPassword] = useState('');
+  const [alerta, setAlerta] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -27,13 +31,26 @@ const Categorias = ({ onSelectCategoria }) => {
     fetchCategorias();
   }, []);
 
-  const handleDeleteCategoria = async (id) => {
-    try {
-      await deleteDoc(doc(db, 'categorias', id));
-      setCategorias(categorias.filter(categoria => categoria.id !== id));
-    } catch (error) {
-      console.error("Error deleting categoria: ", error);
+  const handleDeleteCategoria = async () => {
+    if (password === '031285') {
+      try {
+        await deleteDoc(doc(db, 'categorias', deleteId));
+        setAlerta('Categoría eliminada con éxito');
+        setTimeout(() => {
+          window.location.reload(); // Refrescar la página
+        }, 1000);
+      } catch (error) {
+        console.error("Error deleting categoria: ", error);
+      }
+    } else {
+      setAlerta('Contraseña incorrecta');
+      setTimeout(() => setAlerta(''), 3000);
     }
+  };
+
+  const promptDeleteCategoria = (id) => {
+    setShowPasswordPrompt(true);
+    setDeleteId(id);
   };
 
   const handleSelectCategoria = (id) => {
@@ -48,22 +65,37 @@ const Categorias = ({ onSelectCategoria }) => {
   return (
     <div className="categorias">
       <h2>Categorías</h2>
+      {alerta && <div className="alert alert-success">{alerta}</div>}
       <ul>
         {categorias.map(categoria => (
           <li key={categoria.id} onClick={() => handleSelectCategoria(categoria.id)}>
             <img src={categoria.imagenUrl} alt={categoria.nombre} />
             <div>
               <h3>{categoria.nombre}</h3>
-              <button onClick={() => handleDeleteCategoria(categoria.id)}>Eliminar</button>
+              <button onClick={(e) => { e.stopPropagation(); promptDeleteCategoria(categoria.id); }}>Eliminar</button>
             </div>
           </li>
         ))}
       </ul>
+
+      {showPasswordPrompt && (
+        <div className="password-prompt">
+          <div className="password-prompt-content">
+            <h3>Ingrese la Contraseña</h3>
+            <input
+              type="password"
+              className="form-control"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Contraseña"
+            />
+            <button onClick={handleDeleteCategoria} className="btn btn-danger">Confirmar</button>
+            <button onClick={() => { setShowPasswordPrompt(false); setPassword(''); }} className="btn btn-secondary">Cancelar</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 export default Categorias;
-/* 
-HASTA ACA FUNCIONA PERFECTO ESTE ES EL ORIGINAL
-*/

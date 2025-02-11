@@ -269,3 +269,6 @@ const Ventas = ({ carrito, onClearCart }) => {
 };
 
 export default Ventas;
+/* 
+HASTA ACA FUNCIONA PERFECTO ESTE ES EL ORIGINAL
+*/

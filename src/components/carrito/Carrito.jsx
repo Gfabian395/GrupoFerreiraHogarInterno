@@ -124,3 +124,6 @@ const Carrito = ({ productos, onRemoveFromCart, onClearCart }) => {
 };
 
 export default Carrito;
+/* 
+HASTA ACA FUNCIONA PERFECTO ESTE ES EL ORIGINAL
+*/

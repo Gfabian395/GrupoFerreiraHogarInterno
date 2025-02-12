@@ -1,0 +1,35 @@
+.cierre-caja {
+  padding: 20px;
+}
+
+.cierre-caja h2 {
+  margin-bottom: 20px;
+}
+
+.cierre-caja .table {
+  width: 100%;
+  margin-bottom: 20px;
+  border-collapse: collapse;
+}
+
+.cierre-caja .table th,
+.cierre-caja .table td {
+  border: 1px solid #dee2e6;
+  padding: 8px;
+  text-align: left;
+}
+
+.cierre-caja h3 {
+  margin-top: 20px;
+  font-weight: bold;
+}
+
+.cierre-caja button {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import Nav from './components/nav/Nav';
 import Clientes from './components/clientes/Clientes';
 import ClienteDetalles from './components/clientes/ClienteDetalles';
@@ -10,8 +10,9 @@ import AgregarCategoria from './components/categorias/AgregarCategoria';
 import AgregarProducto from './components/productos/AgregarProducto';
 import Carrito from './components/carrito/Carrito';
 import Ventas from './components/ventas/Ventas';
-import AddCompra from './components/compras/AddCompra'; // Importa el nuevo componente
-import Login from './components/login/Login'; // Importa el componente de Login
+import AddCompra from './components/compras/AddCompra';
+import Login from './components/login/Login';
+import CierreCaja from './components/caja/CierreCaja';
 
 function App() {
   const [carrito, setCarrito] = useState([]);
@@ -75,7 +76,7 @@ function App() {
           <Login onLogin={handleLogin} />
         ) : (
           <>
-            <Nav cartItemCount={cartItemCount} onLogout={handleLogout} username={usuario.username} />
+            <Nav cartItemCount={cartItemCount} onLogout={handleLogout} username={usuario.username} role={usuario.role} />
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/clientes" element={<Clientes currentUser={usuario} />} />
@@ -97,6 +98,7 @@ function App() {
               <Route path="/ventas" element={<Ventas carrito={carrito} onClearCart={handleClearCart} currentUser={usuario} />} />
               <Route path="/ventas/:ventaId/detalles" element={<ClienteDetalles currentUser={usuario} />} /> {/* Nueva ruta para los detalles de la venta */}
               <Route path="/add-compra" element={<AddCompra />} /> {/* Nueva ruta para agregar compras */}
+              <Route path="/cierre-caja" element={usuario.role === 'jefe' ? <CierreCaja currentUser={usuario} /> : <Navigate to="/" />} /> {/* Ruta para cierre de caja solo para jefes */}
             </Routes>
           </>
         )}
@@ -107,7 +109,7 @@ function App() {
 
 const Home = () => (
   <div>
-    <h2>Bienvenido a la Tienda de Electrodomesticos!!</h2>
+    <h2>Bienvenido a la Tienda de Electrodomésticos!</h2>
   </div>
 );
 

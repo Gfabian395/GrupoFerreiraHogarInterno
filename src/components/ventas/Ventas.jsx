@@ -199,10 +199,17 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
     // Abre el PDF como un blob para asegurar la compatibilidad con dispositivos móviles
     const pdfBlob = doc.output('blob');
     const url = URL.createObjectURL(pdfBlob);
-    window.open(url);
+    
+    // Crear un enlace temporario para la descarga
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'Factura.pdf';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
   
-
+  
   const handleRealizarVenta = async () => {
     if (!selectedCliente || !cuotasSeleccionadas || (entrega === 'domicilio' && !selectedChofer)) {
       alert('Por favor, selecciona un cliente, las cuotas y el chofer para entrega a domicilio.');
@@ -266,6 +273,7 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
     alert('Venta realizada con éxito');
     navigate('/clientes');
   };
+
   return (
     <div className="ventas">
       <h2>Realizar Venta</h2>

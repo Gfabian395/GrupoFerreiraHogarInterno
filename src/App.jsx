@@ -13,6 +13,7 @@ import Ventas from './components/ventas/Ventas';
 import AddCompra from './components/compras/AddCompra';
 import Login from './components/login/Login';
 import CierreCaja from './components/caja/CierreCaja';
+import Home from './components/home/Home'; // Importa el nuevo componente Home
 
 function App() {
   const [carrito, setCarrito] = useState([]);
@@ -106,11 +107,5 @@ function App() {
     </Router>
   );
 }
-
-const Home = () => (
-  <div>
-    <h2>Bienvenido a la Tienda de Electrodomésticos!</h2>
-  </div>
-);
 
 export default App;

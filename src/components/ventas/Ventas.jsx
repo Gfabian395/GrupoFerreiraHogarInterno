@@ -5,6 +5,7 @@ import { collection, getDocs, addDoc, doc, updateDoc, getDoc } from 'firebase/fi
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import './Ventas.css';
+import logo from '../../assets/Oficial.png';
 
 const configuracionCuotas = [
   { cuotas: 2, interes: 15 },
@@ -17,6 +18,12 @@ const configuracionCuotas = [
   { cuotas: 24, interes: 180 }
 ];
 
+const choferes = [
+  { nombre: 'Vanesa Ferreira', patente: 'AD417CW', telefono: '11-3800-2078' },
+  { nombre: 'Carolina Ferreira', patente: 'AD754DG', telefono: '11-2222-2222' },
+  { nombre: 'Gustavo Ferreira', patente: 'AD614CN', telefono: '11-3333-3333' }
+];
+
 const Ventas = ({ carrito, onClearCart, currentUser }) => {
   const [clientes, setClientes] = useState([]);
   const [selectedCliente, setSelectedCliente] = useState('');
@@ -26,6 +33,8 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
   const [cargarPrimerCuota, setCargarPrimerCuota] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredClientes, setFilteredClientes] = useState([]);
+  const [entrega, setEntrega] = useState('sucursal'); // Nueva opción para la entrega
+  const [selectedChofer, setSelectedChofer] = useState(choferes[0]); // Chofer seleccionado por defecto
   const location = useLocation();
   const navigate = useNavigate();
   const sucursal = location.state?.sucursal || 'Andes 4034';
@@ -105,20 +114,63 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
     setCargarPrimerCuota(e.target.value === "sí");
   };
 
-  const generatePDF = (venta, clienteInfo, vendedor) => {
-    const doc = new jsPDF({
-      orientation: 'portrait',
-      unit: 'mm',
-      format: [53, 300]
-    });
+  const handleEntregaChange = (e) => {
+    setEntrega(e.target.value);
+    if (e.target.value === 'domicilio') {
+      setSelectedChofer(choferes[0]); // Selecciona el primer chofer por defecto
+    } else {
+      setSelectedChofer(null);
+    }
+  };
 
-    doc.setFontSize(10);
-    doc.text('Mini Factura', 26.5, 10, null, null, 'center');
-    doc.text(`Cliente: ${clienteInfo.nombreCompleto}`, 5, 20);
-    doc.text(`Sucursal: ${venta.sucursal}`, 5, 25);
-    doc.text(`Cuotas: ${venta.cuotas}`, 5, 30);
-    doc.text(`Vendedor: ${vendedor}`, 5, 35);
-    doc.text(`Fecha: ${new Date().toLocaleString()}`, 5, 40);
+  const handleChoferChange = (e) => {
+    const chofer = choferes.find(chofer => chofer.nombre === e.target.value);
+    setSelectedChofer(chofer);
+  };
+
+  const generatePDF = (venta, clienteInfo, vendedor) => {
+    const doc = new jsPDF('p', 'pt', 'a4'); // A4 size
+    const logo = '/src/assets/Oficial.png'; // Ruta de la imagen del logo
+
+    // Añadir la marca de agua
+    const addWatermark = () => {
+      doc.setGState(new doc.GState({ opacity: 0.1 })); // Ajustar la opacidad al 10%
+      doc.addImage(logo, 'PNG', 100, 150, 400, 400);
+      doc.setGState(new doc.GState({ opacity: 1 })); // Restablecer la opacidad al 100% para el resto del contenido
+    };
+
+    // Título y logo en el centro
+    doc.setFontSize(12);
+    doc.addImage(logo, 'PNG', 250, 20, 80, 80); // Imagen en el centro arriba, tamaño reducido
+    doc.text('Factura', 40, 140);
+    doc.text(`Cliente: ${clienteInfo.nombreCompleto}`, 40, 160);
+    doc.text(`Sucursal: ${venta.sucursal}`, 40, 180);
+    doc.text(`Vendedor: ${vendedor}`, 40, 200);
+    doc.text(`Fecha: ${new Date().toLocaleString()}`, 40, 220);
+
+    // Información del local
+    doc.text('Los Andes 4320:', 400, 140);
+    doc.text('Teléfono: 11-2846-6001', 400, 160);
+    doc.text('Los Andes 4034:', 400, 180);
+    doc.text('Teléfono: 11-3800-2078', 400, 200);
+
+    // Añadir la marca de agua antes de la tabla
+    addWatermark();
+
+    if (venta.entrega === 'domicilio') {
+      // Parte superior para el chofer
+      doc.setFontSize(10);
+      doc.text('DATOS DEL CLIENTE:', 40, 400);
+      doc.text(`Nombre: ${clienteInfo.nombreCompleto}`, 40, 420);
+      doc.text(`Dirección: ${clienteInfo.direccion}`, 40, 440);
+      doc.text(`Teléfono: ${clienteInfo.telefono}`, 40, 460);
+      doc.text(`Fecha y Hora: ${new Date().toLocaleString()}`, 40, 480);
+
+      // Parte inferior para el cliente
+      doc.text('DATOS DEL CHOFER:', 400, 400);
+      doc.text(`Nombre: ${venta.chofer.nombre}`, 400, 420);
+      doc.text(`Teléfono: ${venta.chofer.telefono}`, 400, 440);
+    }
 
     const tableColumn = ["Producto", "Cant", "P.Unit", "Subtotal"];
     const tableRows = [];
@@ -136,17 +188,20 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
     doc.autoTable({
       head: [tableColumn],
       body: tableRows,
-      startY: 45,
-      theme: 'plain',
-      styles: { fontSize: 8 }
+      startY: 240,
+      theme: 'striped',
+      styles: { fontSize: 10 },
+      headStyles: { fillColor: [22, 160, 133] }
     });
+
+    doc.text(`Total Crédito: $${venta.totalCredito.toLocaleString('es-AR')}`, 40, doc.autoTable.previous.finalY + 20);
 
     window.open(doc.output('bloburl'));
   };
 
   const handleRealizarVenta = async () => {
-    if (!selectedCliente || !cuotasSeleccionadas) {
-      alert('Por favor, selecciona un cliente y las cuotas.');
+    if (!selectedCliente || !cuotasSeleccionadas || (entrega === 'domicilio' && !selectedChofer)) {
+      alert('Por favor, selecciona un cliente, las cuotas y el chofer para entrega a domicilio.');
       return;
     }
 
@@ -165,7 +220,9 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
       totalCredito: totalCredito,
       valorCuota: valorCuotaCalculado,
       pagos: [],
-      vendedor: currentUser.username
+      vendedor: currentUser.username,
+      entrega: entrega, // Añadir información de entrega
+      chofer: entrega === 'domicilio' ? selectedChofer : null // Añadir información del chofer si aplica
     };
 
     const ventaRef = await addDoc(ventasCollection, venta);
@@ -205,7 +262,6 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
     alert('Venta realizada con éxito');
     navigate('/clientes');
   };
-
   return (
     <div className="ventas">
       <h2>Realizar Venta</h2>
@@ -242,6 +298,23 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
           <option value="no">No</option>
         </select>
       </div>
+      <div className="form-group">
+        <label htmlFor="entrega">Seleccionar Tipo de Entrega:</label>
+        <select id="entrega" className="form-control" value={entrega} onChange={handleEntregaChange}>
+          <option value="sucursal">Retira en Sucursal</option>
+          <option value="domicilio">Envío a Domicilio</option>
+        </select>
+      </div>
+      {entrega === 'domicilio' && (
+        <div className="form-group">
+          <label htmlFor="chofer">Seleccionar Chofer:</label>
+          <select id="chofer" className="form-control" value={selectedChofer.nombre} onChange={handleChoferChange}>
+            {choferes.map((chofer) => (
+              <option key={chofer.nombre} value={chofer.nombre}>{chofer.nombre}</option>
+            ))}
+          </select>
+        </div>
+      )}
       <h3>Productos en Carrito</h3>
       <div className="card-container">
         {carrito.map(producto => (

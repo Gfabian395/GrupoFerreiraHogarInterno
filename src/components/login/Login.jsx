@@ -3,18 +3,18 @@ import './Login.css';
 
 // Simulamos una base de datos de usuarios
 const usuariosDB = [
-  { username: 'Gfabian395', password: 'Gfabian395', role: 'jefe' },
-  { username: 'VaneDavis', password: '554972', role: 'jefe' },
-  { username: 'RoFlrtin', password: 'jose1946', role: 'vendedor' },
-  { username: 'FrancoGF', password: 'Grupof2025', role: 'vendedor' },
-  { username: 'Carmen Galarza', password: 'Gordis2024', role: 'vendedor' },
-  { username: 'Carol B', password: 'Tokyoghoul', role: 'vendedor' },
-  { username: 'TamaraAbigail', password: 'Tamara07', role: 'vendedor' },
-  { username: 'Yuli182', password: '244962', role: 'vendedor' },
-  { username: 'Gustavito02', password: '36520975', role: 'vendedor' },
-  { username: 'Elias G', password: 'Elemento', role: 'vendedor' },
-  { username: 'Micaela G', password: 'Galarza24', role: 'vendedor' },
-  { username: 'prueba', password: 'prueba', role: 'vendedor' },
+  { username: 'Gfabian395', password: 'Gfabian395', role: 'jefe', imageUrl: 'https://i.etsystatic.com/44733518/r/il/9a3b61/5741845381/il_1080xN.5741845381_ljvq.jpg' },
+  { username: 'VaneDavis', password: '554972', role: 'jefe', imageUrl: 'path/to/VaneDavis.jpg' },
+  { username: 'RoFlrtin', password: 'jose1946', role: 'vendedor', imageUrl: 'path/to/RoFlrtin.jpg' },
+  { username: 'FrancoGF', password: 'Grupof2025', role: 'vendedor', imageUrl: 'path/to/FrancoGF.jpg' },
+  { username: 'Carmen Galarza', password: 'Gordis2024', role: 'vendedor', imageUrl: 'path/to/CarmenGalarza.jpg' },
+  { username: 'Carol B', password: 'Tokyoghoul', role: 'vendedor', imageUrl: 'path/to/CarolB.jpg' },
+  { username: 'TamaraAbigail', password: 'Tamara07', role: 'vendedor', imageUrl: 'path/to/TamaraAbigail.jpg' },
+  { username: 'Yuli182', password: '244962', role: 'vendedor', imageUrl: 'path/to/Yuli182.jpg' },
+  { username: 'Gustavito02', password: '36520975', role: 'vendedor', imageUrl: 'path/to/Gustavito02.jpg' },
+  { username: 'Elias G', password: 'Elemento', role: 'vendedor', imageUrl: 'path/to/EliasG.jpg' },
+  { username: 'Micaela G', password: 'Galarza24', role: 'vendedor', imageUrl: 'path/to/MicaelaG.jpg' },
+  { username: 'prueba', password: 'prueba', role: 'vendedor', imageUrl: 'path/to/prueba.jpg' },
 ];
 
 const Login = ({ onLogin }) => {

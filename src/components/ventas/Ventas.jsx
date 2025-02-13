@@ -130,33 +130,21 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
 
   const generatePDF = (venta, clienteInfo, vendedor) => {
     const doc = new jsPDF('p', 'pt', 'a4'); // A4 size
-    const logo = '/src/assets/Oficial.png'; // Ruta de la imagen del logo
-  
-    // Añadir la marca de agua
-    const addWatermark = () => {
-      doc.setGState(new doc.GState({ opacity: 0.1 })); // Ajustar la opacidad al 10%
-      doc.addImage(logo, 'PNG', 100, 150, 400, 400);
-      doc.setGState(new doc.GState({ opacity: 1 })); // Restablecer la opacidad al 100% para el resto del contenido
-    };
-  
-    // Título y logo en el centro
+
+    // Título y detalles en el centro
     doc.setFontSize(12);
-    doc.addImage(logo, 'PNG', 250, 20, 80, 80); // Imagen en el centro arriba, tamaño reducido
     doc.text('Factura', 40, 140);
     doc.text(`Cliente: ${clienteInfo.nombreCompleto}`, 40, 160);
     doc.text(`Sucursal: ${venta.sucursal}`, 40, 180);
     doc.text(`Vendedor: ${vendedor}`, 40, 200);
     doc.text(`Fecha: ${new Date().toLocaleString()}`, 40, 220);
-  
+
     // Información del local
     doc.text('Los Andes 4320:', 400, 140);
     doc.text('Teléfono: 11-2846-6001', 400, 160);
     doc.text('Los Andes 4034:', 400, 180);
     doc.text('Teléfono: 11-3800-2078', 400, 200);
-  
-    // Añadir la marca de agua antes de la tabla
-    addWatermark();
-  
+
     if (venta.entrega === 'domicilio') {
       // Parte superior para el chofer
       doc.setFontSize(10);
@@ -165,16 +153,16 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
       doc.text(`Dirección: ${clienteInfo.direccion}`, 40, 440);
       doc.text(`Teléfono: ${clienteInfo.telefono}`, 40, 460);
       doc.text(`Fecha y Hora: ${new Date().toLocaleString()}`, 40, 480);
-  
+
       // Parte inferior para el cliente
       doc.text('DATOS DEL CHOFER:', 400, 400);
       doc.text(`Nombre: ${venta.chofer.nombre}`, 400, 420);
       doc.text(`Teléfono: ${venta.chofer.telefono}`, 400, 440);
     }
-  
+
     const tableColumn = ["Producto", "Cant", "P.Unit", "Subtotal"];
     const tableRows = [];
-  
+
     venta.productos.forEach(producto => {
       const productoData = [
         producto.nombre,
@@ -184,7 +172,7 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
       ];
       tableRows.push(productoData);
     });
-  
+
     doc.autoTable({
       head: [tableColumn],
       body: tableRows,
@@ -193,30 +181,31 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
       styles: { fontSize: 10 },
       headStyles: { fillColor: [22, 160, 133] }
     });
-  
+
     doc.text(`Total Crédito: $${venta.totalCredito.toLocaleString('es-AR')}`, 40, doc.autoTable.previous.finalY + 20);
-  
+
     // Guardar el PDF como archivo y descargar automáticamente
     doc.save('Factura.pdf');
-  
+
     // Redirigir a la página de clientes después de descargar el PDF
     setTimeout(() => {
       navigate('/clientes'); // Redirigir a la página de clientes
     }, 1000); // Ajusta el tiempo si es necesario
   };
-  
-  
+
+
+
   const handleRealizarVenta = async () => {
     if (!selectedCliente || !cuotasSeleccionadas || (entrega === 'domicilio' && !selectedChofer)) {
       alert('Por favor, selecciona un cliente, las cuotas y el chofer para entrega a domicilio.');
       return;
     }
-  
+
     const cuotaSeleccionada = configuracionCuotas.find(c => c.cuotas === cuotasSeleccionadas);
     const interes = cuotaSeleccionada?.interes || 0;
     const totalCredito = subtotal * (1 + interes / 100);
     const valorCuotaCalculado = Math.round(totalCredito / cuotasSeleccionadas / 1000) * 1000;
-  
+
     const ventasCollection = collection(db, 'ventas');
     const venta = {
       clienteId: selectedCliente,
@@ -231,9 +220,9 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
       entrega: entrega, // Añadir información de entrega
       chofer: entrega === 'domicilio' ? selectedChofer : null // Añadir información del chofer si aplica
     };
-  
+
     const ventaRef = await addDoc(ventasCollection, venta);
-  
+
     for (const producto of carrito) {
       if (producto.categoriaId) {
         const productoRef = doc(db, `categorias/${producto.categoriaId}/productos`, producto.id);
@@ -250,25 +239,25 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
         console.error(`Producto ${producto.id} no tiene categoriaId`);
       }
     }
-  
+
     const clienteRef = doc(db, 'clientes', selectedCliente);
     const clienteDoc = await getDoc(clienteRef);
     const clienteInfo = clienteDoc.data();
-  
+
     generatePDF(venta, clienteInfo, currentUser.username);
-  
+
     if (cargarPrimerCuota) {
       const fechaPago = new Date().toISOString().split('T')[0];
       const montoPago = valorCuotaCalculado;
       const pagosIniciales = [{ fecha: fechaPago, monto: montoPago, usuario: currentUser.username }];
       await updateDoc(ventaRef, { pagos: pagosIniciales });
     }
-  
+
     setVentaRealizada(true);
     onClearCart();
     alert('Venta realizada con éxito');
   };
-  
+
 
   return (
     <div className="ventas">

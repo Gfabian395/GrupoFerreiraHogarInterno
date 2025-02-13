@@ -66,7 +66,6 @@ const Home = () => {
               <div className="medal">{index + 1 === 1 ? '🥇' : index + 1 === 2 ? '🥈' : '🥉'}</div>
               <img src={user?.imageUrl} alt={vendedor.vendedor} className="vendedor-image" />
               <div className="vendedor-name">{vendedor.vendedor}</div>
-              <div className="vendedor-sales">Ventas del mes: {vendedor.cantVentas}</div>
             </div>
           );
         })}

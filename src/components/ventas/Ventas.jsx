@@ -196,19 +196,9 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
   
     doc.text(`Total Crédito: $${venta.totalCredito.toLocaleString('es-AR')}`, 40, doc.autoTable.previous.finalY + 20);
   
-    // Abre el PDF como un blob para asegurar la compatibilidad con dispositivos móviles
-    const pdfBlob = doc.output('blob');
-    const url = URL.createObjectURL(pdfBlob);
-    
-    // Crear un enlace temporario para la descarga
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'Factura.pdf';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // Guardar el PDF como archivo
+    doc.save('Factura.pdf');
   };
-  
   
   const handleRealizarVenta = async () => {
     if (!selectedCliente || !cuotasSeleccionadas || (entrega === 'domicilio' && !selectedChofer)) {

@@ -35,10 +35,15 @@
 }
 
 .categorias img {
-  width: 250px;
-  /* height: 50px; */
+  width: 200px;
+   height: 200px; 
   margin-right: 10px;
   border-radius: 5px;
+}
+
+.descripcioncita{
+  width: 100%;
+  text-align: center;
 }
 
 .categorias h3 {

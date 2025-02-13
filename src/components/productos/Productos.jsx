@@ -61,7 +61,6 @@ const Productos = ({ onAddToCart, currentUser }) => {
 
   return (
     <>
-      <h2>Productos</h2>
       {alerta && <div className="alert alert-success">{alerta}</div>}
       <div className="productos">
         <ul>

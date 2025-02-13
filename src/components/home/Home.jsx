@@ -56,7 +56,7 @@ const Home = () => {
 
   return (
     <div className="home">
-      <h2>Nuestro Mejor Vendedor</h2>
+      <h2>Nuestro Mejor Vendedor del Mes</h2>
       <div className="ranking-container">
         {rankingVendedores.map((vendedor, index) => {
           const user = usuariosDB.find(user => user.username === vendedor.vendedor);

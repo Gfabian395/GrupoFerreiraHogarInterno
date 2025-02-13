@@ -99,7 +99,6 @@ const Clientes = ({ currentUser }) => {
 
   return (
     <div className="container">
-      <h2 className="my-4">Gestión de Clientes</h2>
       <button onClick={() => setMostrarFormulario(!mostrarFormulario)} className="btn btn-secondary mb-3">
         {mostrarFormulario ? 'Ocultar Formulario' : 'Agregar Cliente'}
       </button>

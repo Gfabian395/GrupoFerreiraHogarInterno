@@ -69,13 +69,12 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
 
   return (
     <div className="categorias">
-      <h2>Categorías</h2>
       {alerta && <div className="alert alert-danger">{alerta}</div>}
       <ul>
         {categorias.map(categoria => (
           <li key={categoria.id} onClick={() => handleSelectCategoria(categoria.id)}>
             <img src={categoria.imagenUrl} alt={categoria.nombre} />
-            <div>
+            <div className='descripcioncita'>
               <h3>{categoria.nombre}</h3>
               {currentUser && currentUser.role === 'jefe' && (
                 <button onClick={(e) => { e.stopPropagation(); promptDeleteCategoria(categoria.id); }}>Eliminar</button>

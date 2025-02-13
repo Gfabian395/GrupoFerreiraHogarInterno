@@ -128,70 +128,91 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
     setSelectedChofer(chofer);
   };
 
+
+
+  
+
   const generatePDF = (venta, clienteInfo, vendedor) => {
-    const doc = new jsPDF('p', 'pt', 'a4'); // A4 size
+  const doc = new jsPDF('p', 'pt', 'a4'); // A4 size
 
-    // Título y detalles en el centro
-    doc.setFontSize(12);
-    doc.text('Factura', 40, 140);
-    doc.text(`Cliente: ${clienteInfo.nombreCompleto}`, 40, 160);
-    doc.text(`Sucursal: ${venta.sucursal}`, 40, 180);
-    doc.text(`Vendedor: ${vendedor}`, 40, 200);
-    doc.text(`Fecha: ${new Date().toLocaleString()}`, 40, 220);
+  // Agregar el logo en la parte superior
+  const logoUrl = 'https://scontent.faep37-1.fna.fbcdn.net/v/t39.30808-6/480109992_122105885180760410_4771551403182724247_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=f727a1&_nc_ohc=lpMIF9WmQ8EQ7kNvgHym_hb&_nc_oc=AdiOkP0N0qKoBfD1l1nA_QA7xBv3L6_ALCuvesldnW-g8USqa_GuSoWmcPZeWce5Ro4&_nc_zt=23&_nc_ht=scontent.faep37-1.fna&_nc_gid=AJDzdIg7r0Bch0dt6UGKHjd&oh=00_AYC4z6kUNLjANB8PSJjst-5-pp527-9jvmgAj0gNz1INMg&oe=67B44E99'; // URL del logo
+  // Asegúrate de usar las dimensiones correctas para que el logo no se deforme.
+  doc.addImage(logoUrl, 'JPEG', 250, 20, 80, 80); // Coordenadas X e Y, Ancho y Alto
 
-    // Información del local
-    doc.text('Los Andes 4320:', 400, 140);
-    doc.text('Teléfono: 11-2846-6001', 400, 160);
-    doc.text('Los Andes 4034:', 400, 180);
-    doc.text('Teléfono: 11-3800-2078', 400, 200);
+  // Agregar el logo como marca de agua en el centro
+  doc.setGState(new doc.GState({opacity: 0.05})); // Ajustar opacidad al 5%
+  const imgWidth = 400;
+  const imgHeight = 400;
+  const centerX = (doc.internal.pageSize.getWidth() - imgWidth) / 2;
+  const centerY = (doc.internal.pageSize.getHeight() - imgHeight) / 2;
+  doc.addImage(logoUrl, 'JPEG', centerX, centerY, imgWidth, imgHeight, '', 'FAST'); // Ajusta la posición y tamaño según sea necesario
+  doc.setGState(new doc.GState({opacity: 1})); // Restaurar opacidad al 100%
 
-    if (venta.entrega === 'domicilio') {
-      // Parte superior para el chofer
-      doc.setFontSize(10);
-      doc.text('DATOS DEL CLIENTE:', 40, 400);
-      doc.text(`Nombre: ${clienteInfo.nombreCompleto}`, 40, 420);
-      doc.text(`Dirección: ${clienteInfo.direccion}`, 40, 440);
-      doc.text(`Teléfono: ${clienteInfo.telefono}`, 40, 460);
-      doc.text(`Fecha y Hora: ${new Date().toLocaleString()}`, 40, 480);
+  // Título y detalles en el centro
+  doc.setFontSize(12);
+  doc.text('Factura', 40, 140);
+  doc.text(`Cliente: ${clienteInfo.nombreCompleto}`, 40, 160);
+  doc.text(`Sucursal: ${venta.sucursal}`, 40, 180);
+  doc.text(`Vendedor: ${vendedor}`, 40, 200);
+  doc.text(`Fecha: ${new Date().toLocaleString()}`, 40, 220);
 
-      // Parte inferior para el cliente
-      doc.text('DATOS DEL CHOFER:', 400, 400);
-      doc.text(`Nombre: ${venta.chofer.nombre}`, 400, 420);
-      doc.text(`Teléfono: ${venta.chofer.telefono}`, 400, 440);
-    }
+  // Información del local
+  doc.text('Los Andes 4320:', 400, 140);
+  doc.text('Teléfono: 11-2846-6001', 400, 160);
+  doc.text('Los Andes 4034:', 400, 180);
+  doc.text('Teléfono: 11-3800-2078', 400, 200);
 
-    const tableColumn = ["Producto", "Cant", "P.Unit", "Subtotal"];
-    const tableRows = [];
+  if (venta.entrega === 'domicilio') {
+    // Parte superior para el chofer
+    doc.setFontSize(10);
+    doc.text('DATOS DEL CLIENTE:', 40, 400);
+    doc.text(`Nombre: ${clienteInfo.nombreCompleto}`, 40, 420);
+    doc.text(`Dirección: ${clienteInfo.direccion}`, 40, 440);
+    doc.text(`Teléfono: ${clienteInfo.telefono}`, 40, 460);
+    doc.text(`Fecha y Hora: ${new Date().toLocaleString()}`, 40, 480);
 
-    venta.productos.forEach(producto => {
-      const productoData = [
-        producto.nombre,
-        producto.cantidad,
-        `$${producto.precio.toLocaleString('es-AR')}`,
-        `$${(producto.precio * producto.cantidad).toLocaleString('es-AR')}`
-      ];
-      tableRows.push(productoData);
-    });
+    // Parte inferior para el cliente
+    doc.text('DATOS DEL CHOFER:', 400, 400);
+    doc.text(`Nombre: ${venta.chofer.nombre}`, 400, 420);
+    doc.text(`Teléfono: ${venta.chofer.telefono}`, 400, 440);
+  }
 
-    doc.autoTable({
-      head: [tableColumn],
-      body: tableRows,
-      startY: 240,
-      theme: 'striped',
-      styles: { fontSize: 10 },
-      headStyles: { fillColor: [22, 160, 133] }
-    });
+  const tableColumn = ["Producto", "Cant", "P.Unit", "Subtotal"];
+  const tableRows = [];
 
-    doc.text(`Total Crédito: $${venta.totalCredito.toLocaleString('es-AR')}`, 40, doc.autoTable.previous.finalY + 20);
+  venta.productos.forEach(producto => {
+    const productoData = [
+      producto.nombre,
+      producto.cantidad,
+      `$${producto.precio.toLocaleString('es-AR')}`,
+      `$${(producto.precio * producto.cantidad).toLocaleString('es-AR')}`
+    ];
+    tableRows.push(productoData);
+  });
 
-    // Guardar el PDF como archivo y descargar automáticamente
-    doc.save('Factura.pdf');
+  doc.autoTable({
+    head: [tableColumn],
+    body: tableRows,
+    startY: 240,
+    theme: 'striped',
+    styles: { fontSize: 10 },
+    headStyles: { fillColor: [22, 160, 133] }
+  });
 
-    // Redirigir a la página de clientes después de descargar el PDF
-    setTimeout(() => {
-      navigate('/clientes'); // Redirigir a la página de clientes
-    }, 1000); // Ajusta el tiempo si es necesario
-  };
+  doc.text(`Total Crédito: $${venta.totalCredito.toLocaleString('es-AR')}`, 40, doc.autoTable.previous.finalY + 20);
+
+  // Guardar el PDF como archivo y descargar automáticamente
+  doc.save('Factura.pdf');
+
+  // Redirigir a la página de clientes después de descargar el PDF
+  setTimeout(() => {
+    navigate('/clientes'); // Redirigir a la página de clientes
+  }, 1000); // Ajusta el tiempo si es necesario
+};
+
+  
+  
 
 
 

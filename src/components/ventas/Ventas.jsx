@@ -5,7 +5,8 @@ import { collection, getDocs, addDoc, doc, updateDoc, getDoc } from 'firebase/fi
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import './Ventas.css';
-import logo from '../../assets/Oficial.png';
+import logo from 'path/to/007/007/assets/Oficial.png';
+
 
 const configuracionCuotas = [
   { cuotas: 2, interes: 15 },
@@ -128,9 +129,21 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
     setSelectedChofer(chofer);
   };
 
-  const generatePDF = (venta, clienteInfo, vendedor) => {
-    const doc = new jsPDF('p', 'pt', 'a4'); // A4 size
 
+const generatePDF = (venta, clienteInfo, vendedor, navigate) => {
+  const doc = new jsPDF('p', 'pt', 'a4'); // A4 size
+
+  // Añadir la marca de agua y el logo
+  const addLogo = () => {
+    const img = new Image();
+    img.src = logo;
+    img.onload = () => {
+      doc.addImage(img, 'PNG', 250, 20, 80, 80); // Imagen en el centro arriba, tamaño reducido
+      completePDF(); // Llamar a la función para completar el PDF después de cargar el logo
+    };
+  };
+
+  const completePDF = () => {
     // Título y detalles en el centro
     doc.setFontSize(12);
     doc.text('Factura', 40, 140);
@@ -192,6 +205,10 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
       navigate('/clientes'); // Redirigir a la página de clientes
     }, 1000); // Ajusta el tiempo si es necesario
   };
+
+  addLogo();
+};
+
 
 
 

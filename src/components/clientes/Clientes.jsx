@@ -9,7 +9,6 @@ const Clientes = ({ currentUser }) => {
   const [clientes, setClientes] = useState([]);
   const [filteredClientes, setFilteredClientes] = useState([]);
   const [newCliente, setNewCliente] = useState({ dni: '', nombreCompleto: '', direccion: '', entrecalles: '', telefono1: '', telefono2: '', imagenUrl: '' });
-  const [capturedImage, setCapturedImage] = useState(null);
   const [editClienteId, setEditClienteId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
@@ -47,8 +46,7 @@ const Clientes = ({ currentUser }) => {
   }, [searchTerm, clientes]);
 
   const handleAddButtonClick = () => {
-    setNewCliente({ dni: '', nombreCompleto: '', direccion: '', entrecalles: '', telefono1: '', telefono2: '', imagenUrl: '' });
-    setCapturedImage(null); // Limpia la imagen capturada
+    setNewCliente({ dni: '', nombreCompleto: '', direccion: '', entrecalles: '', telefono1: '', telefono2: '', imagenUrl: '' }); // Limpia los datos del formulario
     setMostrarFormulario(true);
   }
 
@@ -57,7 +55,6 @@ const Clientes = ({ currentUser }) => {
     const clienteDoc = doc(db, 'clientes', newCliente.dni); // Usa el DNI como ID del documento
     await setDoc(clienteDoc, {
       ...newCliente, // Mantén los otros campos como están
-      imagenUrl: capturedImage || newCliente.imagenUrl, // Usa la imagen capturada o la URL proporcionada
       dni: newCliente.dni.toString(), // Asegúrate de que el DNI se guarde como string
     });
     setNewCliente({ dni: '', nombreCompleto: '', direccion: '', entrecalles: '', telefono1: '', telefono2: '', imagenUrl: '' });
@@ -77,7 +74,6 @@ const Clientes = ({ currentUser }) => {
     const clienteDoc = doc(db, 'clientes', editClienteId);
     await setDoc(clienteDoc, {
       ...newCliente, // Mantén los otros campos como están
-      imagenUrl: capturedImage || newCliente.imagenUrl, // Usa la imagen capturada o la URL proporcionada
       dni: newCliente.dni.toString(), // Asegúrate de que el DNI se guarde como string
     });
     setEditClienteId(null);
@@ -97,7 +93,6 @@ const Clientes = ({ currentUser }) => {
       telefono2: cliente.telefono2,
       imagenUrl: cliente.imagenUrl
     });
-    setCapturedImage(cliente.imagenUrl); // Muestra la imagen actual
     setMostrarEditar(true);
   };
 
@@ -128,17 +123,6 @@ const Clientes = ({ currentUser }) => {
       document.removeEventListener('mousedown', handleOutsideClick);
     };
   }, [mostrarFormulario, mostrarEditar, mostrarEliminar]);
-
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setCapturedImage(reader.result);
-    };
-    if (file) {
-      reader.readAsDataURL(file);
-    }
-  };
 
   if (loading) {
     return <Load />;
@@ -196,8 +180,8 @@ const Clientes = ({ currentUser }) => {
                 type="tel"
                 className="form-control"
                 placeholder="Teléfono 1"
-                value={newCliente.telefono1}
-                onChange={(e) => setNewCliente({ ...newCliente, telefono1: e.target.value })}
+                value={`+54${newCliente.telefono1}`}
+                onChange={(e) => setNewCliente({ ...newCliente, telefono1: e.target.value.replace('+54', '') })}
                 required
               />
             </div>
@@ -206,18 +190,19 @@ const Clientes = ({ currentUser }) => {
                 type="tel"
                 className="form-control"
                 placeholder="Teléfono 2"
-                value={newCliente.telefono2}
-                onChange={(e) => setNewCliente({ ...newCliente, telefono2: e.target.value })}
+                value={`+54${newCliente.telefono2}`}
+                onChange={(e) => setNewCliente({ ...newCliente, telefono2: e.target.value.replace('+54', '') })}
               />
             </div>
+
             <div className="form-group">
               <input
-                type="file"
+                type="url"
                 className="form-control"
-                accept="image/*"
-                onChange={handleFileChange}
+                placeholder="URL de Imagen"
+                value={newCliente.imagenUrl}
+                onChange={(e) => setNewCliente({ ...newCliente, imagenUrl: e.target.value })}
               />
-              {capturedImage && <img src={capturedImage} alt="Selected" className="img-fluid mt-2" />}
             </div>
             <button type="submit" className="btn btn-primary">Agregar Cliente</button>
           </form>
@@ -288,12 +273,12 @@ const Clientes = ({ currentUser }) => {
             </div>
             <div className="form-group">
               <input
-                type="file"
+                type="url"
                 className="form-control"
-                accept="image/*"
-                onChange={handleFileChange}
+                placeholder="URL de Imagen"
+                value={newCliente.imagenUrl}
+                onChange={(e) => setNewCliente({ ...newCliente, imagenUrl: e.target.value })}
               />
-              {capturedImage && <img src={capturedImage} alt="Selected" className="img-fluid mt-2" />}
             </div>
             <button type="submit" className="btn btn-primary">Actualizar Cliente</button>
           </form>
@@ -319,13 +304,21 @@ const Clientes = ({ currentUser }) => {
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
-      
+
       <div className="card-container mt-4">
         {filteredClientes.map(cliente => (
           <div className="card" key={cliente.dni} onClick={() => handleClienteClick(cliente.dni)}>
             <img src={cliente.imagenUrl} alt={cliente.nombreCompleto} className="card-img-top" />
             <div className="card-body">
               <h5 className="card-title">{cliente.nombreCompleto}</h5>
+              <a
+                href={`https://wa.me/${cliente.telefono1}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-success"
+              >
+                Chat en WhatsApp
+              </a>
               {currentUser && currentUser.role === 'jefe' && (
                 <>
                   <button className="btn btn-warning" onClick={(e) => { e.stopPropagation(); startEditCliente(cliente); }}>Editar</button>

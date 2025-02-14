@@ -253,24 +253,25 @@ const Clientes = ({ currentUser }) => {
               />
             </div>
             <div className="form-group">
-              <input
-                type="tel"
-                className="form-control"
-                placeholder="Teléfono 1"
-                value={newCliente.telefono1}
-                onChange={(e) => setNewCliente({ ...newCliente, telefono1: e.target.value })}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <input
-                type="tel"
-                className="form-control"
-                placeholder="Teléfono 2"
-                value={newCliente.telefono2}
-                onChange={(e) => setNewCliente({ ...newCliente, telefono2: e.target.value })}
-              />
-            </div>
+  <input
+    type="tel"
+    className="form-control"
+    placeholder="Teléfono 1"
+    value={newCliente.telefono1.startsWith('+54') ? newCliente.telefono1 : `+54${newCliente.telefono1}`}
+    onChange={(e) => setNewCliente({ ...newCliente, telefono1: e.target.value })}
+    required
+  />
+</div>
+<div className="form-group">
+  <input
+    type="tel"
+    className="form-control"
+    placeholder="Teléfono 2"
+    value={newCliente.telefono2.startsWith('+54') ? newCliente.telefono2 : `+54${newCliente.telefono2}`}
+    onChange={(e) => setNewCliente({ ...newCliente, telefono2: e.target.value })}
+  />
+</div>
+
             <div className="form-group">
               <input
                 type="url"

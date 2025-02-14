@@ -9,6 +9,7 @@ const Clientes = ({ currentUser }) => {
   const [clientes, setClientes] = useState([]);
   const [filteredClientes, setFilteredClientes] = useState([]);
   const [newCliente, setNewCliente] = useState({ dni: '', nombreCompleto: '', direccion: '', entrecalles: '', telefono1: '', telefono2: '', imagenUrl: '' });
+  const [capturedImage, setCapturedImage] = useState(null);
   const [editClienteId, setEditClienteId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
@@ -46,7 +47,8 @@ const Clientes = ({ currentUser }) => {
   }, [searchTerm, clientes]);
 
   const handleAddButtonClick = () => {
-    setNewCliente({ dni: '', nombreCompleto: '', direccion: '', entrecalles: '', telefono1: '', telefono2: '', imagenUrl: '' }); // Limpia los datos del formulario
+    setNewCliente({ dni: '', nombreCompleto: '', direccion: '', entrecalles: '', telefono1: '', telefono2: '', imagenUrl: '' });
+    setCapturedImage(null); // Limpia la imagen capturada
     setMostrarFormulario(true);
   }
 
@@ -55,6 +57,7 @@ const Clientes = ({ currentUser }) => {
     const clienteDoc = doc(db, 'clientes', newCliente.dni); // Usa el DNI como ID del documento
     await setDoc(clienteDoc, {
       ...newCliente, // Mantén los otros campos como están
+      imagenUrl: capturedImage || newCliente.imagenUrl, // Usa la imagen capturada o la URL proporcionada
       dni: newCliente.dni.toString(), // Asegúrate de que el DNI se guarde como string
     });
     setNewCliente({ dni: '', nombreCompleto: '', direccion: '', entrecalles: '', telefono1: '', telefono2: '', imagenUrl: '' });
@@ -74,6 +77,7 @@ const Clientes = ({ currentUser }) => {
     const clienteDoc = doc(db, 'clientes', editClienteId);
     await setDoc(clienteDoc, {
       ...newCliente, // Mantén los otros campos como están
+      imagenUrl: capturedImage || newCliente.imagenUrl, // Usa la imagen capturada o la URL proporcionada
       dni: newCliente.dni.toString(), // Asegúrate de que el DNI se guarde como string
     });
     setEditClienteId(null);
@@ -93,6 +97,7 @@ const Clientes = ({ currentUser }) => {
       telefono2: cliente.telefono2,
       imagenUrl: cliente.imagenUrl
     });
+    setCapturedImage(cliente.imagenUrl); // Muestra la imagen actual
     setMostrarEditar(true);
   };
 
@@ -123,6 +128,39 @@ const Clientes = ({ currentUser }) => {
       document.removeEventListener('mousedown', handleOutsideClick);
     };
   }, [mostrarFormulario, mostrarEditar, mostrarEliminar]);
+
+  const handleCapturePhoto = () => {
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        const video = document.createElement('video');
+        video.srcObject = stream;
+        video.play();
+        
+        const captureButton = document.createElement('button');
+        captureButton.textContent = 'Capturar';
+        captureButton.onclick = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          const context = canvas.getContext('2d');
+          context.drawImage(video, 0, 0, canvas.width, canvas.height);
+          
+          const imageUrl = canvas.toDataURL('image/png');
+          setCapturedImage(imageUrl);
+
+          video.pause();
+          stream.getTracks().forEach(track => track.stop());
+
+          // Remueve el video y el botón después de capturar la imagen
+          document.body.removeChild(video);
+          document.body.removeChild(captureButton);
+        };
+
+        document.body.appendChild(video);
+        document.body.appendChild(captureButton);
+      })
+      .catch(error => console.error('Error accessing camera:', error));
+  };
 
   if (loading) {
     return <Load />;
@@ -195,13 +233,8 @@ const Clientes = ({ currentUser }) => {
               />
             </div>
             <div className="form-group">
-              <input
-                type="url"
-                className="form-control"
-                placeholder="URL de Imagen"
-                value={newCliente.imagenUrl}
-                onChange={(e) => setNewCliente({ ...newCliente, imagenUrl: e.target.value })}
-              />
+            <button type="button" className="btn btn-secondary" onClick={handleCapturePhoto}>Capturar Foto</button>
+              {capturedImage && <img src={capturedImage} alt="Captured" className="img-fluid mt-2" />}
             </div>
             <button type="submit" className="btn btn-primary">Agregar Cliente</button>
           </form>
@@ -271,13 +304,8 @@ const Clientes = ({ currentUser }) => {
               />
             </div>
             <div className="form-group">
-              <input
-                type="url"
-                className="form-control"
-                placeholder="URL de Imagen"
-                value={newCliente.imagenUrl}
-                onChange={(e) => setNewCliente({ ...newCliente, imagenUrl: e.target.value })}
-              />
+              <button type="button" className="btn btn-secondary" onClick={handleCapturePhoto}>Capturar Foto</button>
+              {capturedImage && <img src={capturedImage} alt="Captured" className="img-fluid mt-2" />}
             </div>
             <button type="submit" className="btn btn-primary">Actualizar Cliente</button>
           </form>

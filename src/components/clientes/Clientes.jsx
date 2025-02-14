@@ -129,37 +129,15 @@ const Clientes = ({ currentUser }) => {
     };
   }, [mostrarFormulario, mostrarEditar, mostrarEliminar]);
 
-  const handleCapturePhoto = () => {
-    navigator.mediaDevices.getUserMedia({ video: true })
-      .then(stream => {
-        const video = document.createElement('video');
-        video.srcObject = stream;
-        video.play();
-        
-        const captureButton = document.createElement('button');
-        captureButton.textContent = 'Capturar';
-        captureButton.onclick = () => {
-          const canvas = document.createElement('canvas');
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-          const context = canvas.getContext('2d');
-          context.drawImage(video, 0, 0, canvas.width, canvas.height);
-          
-          const imageUrl = canvas.toDataURL('image/png');
-          setCapturedImage(imageUrl);
-
-          video.pause();
-          stream.getTracks().forEach(track => track.stop());
-
-          // Remueve el video y el botón después de capturar la imagen
-          document.body.removeChild(video);
-          document.body.removeChild(captureButton);
-        };
-
-        document.body.appendChild(video);
-        document.body.appendChild(captureButton);
-      })
-      .catch(error => console.error('Error accessing camera:', error));
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setCapturedImage(reader.result);
+    };
+    if (file) {
+      reader.readAsDataURL(file);
+    }
   };
 
   if (loading) {
@@ -233,8 +211,13 @@ const Clientes = ({ currentUser }) => {
               />
             </div>
             <div className="form-group">
-            <button type="button" className="btn btn-secondary" onClick={handleCapturePhoto}>Capturar Foto</button>
-              {capturedImage && <img src={capturedImage} alt="Captured" className="img-fluid mt-2" />}
+              <input
+                type="file"
+                className="form-control"
+                accept="image/*"
+                onChange={handleFileChange}
+              />
+              {capturedImage && <img src={capturedImage} alt="Selected" className="img-fluid mt-2" />}
             </div>
             <button type="submit" className="btn btn-primary">Agregar Cliente</button>
           </form>
@@ -304,8 +287,13 @@ const Clientes = ({ currentUser }) => {
               />
             </div>
             <div className="form-group">
-              <button type="button" className="btn btn-secondary" onClick={handleCapturePhoto}>Capturar Foto</button>
-              {capturedImage && <img src={capturedImage} alt="Captured" className="img-fluid mt-2" />}
+              <input
+                type="file"
+                className="form-control"
+                accept="image/*"
+                onChange={handleFileChange}
+              />
+              {capturedImage && <img src={capturedImage} alt="Selected" className="img-fluid mt-2" />}
             </div>
             <button type="submit" className="btn btn-primary">Actualizar Cliente</button>
           </form>

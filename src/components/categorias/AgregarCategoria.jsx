@@ -28,38 +28,46 @@ const AgregarCategoria = ({ currentUser }) => {
 
   return (
     <div className="agregar-categoria">
-      <button onClick={() => setMostrarFormulario(!mostrarFormulario)} className="btn btn-secondary">
-        {mostrarFormulario ? 'Ocultar Formulario' : 'Agregar Categoría'}
-      </button>
       {mostrarFormulario && (
-        <>
-          <h2>Agregar Categoría</h2>
-          {alerta && <div className="alert alert-success">{alerta}</div>}
-          <form onSubmit={handleAddCategoria}>
-            <div className="form-group">
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Nombre de la Categoría"
-                value={nombre}
-                onChange={(e) => setNombre(e.target.value)}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <input
-                type="url"
-                className="form-control"
-                placeholder="URL de la Imagen"
-                value={imagenUrl}
-                onChange={(e) => setImagenUrl(e.target.value)}
-                required
-              />
-            </div>
-            <button type="submit" className="btn btn-primary">Agregar Categoría</button>
-          </form>
-        </>
+        <div className="overlay">
+          <div className="form-popup">
+            <h2>Agregar Categoría</h2>
+            {alerta && <div className="alert alert-success">{alerta}</div>}
+            <form onSubmit={handleAddCategoria}>
+              <div className="form-group">
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Nombre de la Categoría"
+                  value={nombre}
+                  onChange={(e) => setNombre(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <input
+                  type="url"
+                  className="form-control"
+                  placeholder="URL de la Imagen"
+                  value={imagenUrl}
+                  onChange={(e) => setImagenUrl(e.target.value)}
+                  required
+                />
+              </div>
+              <button type="submit" className="btn btn-primary">Agregar Categoría</button>
+            </form>
+            <button onClick={() => setMostrarFormulario(false)} className="btn btn-secondary">Cerrar</button>
+          </div>
+        </div>
       )}
+      {/* Botón flotante */}
+      <button
+        onClick={() => setMostrarFormulario(!mostrarFormulario)}
+        className="btn-float"
+        title="Agregar Categoría"
+      >
+        +
+      </button>
     </div>
   );
 };

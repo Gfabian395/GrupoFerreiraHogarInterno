@@ -31,7 +31,8 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
     fetchCategorias();
   }, []);
 
-  const handleDeleteCategoria = async () => {
+  const handleDeleteCategoria = async (e) => {
+    e.preventDefault();
     if (password === '031285') {
       try {
         await deleteDoc(doc(db, 'categorias', deleteId));
@@ -85,18 +86,21 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
       </ul>
 
       {showPasswordPrompt && (
-        <div className="password-prompt">
-          <div className="password-prompt-content">
+        <div className="overlay">
+          <div className="form-popup">
             <h3>Ingrese la Contraseña</h3>
-            <input
-              type="password"
-              className="form-control"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Contraseña"
-            />
-            <button onClick={handleDeleteCategoria} className="btn btn-danger">Confirmar</button>
-            <button onClick={() => { setShowPasswordPrompt(false); setPassword(''); }} className="btn btn-secondary">Cancelar</button>
+            <form onSubmit={handleDeleteCategoria}>
+              <input
+                type="password"
+                className="form-control"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Contraseña"
+                required
+              />
+              <button type="submit" className="btn btn-danger">Confirmar</button>
+              <button onClick={() => { setShowPasswordPrompt(false); setPassword(''); }} className="btn btn-secondary">Cancelar</button>
+            </form>
           </div>
         </div>
       )}

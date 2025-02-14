@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';  // Importa el hook useNavigate
 import { collection, getDocs } from 'firebase/firestore';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -11,6 +12,8 @@ const CierreCaja = ({ currentUser }) => {
   const [loading, setLoading] = useState(true);
   const [totalRecaudado, setTotalRecaudado] = useState(0);
   const [rankingVendedores, setRankingVendedores] = useState([]);
+  const [showPDFPrompt, setShowPDFPrompt] = useState(false);
+  const navigate = useNavigate();  // Usa el hook useNavigate
 
   useEffect(() => {
     if (currentUser.role !== 'jefe') {
@@ -72,10 +75,15 @@ const CierreCaja = ({ currentUser }) => {
     fetchMovimientos();
   }, [currentUser]);
 
+  const handleGeneratePDF = () => {
+    setShowPDFPrompt(true);
+  };
+
   const generatePDF = () => {
     const doc = new jsPDF('p', 'pt', 'a4');
     doc.setFontSize(10);
-    doc.text('Reporte de Cierre de Caja', 40, 30);
+    const today = new Date().toLocaleDateString();
+    doc.text(`Reporte de Cierre de Caja de ${today}`, 40, 30);
     const tableColumn = ["ID Venta", "Cliente", "Vendedor", "Fecha", "Razón", "Monto"];
     const tableRows = [];
 
@@ -101,13 +109,23 @@ const CierreCaja = ({ currentUser }) => {
 
     doc.text(`Total Recaudado: $${totalRecaudado.toLocaleString('es-AR')}`, 40, doc.autoTable.previous.finalY + 20);
     doc.save('cierre_caja.pdf');
+
+    // Limpiar la pantalla de cierre de caja
+    setMovimientos([]);
+    setTotalRecaudado(0);
+    setRankingVendedores([]);
+    setShowPDFPrompt(false); // Ocultar el prompt después de generar el PDF
+  };
+
+  const handleGenerateResumen = () => {
+    navigate('/resumen');
   };
 
   return (
     <div className="cierre-caja">
       <h2>Cierre de Caja</h2>
       {loading ? (
-        <Load/>
+        <Load />
       ) : (
         <>
           <div className="table-responsive">
@@ -137,7 +155,8 @@ const CierreCaja = ({ currentUser }) => {
             </table>
           </div>
           <h3>Total Recaudado: ${totalRecaudado.toLocaleString('es-AR')}</h3>
-          <button onClick={generatePDF}>Generar PDF</button>
+          <button onClick={handleGeneratePDF}>Generar PDF</button>
+          <button onClick={handleGenerateResumen}>Ver Resumen</button>
 
           <h2>Ranking de Mejores 3 Vendedores Mensuales</h2>
           <div className="table-responsive">
@@ -160,6 +179,16 @@ const CierreCaja = ({ currentUser }) => {
               </tbody>
             </table>
           </div>
+
+          {showPDFPrompt && (
+            <div className="overlay">
+              <div className="form-popup">
+                <h3>¿Desea descargar PDF y limpiar pantalla?</h3>
+                <button onClick={generatePDF} className="btn btn-primary">Sí</button>
+                <button onClick={() => setShowPDFPrompt(false)} className="btn btn-secondary">No</button>
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>

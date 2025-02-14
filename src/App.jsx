@@ -13,7 +13,8 @@ import Ventas from './components/ventas/Ventas';
 import AddCompra from './components/compras/AddCompra';
 import Login from './components/login/Login';
 import CierreCaja from './components/caja/CierreCaja';
-import Home from './components/home/Home'; // Importa el nuevo componente Home
+import Home from './components/home/Home';
+import Resumen from './components/resumen/Resumen';  // Importa el nuevo componente
 
 function App() {
   const [carrito, setCarrito] = useState([]);
@@ -100,6 +101,7 @@ function App() {
               <Route path="/ventas/:ventaId/detalles" element={<ClienteDetalles currentUser={usuario} />} /> {/* Nueva ruta para los detalles de la venta */}
               <Route path="/add-compra" element={<AddCompra />} /> {/* Nueva ruta para agregar compras */}
               <Route path="/cierre-caja" element={usuario.role === 'jefe' ? <CierreCaja currentUser={usuario} /> : <Navigate to="/" />} /> {/* Ruta para cierre de caja solo para jefes */}
+              <Route path="/resumen" element={usuario.role === 'jefe' ? <Resumen /> : <Navigate to="/" />} /> {/* Ruta para el resumen solo para jefes */}
             </Routes>
           </>
         )}

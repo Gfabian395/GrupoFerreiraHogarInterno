@@ -39,22 +39,24 @@ const Login = ({ onLogin }) => {
   };
 
   return (
-    <div className="login">
-      <h2>Login</h2>
-      {alerta && <div className="alert alert-danger">{alerta}</div>}
-      <input
-        type="text"
-        placeholder="Username"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-      />
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
-      <button onClick={handleLogin}>Login</button>
+    <div className="login-container">
+      <div className="login-box">
+        <h2>Ingresar</h2>
+        {alerta && <div className="alert alert-danger">{alerta}</div>}
+        <input
+          type="text"
+          placeholder="Usuario"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+        />
+        <input
+          type="password"
+          placeholder="Contraseña"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <button onClick={handleLogin}>Ingresar</button>
+      </div>
     </div>
   );
 };

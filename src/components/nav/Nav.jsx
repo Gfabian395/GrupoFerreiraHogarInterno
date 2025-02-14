@@ -13,6 +13,13 @@ const Nav = ({ cartItemCount, onLogout, username, role }) => {
     }
   };
 
+  const handleLogoutClick = () => {
+    const confirmed = window.confirm("¿Quieres cerrar sesión?");
+    if (confirmed) {
+      onLogout();
+    }
+  };
+
   return (
     <nav className="navbar navbar-expand-lg navbar-light bg-light">
       <Link to="/" className="navbar-brand"><b>Grupo Ferreira Hogar</b></Link>
@@ -36,7 +43,7 @@ const Nav = ({ cartItemCount, onLogout, username, role }) => {
         </div>
         <div className="navbar-nav ml-auto">
           <span className="navbar-text">
-            {username} <Icon className="material-icons" onClick={onLogout}>logout</Icon>
+            {username} <Icon className="material-icons" onClick={handleLogoutClick}>logout</Icon>
           </span>
         </div>
       </div>

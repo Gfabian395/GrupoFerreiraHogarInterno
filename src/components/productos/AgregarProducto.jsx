@@ -57,27 +57,25 @@ const AgregarProducto = ({ currentUser }) => {
 
   return (
     <div className="agregar-producto">
-      <button onClick={() => setMostrarFormulario(!mostrarFormulario)} className="btn btn-secondary">
-        {mostrarFormulario ? 'Ocultar Formulario' : 'Agregar Producto'}
-      </button>
       {mostrarFormulario && (
-        <>
-          <h2>Agregar Producto</h2>
-          {alerta && <div className="alert alert-success">{alerta}</div>}
-          <form onSubmit={handleAddProducto}>
-            <div className="form-group">
-              <label htmlFor="categoriaSelect">Seleccionar Categoría</label>
-              <select
-                id="categoriaSelect"
-                className="form-control"
-                value={selectedCategoria}
-                onChange={(e) => setSelectedCategoria(e.target.value)}
-                required
-              >
-                <option value="">-- Selecciona una Categoría --</option>
-                {categorias.map(categoria => (
-                  <option key={categoria.id} value={categoria.id}>{categoria.nombre}</option>
-                ))}
+        <div className="overlay">
+          <div className="form-popup">
+            <h2>Agregar Producto</h2>
+            {alerta && <div className="alert alert-success">{alerta}</div>}
+            <form onSubmit={handleAddProducto}>
+              <div className="form-group">
+                <label htmlFor="categoriaSelect">Seleccionar Categoría</label>
+                <select
+                  id="categoriaSelect"
+                  className="form-control"
+                  value={selectedCategoria}
+                  onChange={(e) => setSelectedCategoria(e.target.value)}
+                  required
+                >
+                  <option value="">-- Selecciona una Categoría --</option>
+                  {categorias.map(categoria => (
+                    <option key={categoria.id} value={categoria.id}>{categoria.nombre}</option>
+                  ))}
                 </select>
               </div>
               <div className="form-group">
@@ -140,9 +138,19 @@ const AgregarProducto = ({ currentUser }) => {
               </div>
               <button type="submit" className="btn btn-primary">Agregar Producto</button>
             </form>
-          </>
-        )}
-      </div>
+            <button onClick={() => setMostrarFormulario(false)} className="btn btn-secondary">Cerrar</button>
+          </div>
+        </div>
+      )}
+      {/* Botón flotante */}
+      <button
+        onClick={() => setMostrarFormulario(!mostrarFormulario)}
+        className="btn-float"
+        title="Agregar Producto"
+      >
+        +
+      </button>
+    </div>
   );
 };
 

@@ -10,6 +10,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
   const [productos, setProductos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [alerta, setAlerta] = useState('');
+  const [searchQuery, setSearchQuery] = useState(''); // Estado para el buscador
 
   useEffect(() => {
     const fetchProductos = async () => {
@@ -55,6 +56,14 @@ const Productos = ({ onAddToCart, currentUser }) => {
     handleIncrementStock(productoId, campo);
   };
 
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const filteredProductos = productos.filter(producto =>
+    producto.nombre.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   if (loading) {
     return <Load />;
   }
@@ -63,8 +72,15 @@ const Productos = ({ onAddToCart, currentUser }) => {
     <>
       {alerta && <div className="alert alert-success">{alerta}</div>}
       <div className="productos">
+        <input
+          type="text"
+          placeholder="Buscar productos..."
+          value={searchQuery}
+          onChange={handleSearchChange}
+          className="search-bar"
+        />
         <ul>
-          {productos.map(producto => (
+          {filteredProductos.map(producto => (
             <li key={producto.id}>
               <img src={producto.imagenUrl} alt={producto.nombre} />
               <div className='detallitos'>

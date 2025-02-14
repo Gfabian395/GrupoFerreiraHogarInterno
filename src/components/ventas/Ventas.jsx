@@ -169,8 +169,9 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
     doc.text('DATOS DEL CLIENTE:', 40, 400);
     doc.text(`Nombre: ${clienteInfo.nombreCompleto}`, 40, 420);
     doc.text(`Dirección: ${clienteInfo.direccion}`, 40, 440);
-    doc.text(`Teléfono: ${clienteInfo.telefono}`, 40, 460);
-    doc.text(`Fecha y Hora: ${new Date().toLocaleString()}`, 40, 480);
+    doc.text(`Teléfono: ${clienteInfo.telefono1}`, 40, 460);
+    doc.text(`Teléfono 2: ${clienteInfo.telefono2}`, 40, 480);
+    doc.text(`Fecha y Hora: ${new Date().toLocaleString()}`, 40, 500);
 
     // Parte inferior para el cliente
     doc.text('DATOS DEL CHOFER:', 400, 400);
@@ -200,8 +201,7 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
     headStyles: { fillColor: [22, 160, 133] }
   });
 
-  doc.text(`Total Crédito: $${venta.totalCredito.toLocaleString('es-AR')}`, 40, doc.autoTable.previous.finalY + 20);
-
+  
   // Guardar el PDF como archivo y descargar automáticamente
   doc.save('Factura.pdf');
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { db } from '../../firebaseConfig';
 import { collection, query, where, getDocs, updateDoc, doc } from 'firebase/firestore';
@@ -10,7 +10,8 @@ const ClienteDetalles = ({ currentUser }) => {
   const [ventas, setVentas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pagos, setPagos] = useState([]);
-  const [alerta, setAlerta] = useState('');
+  const fechaRef = useRef(null);
+  const montoRef = useRef(null);
 
   useEffect(() => {
     const fetchVentas = async () => {
@@ -44,12 +45,12 @@ const ClienteDetalles = ({ currentUser }) => {
         pagos: newPagos
       });
       setPagos(newPagos);
-      setAlerta('Pago registrado con éxito');
-      setTimeout(() => setAlerta(''), 3000);
+      alert('Pago registrado con éxito');
       const updatedVentas = ventas.map(venta =>
         venta.id === ventaId ? { ...venta, pagos: newPagos } : venta
       );
       setVentas(updatedVentas);
+      // Limpiar los campos de entrada después de un pago exitoso
     } catch (error) {
       console.error("Error actualizando pago: ", error);
     }
@@ -67,6 +68,10 @@ const ClienteDetalles = ({ currentUser }) => {
       monto = saldo;
     }
 
+    // Limpiar los campos de entrada antes de llamar a handleCuotaPagada
+    fechaRef.current.value = '';
+    montoRef.current.value = '';
+
     handleCuotaPagada(ventaId, fecha, monto, currentUser.username);
   };
 
@@ -77,7 +82,6 @@ const ClienteDetalles = ({ currentUser }) => {
   return (
     <div className="cliente-detalles container">
       <h2 className="my-4">Detalles de Ventas</h2>
-      {alerta && <div className="alert alert-success">{alerta}</div>}
       {ventas.map(venta => {
         const totalCredito = Math.round((venta.totalCredito || 0) / 1000) * 1000;
         const totalPagos = venta.pagos ? venta.pagos.reduce((acc, pago) => acc + Math.round(Number(pago.monto / 1000)) * 1000, 0) : 0;
@@ -133,11 +137,11 @@ const ClienteDetalles = ({ currentUser }) => {
                 <form onSubmit={(e) => agregarPago(venta.id, e)}>
                   <div className="form-group">
                     <label htmlFor="fecha">Fecha:</label>
-                    <input type="date" className="form-control" id="fecha" name="fecha" required />
+                    <input type="date" className="form-control" id="fecha" name="fecha" required ref={fechaRef} />
                   </div>
                   <div className="form-group">
                     <label htmlFor="monto">Monto:</label>
-                    <input type="number" className="form-control" id="monto" name="monto" required />
+                    <input type="number" className="form-control" id="monto" name="monto" required ref={montoRef} />
                     <button type="submit" className="btn btn-primary">Agregar Pago</button>
                   </div>
                 </form>

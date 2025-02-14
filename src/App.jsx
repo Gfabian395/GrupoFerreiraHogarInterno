@@ -78,7 +78,7 @@ function App() {
           <Login onLogin={handleLogin} />
         ) : (
           <>
-            <Nav cartItemCount={cartItemCount} onLogout={handleLogout} username={usuario.username} role={usuario.role} />
+            <Nav cartItemCount={cartItemCount} onLogout={handleLogout} username={usuario.username} role={usuario.role} profileImage={usuario.imageUrl} />
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/clientes" element={<Clientes currentUser={usuario} />} />

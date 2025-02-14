@@ -22,7 +22,7 @@ function formatearNumero(valor) {
 const Carrito = ({ productos, onRemoveFromCart, onClearCart }) => {
   const [cuotas, setCuotas] = useState([]);
   const [sucursal, setSucursal] = useState('Andes 4034'); // Estado para la sucursal
-  const [stockDisponible, setStockDisponible] = useState([]);
+  const [stockDisponible, setStockDisponible] = useState({});
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -31,8 +31,8 @@ const Carrito = ({ productos, onRemoveFromCart, onClearCart }) => {
       'Andes 4034': productos.map(producto => ({ id: producto.id, stock: producto.cantidadDisponibleAndes4034 })),
       'Andes 4320': productos.map(producto => ({ id: producto.id, stock: producto.cantidadDisponibleAndes4320 }))
     };
-    setStockDisponible(stock[sucursal] || []);
-  }, [sucursal, productos]);
+    setStockDisponible(stock);
+  }, [productos]);
 
   const handleSucursalChange = (e) => {
     setSucursal(e.target.value);
@@ -88,35 +88,46 @@ const Carrito = ({ productos, onRemoveFromCart, onClearCart }) => {
     }
   };
 
+  // Verificar si hay productos sin stock en la sucursal seleccionada
+  const hayProductosSinStock = productos.some(producto => {
+    const stockSucursalActual = stockDisponible[sucursal]?.find(stock => stock.id === producto.id)?.stock || 0;
+    return stockSucursalActual === 0;
+  });
+
   return (
     <div className="carrito">
       <h2>Carrito</h2>
       <div className="card-container">
-        {productos.map(producto => (
-          <div className="card" key={producto.id}>
-            <img src={producto.imagenUrl} alt={producto.nombre} className="card-img-top" />
-            <div className="card-body">
-              <h5 className="card-title">{producto.nombre}</h5>
-              <p className="card-text">Precio: ${producto.precio.toLocaleString('es-AR')}</p>
-              <p className="card-text">Cantidad: {producto.cantidad}</p>
-              <p className="card-text">Subtotal: ${(producto.precio * producto.cantidad).toLocaleString('es-AR')}</p>
-              <p className="card-text">Stock Disponible en {sucursal}: {stockDisponible.find(stock => stock.id === producto.id)?.stock || 0}</p>
-              <div className="form-group">
-                <label htmlFor="sucursal">Seleccionar Sucursal:</label>
-                <select id="sucursal" className="form-control" value={sucursal} onChange={handleSucursalChange}>
-                  <option value="Andes 4034">Andes 4034</option>
-                  <option value="Andes 4320">Andes 4320</option>
-                </select>
+        {productos.map(producto => {
+          const stockSucursalActual = stockDisponible[sucursal]?.find(stock => stock.id === producto.id)?.stock || 0;
+          const outOfStock = stockSucursalActual === 0;
+
+          return (
+            <div className={`card ${outOfStock ? 'producto-sin-stock' : ''}`} key={producto.id}>
+              <img src={producto.imagenUrl} alt={producto.nombre} className="card-img-top" />
+              <div className="card-body">
+                <h5 className="card-title">{producto.nombre}</h5>
+                <p className="card-text">Precio: ${producto.precio.toLocaleString('es-AR')}</p>
+                <p className="card-text">Cantidad: {producto.cantidad}</p>
+                <p className="card-text">Subtotal: ${(producto.precio * producto.cantidad).toLocaleString('es-AR')}</p>
+                <p className="card-text">Stock Disponible en {sucursal}: {stockSucursalActual}</p>
+                <div className="form-group">
+                  <label htmlFor="sucursal">Seleccionar Sucursal:</label>
+                  <select id="sucursal" className="form-control" value={sucursal} onChange={handleSucursalChange}>
+                    <option value="Andes 4034">Andes 4034</option>
+                    <option value="Andes 4320">Andes 4320</option>
+                  </select>
+                </div>
+                <button className="btn btn-danger mt-2" onClick={() => onRemoveFromCart(producto.id)}>Eliminar</button>
               </div>
-              <button className="btn btn-danger mt-2" onClick={() => onRemoveFromCart(producto.id)}>Eliminar</button>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
       <h3>Resumen del Pedido</h3>
       <p><strong>Subtotal:</strong> ${subtotal.toLocaleString('es-AR')}</p>
 
-      <button className="btn btn-primary mt-4" onClick={handleFinalizarCompra}>Terminar Venta</button>
+      <button className="btn btn-primary mt-4" onClick={handleFinalizarCompra} disabled={hayProductosSinStock}>Terminar Venta</button>
 
       <button className="btn btn-danger mt-4" onClick={onClearCart}>Vaciar Carrito</button>
     </div>
@@ -124,6 +135,3 @@ const Carrito = ({ productos, onRemoveFromCart, onClearCart }) => {
 };
 
 export default Carrito;
-/* 
-HASTA ACA FUNCIONA PERFECTO ESTE ES EL ORIGINAL
-*/

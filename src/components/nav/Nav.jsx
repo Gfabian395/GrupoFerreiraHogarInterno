@@ -3,7 +3,7 @@ import './Nav.css';
 import { Link, useLocation } from 'react-router-dom';
 import { Icon } from '@mui/material'; // Importar el componente Icon de Material-UI
 
-const Nav = ({ cartItemCount, onLogout, username, role }) => {
+const Nav = ({ cartItemCount, onLogout, username, role, profileImage }) => {
   const location = useLocation();
 
   const handleNavClick = () => {
@@ -43,7 +43,7 @@ const Nav = ({ cartItemCount, onLogout, username, role }) => {
         </div>
         <div className="navbar-nav ml-auto">
           <span className="navbar-text">
-            {username} <Icon className="material-icons" onClick={handleLogoutClick}>logout</Icon>
+            {profileImage && <img src={profileImage} alt="Perfil" className="profile-image" />} {username} <Icon className="material-icons" onClick={handleLogoutClick}>logout</Icon>
           </span>
         </div>
       </div>

@@ -77,3 +77,9 @@
 }
 
 /* El resto de tus estilos */
+
+.producto-sin-stock {
+  filter: grayscale(100%);
+  pointer-events: none;
+  opacity: 0.6;
+}

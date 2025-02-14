@@ -40,3 +40,12 @@
 .card button {
   margin-top: 10px;
 }
+
+.producto-sin-stock {
+  filter: grayscale(100%);
+  opacity: 0.6;
+}
+
+.producto-sin-stock .card-body {
+  pointer-events: auto;
+}

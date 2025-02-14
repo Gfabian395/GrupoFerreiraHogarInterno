@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Clientes.css';
 import { db } from '../../firebaseConfig';
@@ -10,14 +10,15 @@ const Clientes = ({ currentUser }) => {
   const [filteredClientes, setFilteredClientes] = useState([]);
   const [newCliente, setNewCliente] = useState({ dni: '', nombreCompleto: '', direccion: '', entrecalles: '', telefono1: '', telefono2: '', imagenUrl: '' });
   const [editClienteId, setEditClienteId] = useState(null);
-  const [deleteClienteId, setDeleteClienteId] = useState(null);
-  const [password, setPassword] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
-  const [mostrarFormularioEditar, setMostrarFormularioEditar] = useState(false);
-  const [mostrarFormularioEliminar, setMostrarFormularioEliminar] = useState(false);
+  const [mostrarEditar, setMostrarEditar] = useState(false);
+  const [mostrarEliminar, setMostrarEliminar] = useState(false);
   const navigate = useNavigate();
+  const formRef = useRef(null);
+  const editFormRef = useRef(null);
+  const deleteFormRef = useRef(null);
 
   useEffect(() => {
     const fetchClientes = async () => {
@@ -44,18 +45,28 @@ const Clientes = ({ currentUser }) => {
     setFilteredClientes(results);
   }, [searchTerm, clientes]);
 
-  const handleAddCliente = () => {
-    setNewCliente({
-      dni: '',
-      nombreCompleto: '',
-      direccion: '',
-      entrecalles: '',
-      telefono1: '',
-      telefono2: '',
-      imagenUrl: ''
-    });
+  const handleAddButtonClick = () => {
+    setNewCliente({ dni: '', nombreCompleto: '', direccion: '', entrecalles: '', telefono1: '', telefono2: '', imagenUrl: '' }); // Limpia los datos del formulario
     setMostrarFormulario(true);
-    setMostrarFormularioEditar(false);
+  }
+
+  const handleAddCliente = async (e) => {
+    e.preventDefault();
+    const clienteDoc = doc(db, 'clientes', newCliente.dni); // Usa el DNI como ID del documento
+    await setDoc(clienteDoc, {
+      ...newCliente, // Mantén los otros campos como están
+      dni: newCliente.dni.toString(), // Asegúrate de que el DNI se guarde como string
+    });
+    setNewCliente({ dni: '', nombreCompleto: '', direccion: '', entrecalles: '', telefono1: '', telefono2: '', imagenUrl: '' });
+    alert('Cliente agregado exitosamente');
+    window.location.reload(); // Refresca la página
+  };
+
+  const handleDeleteCliente = async (id) => {
+    const clienteDoc = doc(db, 'clientes', id);
+    await deleteDoc(clienteDoc);
+    alert('Cliente eliminado exitosamente');
+    window.location.reload(); // Refresca la página
   };
 
   const handleUpdateCliente = async (e) => {
@@ -67,233 +78,218 @@ const Clientes = ({ currentUser }) => {
     });
     setEditClienteId(null);
     setNewCliente({ dni: '', nombreCompleto: '', direccion: '', entrecalles: '', telefono1: '', telefono2: '', imagenUrl: '' });
-    // Recargar la lista de clientes
-    const clienteCollection = collection(db, 'clientes');
-    const clienteSnapshot = await getDocs(clienteCollection);
-    const clienteList = clienteSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    setClientes(clienteList);
-    setFilteredClientes(clienteList); // Actualiza la lista filtrada también
-    setMostrarFormularioEditar(false); // Ocultar formulario después de editar
-  };
-
-  const handleDeleteCliente = async (e) => {
-    e.preventDefault();
-    if (password === '031285') {
-      const clienteDoc = doc(db, 'clientes', deleteClienteId);
-      await deleteDoc(clienteDoc);
-      // Recargar la lista de clientes
-      const clienteCollection = collection(db, 'clientes');
-      const clienteSnapshot = await getDocs(clienteCollection);
-      const clienteList = clienteSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setClientes(clienteList);
-      setFilteredClientes(clienteList); // Actualiza la lista filtrada también
-      setMostrarFormularioEliminar(false); // Ocultar formulario después de eliminar
-      setPassword(''); // Reiniciar el campo de contraseña
-    } else {
-      alert('Contraseña incorrecta');
-    }
+    alert('Cliente actualizado exitosamente');
+    window.location.reload(); // Refresca la página
   };
 
   const startEditCliente = (cliente) => {
     setEditClienteId(cliente.dni); // Usa el DNI para editar el cliente
-    setNewCliente(cliente);
-    setMostrarFormularioEditar(true); // Mostrar formulario de edición
-  };
-
-  const startDeleteCliente = (dni) => {
-    setDeleteClienteId(dni); // Usa el DNI para eliminar el cliente
-    setMostrarFormularioEliminar(true); // Mostrar formulario de eliminación
+    setNewCliente({
+      dni: cliente.dni,
+      nombreCompleto: cliente.nombreCompleto,
+      direccion: cliente.direccion,
+      entrecalles: cliente.entrecalles,
+      telefono1: cliente.telefono1,
+      telefono2: cliente.telefono2,
+      imagenUrl: cliente.imagenUrl
+    });
+    setMostrarEditar(true);
   };
 
   const handleClienteClick = (dni) => {
     navigate(`/clientes/${dni}/detalles`);
   };
 
+  const handleOutsideClick = (e) => {
+    if (
+      (formRef.current && !formRef.current.contains(e.target)) ||
+      (editFormRef.current && !editFormRef.current.contains(e.target)) ||
+      (deleteFormRef.current && !deleteFormRef.current.contains(e.target))
+    ) {
+      setMostrarFormulario(false);
+      setMostrarEditar(false);
+      setMostrarEliminar(false);
+    }
+  };
+
+  useEffect(() => {
+    if (mostrarFormulario || mostrarEditar || mostrarEliminar) {
+      document.addEventListener('mousedown', handleOutsideClick);
+    } else {
+      document.removeEventListener('mousedown', handleOutsideClick);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+    };
+  }, [mostrarFormulario, mostrarEditar, mostrarEliminar]);
+
   if (loading) {
     return <Load />;
   }
-
   return (
     <div className="container">
+      <button onClick={handleAddButtonClick} className="floating-btn">
+        +
+      </button>
       {mostrarFormulario && (
-        <div className="overlay">
-          <div className="form-popup">
-            <h2>Agregar Cliente</h2>
-            <form onSubmit={handleAddCliente}>
-              <div className="form-group">
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="DNI"
-                  value={newCliente.dni}
-                  onChange={(e) => setNewCliente({ ...newCliente, dni: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Nombre Completo"
-                  value={newCliente.nombreCompleto}
-                  onChange={(e) => setNewCliente({ ...newCliente, nombreCompleto: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Dirección"
-                  value={newCliente.direccion}
-                  onChange={(e) => setNewCliente({ ...newCliente, direccion: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Entrecalles"
-                  value={newCliente.entrecalles}
-                  onChange={(e) => setNewCliente({ ...newCliente, entrecalles: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <input
-                  type="tel"
-                  className="form-control"
-                  placeholder="Teléfono 1"
-                  value={newCliente.telefono1}
-                  onChange={(e) => setNewCliente({ ...newCliente, telefono1: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <input
-                  type="tel"
-                  className="form-control"
-                  placeholder="Teléfono 2"
-                  value={newCliente.telefono2}
-                  onChange={(e) => setNewCliente({ ...newCliente, telefono2: e.target.value })}
-                />
-              </div>
-              <div className="form-group">
-                <input
-                  type="url"
-                  className="form-control"
-                  placeholder="URL de Imagen"
-                  value={newCliente.imagenUrl}
-                  onChange={(e) => setNewCliente({ ...newCliente, imagenUrl: e.target.value })}
-                />
-              </div>
-              <button type="submit" className="btn btn-primary">Agregar Cliente</button>
-            </form>
-            <button onClick={() => setMostrarFormulario(false)} className="btn btn-secondary">Cerrar</button>
-          </div>
+        <div className="blur-background">
+          <form onSubmit={handleAddCliente} className="floating-form" ref={formRef}>
+            <div className="form-group">
+              <input
+                type="text"
+                className="form-control"
+                placeholder="DNI"
+                value={newCliente.dni}
+                onChange={(e) => setNewCliente({ ...newCliente, dni: e.target.value })}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Nombre Completo"
+                value={newCliente.nombreCompleto}
+                onChange={(e) => setNewCliente({ ...newCliente, nombreCompleto: e.target.value })}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Dirección"
+                value={newCliente.direccion}
+                onChange={(e) => setNewCliente({ ...newCliente, direccion: e.target.value })}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Entrecalles"
+                value={newCliente.entrecalles}
+                onChange={(e) => setNewCliente({ ...newCliente, entrecalles: e.target.value })}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <input
+                type="tel"
+                className="form-control"
+                placeholder="Teléfono 1"
+                value={newCliente.telefono1}
+                onChange={(e) => setNewCliente({ ...newCliente, telefono1: e.target.value })}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <input
+                type="tel"
+                className="form-control"
+                placeholder="Teléfono 2"
+                value={newCliente.telefono2}
+                onChange={(e) => setNewCliente({ ...newCliente, telefono2: e.target.value })}
+              />
+            </div>
+            <div className="form-group">
+              <input
+                type="url"
+                className="form-control"
+                placeholder="URL de Imagen"
+                value={newCliente.imagenUrl}
+                onChange={(e) => setNewCliente({ ...newCliente, imagenUrl: e.target.value })}
+              />
+            </div>
+            <button type="submit" className="btn btn-primary">Agregar Cliente</button>
+          </form>
         </div>
       )}
 
-      {mostrarFormularioEditar && (
-        <div className="overlay">
-          <div className="form-popup">
-            <h2>Editar Cliente</h2>
-            <form onSubmit={handleUpdateCliente}>
-              <div className="form-group">
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="DNI"
-                  value={newCliente.dni}
-                  onChange={(e) => setNewCliente({ ...newCliente, dni: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Nombre Completo"
-                  value={newCliente.nombreCompleto}
-                  onChange={(e) => setNewCliente({ ...newCliente, nombreCompleto: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Dirección"
-                  value={newCliente.direccion}
-                  onChange={(e) => setNewCliente({ ...newCliente, direccion: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Entrecalles"
-                  value={newCliente.entrecalles}
-                  onChange={(e) => setNewCliente({ ...newCliente, entrecalles: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <input
-                  type="tel"
-                  className="form-control"
-                  placeholder="Teléfono 1"
-                  value={newCliente.telefono1}
-                  onChange={(e) => setNewCliente({ ...newCliente, telefono1: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <input
-                  type="tel"
-                  className="form-control"
-                  placeholder="Teléfono 2"
-                  value={newCliente.telefono2}
-                  onChange={(e) => setNewCliente({ ...newCliente, telefono2: e.target.value })}
-                />
-              </div>
-              <div className="form-group">
-                <input
-                  type="url"
-                  className="form-control"
-                  placeholder="URL de Imagen"
-                  value={newCliente.imagenUrl}
-                  onChange={(e) => setNewCliente({ ...newCliente, imagenUrl: e.target.value })}
-                />
-              </div>
-              <button type="submit" className="btn btn-primary">Actualizar Cliente</button>
-            </form>
-            <button onClick={() => setMostrarFormularioEditar(false)} className="btn btn-secondary">Cerrar</button>
-          </div>
+      {mostrarEditar && (
+        <div className="blur-background">
+          <form onSubmit={handleUpdateCliente} className="floating-form" ref={editFormRef}>
+            <div className="form-group">
+              <input
+                type="text"
+                className="form-control"
+                placeholder="DNI"
+                value={newCliente.dni}
+                onChange={(e) => setNewCliente({ ...newCliente, dni: e.target.value })}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Nombre Completo"
+                value={newCliente.nombreCompleto}
+                onChange={(e) => setNewCliente({ ...newCliente, nombreCompleto: e.target.value })}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Dirección"
+                value={newCliente.direccion}
+                onChange={(e) => setNewCliente({ ...newCliente, direccion: e.target.value })}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Entrecalles"
+                value={newCliente.entrecalles}
+                onChange={(e) => setNewCliente({ ...newCliente, entrecalles: e.target.value })}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <input
+                type="tel"
+                className="form-control"
+                placeholder="Teléfono 1"
+                value={newCliente.telefono1}
+                onChange={(e) => setNewCliente({ ...newCliente, telefono1: e.target.value })}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <input
+                type="tel"
+                className="form-control"
+                placeholder="Teléfono 2"
+                value={newCliente.telefono2}
+                onChange={(e) => setNewCliente({ ...newCliente, telefono2: e.target.value })}
+              />
+            </div>
+            <div className="form-group">
+              <input
+                type="url"
+                className="form-control"
+                placeholder="URL de Imagen"
+                value={newCliente.imagenUrl}
+                onChange={(e) => setNewCliente({ ...newCliente, imagenUrl: e.target.value })}
+              />
+            </div>
+            <button type="submit" className="btn btn-primary">Actualizar Cliente</button>
+          </form>
         </div>
       )}
 
-      {mostrarFormularioEliminar && (
-        <div className="overlay">
-          <div className="form-popup">
-            <h2>Eliminar Cliente</h2>
-            <form onSubmit={handleDeleteCliente}>
-              <div className="form-group">
-                <label>Contraseña</label>
-                <input
-                  type="password"
-                  className="form-control"
-                  placeholder="Introduce la contraseña"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
-              <button type="submit" className="btn btn-danger">Eliminar Cliente</button>
-            </form>
-            <button onClick={() => setMostrarFormularioEliminar(false)} className="btn btn-secondary">Cerrar</button>
+      {mostrarEliminar && (
+        <div className="blur-background">
+          <div className="floating-form" ref={deleteFormRef}>
+            <p>¿Estás seguro que deseas eliminar este cliente?</p>
+            <button onClick={() => handleDeleteCliente(editClienteId)} className="btn btn-danger">Eliminar</button>
+            <button onClick={() => setMostrarEliminar(false)} className="btn btn-secondary">Cancelar</button>
           </div>
         </div>
       )}
@@ -317,24 +313,15 @@ const Clientes = ({ currentUser }) => {
               {currentUser && currentUser.role === 'jefe' && (
                 <>
                   <button className="btn btn-warning" onClick={(e) => { e.stopPropagation(); startEditCliente(cliente); }}>Editar</button>
-                  <button className="btn btn-danger ml-2" onClick={(e) => { e.stopPropagation(); startDeleteCliente(cliente.dni); }}>Eliminar</button>
+                  <button className="btn btn-danger ml-2" onClick={(e) => { e.stopPropagation(); setEditClienteId(cliente.dni); setMostrarEliminar(true); }}>Eliminar</button>
                 </>
               )}
             </div>
           </div>
         ))}
       </div>
-      {/* Botón flotante */}
-      <button
-        onClick={handleAddCliente}
-        className="btn-float btn-add"
-        title="Agregar Cliente"
-      >
-        +
-      </button>
     </div>
   );
 }
 
 export default Clientes;
-

@@ -10,7 +10,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
   const [productos, setProductos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [alerta, setAlerta] = useState('');
-  const [searchQuery, setSearchQuery] = useState(''); // Estado para el buscador
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const fetchProductos = async () => {
@@ -95,14 +95,14 @@ const Productos = ({ onAddToCart, currentUser }) => {
                   <p>Precio: ${producto.precio}</p>
                   <p>
                     Stock Andes 4034: {producto.cantidadDisponibleAndes4034}
-                    {currentUser.role === 'jefe' && !outOfStock && (
-                      <button onDoubleClick={() => handleShowModal(producto.id, 'cantidadDisponibleAndes4034')} style={{ marginLeft: '10px' }}> + </button>
+                    {currentUser.role === 'jefe' && (
+                      <button onClick={() => handleShowModal(producto.id, 'cantidadDisponibleAndes4034')} className='boton-incrementar'> + </button>
                     )}
                   </p>
                   <p>
-                    Stock Andes 4320: {producto.cantidadDisponibleAndes4320} 
-                    {currentUser.role === 'jefe' && !outOfStock && (
-                      <button onDoubleClick={() => handleShowModal(producto.id, 'cantidadDisponibleAndes4320')} style={{ marginLeft: '10px' }}> + </button>
+                    Stock Andes 4320: {producto.cantidadDisponibleAndes4320}
+                    {currentUser.role === 'jefe' && (
+                      <button onClick={() => handleShowModal(producto.id, 'cantidadDisponibleAndes4320')} className='boton-incrementar'> + </button>
                     )}
                   </p>
                   <button onClick={() => handleAddToCart(producto)} disabled={outOfStock}>Agregar al Carrito</button>

@@ -42,8 +42,6 @@
 }
 
 .productos button {
-  /* padding: 10px; */
-  /* font-size: 16px; */
   background-color: #007bff;
   color: #fff;
   border: none;
@@ -76,10 +74,35 @@
   box-sizing: border-box;
 }
 
-/* El resto de tus estilos */
-
+/* Ajuste para desactivar la card del producto sin stock */
 .producto-sin-stock {
   filter: grayscale(100%);
-  pointer-events: none;
   opacity: 0.6;
 }
+
+/* Especificar que el botón + no se desactive cuando está sin stock */
+.producto-sin-stock .boton-incrementar {
+  filter: none;
+  pointer-events: auto;
+  opacity: 1;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.boton-incrementar {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-left: 20px; /* Ajuste para mover el botón a la derecha */
+}
+
+.boton-incrementar:hover {
+  background-color: #0056b3;
+}
+

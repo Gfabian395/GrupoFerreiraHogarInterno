@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';  // Importa el hook useNavigate
-import { collection, getDocs } from 'firebase/firestore';
+import { useNavigate } from 'react-router-dom';
+import { collection, getDocs, addDoc, deleteDoc, query, where } from 'firebase/firestore'; // Importa deleteDoc y query
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { db } from '../../firebaseConfig';
@@ -13,7 +13,7 @@ const CierreCaja = ({ currentUser }) => {
   const [totalRecaudado, setTotalRecaudado] = useState(0);
   const [rankingVendedores, setRankingVendedores] = useState([]);
   const [showPDFPrompt, setShowPDFPrompt] = useState(false);
-  const navigate = useNavigate();  // Usa el hook useNavigate
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (currentUser.role !== 'jefe') {
@@ -22,33 +22,23 @@ const CierreCaja = ({ currentUser }) => {
     }
     const fetchMovimientos = async () => {
       const ventasCollection = collection(db, 'ventas');
+      const gastosCollection = collection(db, 'gastos');
       const ventasSnapshot = await getDocs(ventasCollection);
+      const gastosSnapshot = await getDocs(gastosCollection);
       const ventasList = ventasSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const gastosList = gastosSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
       let total = 0;
       const movimientosList = [];
       const vendedoresMap = {};
 
       ventasList.forEach(venta => {
-        // Registrar la venta
-        movimientosList.push({
-          idVenta: venta.id,
-          clienteId: venta.clienteId,
-          vendedor: venta.vendedor,
-          fecha: new Date(venta.fecha.seconds * 1000).toLocaleDateString(),
-          razon: 'Venta',
-          monto: venta.totalCredito
-        });
-        total += venta.totalCredito;
-
-        // Contabilizar ventas por vendedor
         if (!vendedoresMap[venta.vendedor]) {
           vendedoresMap[venta.vendedor] = { cantVentas: 0, totalRecaudado: 0 };
         }
         vendedoresMap[venta.vendedor].cantVentas += 1;
         vendedoresMap[venta.vendedor].totalRecaudado += venta.totalCredito;
 
-        // Registrar cada cobro asociado a la venta
         venta.pagos.forEach(pago => {
           movimientosList.push({
             idVenta: venta.id,
@@ -58,10 +48,22 @@ const CierreCaja = ({ currentUser }) => {
             razon: 'Cobro',
             monto: pago.monto
           });
+          total += pago.monto;
         });
       });
 
-      // Generar el ranking de los mejores 3 vendedores
+      gastosList.forEach(gasto => {
+        movimientosList.push({
+          idVenta: gasto.id, // ID de gasto
+          clienteId: '', // No hay cliente asociado a un gasto
+          vendedor: '', // No hay vendedor asociado a un gasto
+          fecha: new Date(gasto.fecha.seconds * 1000).toLocaleDateString(),
+          razon: gasto.tipo,
+          monto: gasto.monto
+        });
+        total -= gasto.monto; // Restar los gastos del total recaudado
+      });
+
       const ranking = Object.entries(vendedoresMap)
         .map(([vendedor, data]) => ({ vendedor, ...data }))
         .sort((a, b) => b.totalRecaudado - a.totalRecaudado)
@@ -84,7 +86,7 @@ const CierreCaja = ({ currentUser }) => {
     doc.setFontSize(10);
     const today = new Date().toLocaleDateString();
     doc.text(`Reporte de Cierre de Caja de ${today}`, 40, 30);
-    const tableColumn = ["ID Venta", "Cliente", "Vendedor", "Fecha", "Razón", "Monto"];
+    const tableColumn = ["ID", "Cliente", "Vendedor", "Fecha", "Razón", "Monto"];
     const tableRows = [];
 
     movimientos.forEach(movimiento => {
@@ -110,15 +112,29 @@ const CierreCaja = ({ currentUser }) => {
     doc.text(`Total Recaudado: $${totalRecaudado.toLocaleString('es-AR')}`, 40, doc.autoTable.previous.finalY + 20);
     doc.save('cierre_caja.pdf');
 
-    // Limpiar la pantalla de cierre de caja
     setMovimientos([]);
     setTotalRecaudado(0);
     setRankingVendedores([]);
-    setShowPDFPrompt(false); // Ocultar el prompt después de generar el PDF
+    setShowPDFPrompt(false);
   };
 
   const handleGenerateResumen = () => {
     navigate('/resumen');
+  };
+
+  const handleAddGasto = async () => {
+    const monto = prompt("Ingrese el monto del gasto en negativo:");
+    const razon = prompt("Ingrese la razón del gasto (e.g., Sueldos, Limpieza, etc.):");
+    if (monto && !isNaN(monto) && razon) {
+      await addDoc(collection(db, 'gastos'), {
+        monto: parseFloat(monto),
+        fecha: new Date(),
+        tipo: razon
+      });
+      alert('Gasto agregado correctamente.');
+    } else {
+      alert('Por favor ingrese un monto y una razón válidos.');
+    }
   };
 
   return (
@@ -132,7 +148,7 @@ const CierreCaja = ({ currentUser }) => {
             <table className="table table-bordered">
               <thead>
                 <tr>
-                  <th>ID Venta</th>
+                  <th>ID</th>
                   <th>Cliente</th>
                   <th>Vendedor</th>
                   <th>Fecha</th>
@@ -157,6 +173,7 @@ const CierreCaja = ({ currentUser }) => {
           <h3>Total Recaudado: ${totalRecaudado.toLocaleString('es-AR')}</h3>
           <button onClick={handleGeneratePDF}>Generar PDF</button>
           <button onClick={handleGenerateResumen}>Ver Resumen</button>
+          <button onClick={handleAddGasto}>Agregar Gasto</button>
 
           <h2>Ranking de Mejores 3 Vendedores Mensuales</h2>
           <div className="table-responsive">

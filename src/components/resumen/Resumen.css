@@ -1,38 +1,62 @@
 .resumen {
-    padding: 20px;
-    background-color: #f9f9f9;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  }
-  
-  .resumen h2 {
-    margin-bottom: 20px;
-    color: #333;
-    text-align: center;
-  }
-  
-  .resumen p {
-    text-align: center;
-    color: #666;
-  }
-  
-  .totales {
-    text-align: center;
-    margin-top: 20px;
-  }
-  
-  .totales h3 {
-    margin-bottom: 10px;
-    color: #333;
-  }
-  
-  .totales p {
-    font-size: 1.2em;
-    color: #555;
-  }
-  
-  .totales span {
-    font-weight: bold;
-    color: #000;
-  }
-  
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.resumen h2 {
+  margin-bottom: 20px;
+  color: #333;
+  text-align: center;
+}
+
+.resumen p {
+  text-align: center;
+  color: #666;
+}
+
+.totales h3 {
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.totales p {
+  font-size: 1.2em;
+  color: #555;
+}
+
+.totales span {
+  font-weight: bold;
+  color: #000;
+}
+
+.totales {
+  display: flex;
+  justify-content: space-between;
+}
+
+.gastos, .ventas {
+  flex: 1;
+  padding: 10px;
+}
+
+.balance {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.balance h3 {
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.balance p {
+  font-size: 1.2em;
+  color: #555;
+}
+
+.balance span {
+  font-weight: bold;
+  color: #000;
+}

@@ -13,6 +13,9 @@ const CierreCaja = ({ currentUser }) => {
   const [totalRecaudado, setTotalRecaudado] = useState(0);
   const [rankingVendedores, setRankingVendedores] = useState([]);
   const [showPDFPrompt, setShowPDFPrompt] = useState(false);
+  const [showGastoForm, setShowGastoForm] = useState(false); // Nuevo estado para mostrar el formulario de gasto
+  const [gastoMonto, setGastoMonto] = useState(''); // Nuevo estado para el monto del gasto
+  const [gastoRazon, setGastoRazon] = useState(''); // Nuevo estado para la razón del gasto
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -123,20 +126,30 @@ const CierreCaja = ({ currentUser }) => {
   };
 
   const handleAddGasto = async () => {
-    const monto = prompt("Ingrese el monto del gasto en negativo:");
-    const razon = prompt("Ingrese la razón del gasto (e.g., Sueldos, Limpieza, etc.):");
+    const monto = parseFloat(gastoMonto);
+    const razon = gastoRazon;
     if (monto && !isNaN(monto) && razon) {
       await addDoc(collection(db, 'gastos'), {
-        monto: parseFloat(monto),
+        monto: Math.round(monto / 1000) * 1000, // Redondeado
         fecha: new Date(),
         tipo: razon
       });
       alert('Gasto agregado correctamente.');
+      setShowGastoForm(false); // Cierra el formulario después de agregar el gasto
+      setGastoMonto(''); // Limpiar campo del monto
+      setGastoRazon(''); // Limpiar campo de la razón
     } else {
       alert('Por favor ingrese un monto y una razón válidos.');
     }
   };
 
+  const handleShowGastoForm = () => {
+    setShowGastoForm(true);
+  };
+
+  const handleCloseGastoForm = () => {
+    setShowGastoForm(false);
+  };
   return (
     <div className="cierre-caja">
       <h2>Cierre de Caja</h2>
@@ -173,9 +186,10 @@ const CierreCaja = ({ currentUser }) => {
           <h3>Total Recaudado: ${totalRecaudado.toLocaleString('es-AR')}</h3>
           <button onClick={handleGeneratePDF}>Generar PDF</button>
           <button onClick={handleGenerateResumen}>Ver Resumen</button>
-          <button onClick={handleAddGasto}>Agregar Gasto</button>
+          <button onClick={handleShowGastoForm}>Agregar Gasto</button>
 
           <h2>Ranking de Mejores 3 Vendedores Mensuales</h2>
+
           <div className="table-responsive">
             <table className="table table-bordered">
               <thead>
@@ -190,12 +204,36 @@ const CierreCaja = ({ currentUser }) => {
                   <tr key={index}>
                     <td>{vendedor.vendedor}</td>
                     <td>{vendedor.cantVentas}</td>
-                    <td>${vendedor.totalRecaudado.toLocaleString('es-AR')}</td>
+                    <td>${(Math.round(vendedor.totalRecaudado / 1000) * 1000).toLocaleString('es-AR')}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+
+          {showGastoForm && (
+            <div className="overlay">
+              <div className="form-popup">
+                <h3>Agregar Gasto</h3>
+                <label htmlFor="gastoRazon">Razón del Gasto:</label>
+                <input
+                  type="text"
+                  id="gastoRazon"
+                  value={gastoRazon}
+                  onChange={(e) => setGastoRazon(e.target.value)}
+                />
+                <label htmlFor="gastoMonto">Monto del Gasto:</label>
+                <input
+                  type="number"
+                  id="gastoMonto"
+                  value={gastoMonto}
+                  onChange={(e) => setGastoMonto(e.target.value)}
+                />
+                <button onClick={handleAddGasto} className="btn btn-primary">Agregar</button>
+                <button onClick={handleCloseGastoForm} className="btn btn-secondary">Cerrar</button>
+              </div>
+            </div>
+          )}
 
           {showPDFPrompt && (
             <div className="overlay">

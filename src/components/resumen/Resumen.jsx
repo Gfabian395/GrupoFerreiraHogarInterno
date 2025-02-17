@@ -37,8 +37,8 @@ const Resumen = () => {
       let totalGastosMensual = 0;
       let totalGastosAnual = 0;
 
-      ventasList.forEach(venta => {
-        venta.pagos.forEach(pago => {
+      for (const venta of ventasList) {
+        for (const pago of venta.pagos) {
           const pagoDate = new Date(pago.fecha);
 
           const oneMonthAgo = new Date(now);
@@ -57,15 +57,15 @@ const Resumen = () => {
           const mes = pagoDate.toLocaleString('es-AR', { month: 'long' });
           const yearMonth = `${pagoDate.getFullYear()}-${pagoDate.getMonth() + 1}`;
           const docRef = doc(db, 'balancesAnuales', yearMonth);
-          setDoc(docRef, {
+          await setDoc(docRef, {
             mes,
             ventasTotales: increment(pago.monto), // Solo incluye el monto de la cuota pagada
             gastosTotales: increment(0)
           }, { merge: true });
-        });
-      });
+        }
+      }
 
-      gastosList.forEach(gasto => {
+      for (const gasto of gastosList) {
         const gastoDate = new Date(gasto.fecha.seconds * 1000);
 
         const oneMonthAgo = new Date(now);
@@ -84,17 +84,17 @@ const Resumen = () => {
         const mes = gastoDate.toLocaleString('es-AR', { month: 'long' });
         const yearMonth = `${gastoDate.getFullYear()}-${gastoDate.getMonth() + 1}`;
         const docRef = doc(db, 'balancesAnuales', yearMonth);
-        setDoc(docRef, {
+        await setDoc(docRef, {
           mes,
           ventasTotales: increment(0),
           gastosTotales: increment(gasto.monto)
         }, { merge: true });
-      });
+      }
 
       setResumenMensual(totalCobrosMensual);
-      setResumenAnual(prevAnual => prevAnual + totalCobrosMensual); // Acumula el balance mensual en el anual
+      setResumenAnual(totalCobrosAnual);
       setGastosMensual(totalGastosMensual);
-      setGastosAnual(prevAnual => prevAnual + totalGastosMensual); // Acumula el balance mensual en el anual
+      setGastosAnual(totalGastosAnual);
 
       const resumenData = [
         { name: 'Mensual', Ventas: totalCobrosMensual, Gastos: totalGastosMensual },
@@ -134,8 +134,8 @@ const Resumen = () => {
         const prevBalanceRef = doc(db, 'balancesAnuales', prevYearMonth);
         await setDoc(prevBalanceRef, {
           mes: previousMonth.toLocaleString('es-AR', { month: 'long' }),
-          ventasTotales: resumenMensual,
-          gastosTotales: gastosMensual
+          ventasTotales: totalCobrosMensual,
+          gastosTotales: totalGastosMensual
         }, { merge: true });
 
         setResumenMensual(0);
@@ -147,10 +147,10 @@ const Resumen = () => {
 
     fetchMovimientos();
   }, []);
+
   if (loading) {
     return <Load />;
   }
-
   return (
     <div className="resumen">
       <h2>Resumen de Ventas y Gastos</h2>

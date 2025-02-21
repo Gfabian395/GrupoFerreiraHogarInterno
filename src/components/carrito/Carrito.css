@@ -47,5 +47,11 @@
 }
 
 .producto-sin-stock .card-body {
-  pointer-events: auto;
+  pointer-events: none;
+}
+
+.boton-deshabilitado {
+  background-color: #ccc;
+  color: #fff;
+  pointer-events: none;
 }

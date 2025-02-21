@@ -12,7 +12,6 @@
 
 .productos ul {
   list-style-type: none;
-  /* padding: 0; */
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
@@ -31,38 +30,83 @@
   border-radius: 5px;
   width: 300px;
   flex-direction: column;
-  flex-wrap: nowrap;
   align-items: center;
 }
 
 .productos img {
   width: 250px;
   height: auto;
-  /* margin-right: 20px;*/
 }
 
-.productos button {
+.boton-agregar {
   background-color: #007bff;
   color: #fff;
   border: none;
   border-radius: 5px;
   cursor: pointer;
+  margin: 5px;
+  padding: 5px; /* Añadido padding a los botones */
 }
 
-.productos button:hover {
+.boton-agregar:hover {
   background-color: #0056b3;
+}
+
+.boton-incrementar {
+  background-color: #196F3D;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-left: 20px;
+}
+
+.boton-incrementar:hover {
+  background-color: #0056b3;
+}
+
+.boton-editar {
+  background-color: #ffc107;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 16px;
+  margin: 5px;
+}
+
+.boton-editar:hover {
+  background-color: #e0a800;
+}
+
+.boton-borrar {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 16px;
+  margin: 5px;
+}
+
+.boton-borrar:hover {
+  background-color: #c82333;
+}
+
+/* Estilos para los botones "Agregar al Carrito" deshabilitados */
+.boton-sin-stock {
+  background-color: #ccc; /* Color gris para indicar que está deshabilitado */
+  color: #fff; /* Color blanco para el texto */
+  pointer-events: none; /* Deshabilita interacciones */
+  filter: grayscale(100%);
+  padding: 5px; /* Añadido padding a los botones deshabilitados */
 }
 
 .detallitos {
   display: flex;
   flex-direction: column;
-  flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
-}
-
-.productos {
-  padding: 20px;
 }
 
 .search-bar {
@@ -74,13 +118,11 @@
   box-sizing: border-box;
 }
 
-/* Ajuste para desactivar la card del producto sin stock */
 .producto-sin-stock {
   filter: grayscale(100%);
   opacity: 0.6;
 }
 
-/* Especificar que el botón + no se desactive cuando está sin stock */
 .producto-sin-stock .boton-incrementar {
   filter: none;
   pointer-events: auto;
@@ -92,17 +134,65 @@
   cursor: pointer;
 }
 
-.boton-incrementar {
-  background-color: #007bff;
-  color: white;
-  border: none;
-  padding: 5px 10px;
-  cursor: pointer;
-  font-size: 16px;
-  margin-left: 20px; /* Ajuste para mover el botón a la derecha */
+.blur-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(5px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
 }
 
-.boton-incrementar:hover {
+.floating-form {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  width: 300px;
+  position: relative;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.btn {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.btn:hover {
   background-color: #0056b3;
 }
 
+.close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  color: #aaa;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.close:hover,
+.close:focus {
+  color: black;
+  text-decoration: none;
+}

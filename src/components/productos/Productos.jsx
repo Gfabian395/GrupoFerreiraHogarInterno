@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { db } from '../../firebaseConfig';
-import { collection, getDocs, updateDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 import Load from '../load/Load';
 import './Productos.css';
 
@@ -11,13 +11,18 @@ const Productos = ({ onAddToCart, currentUser }) => {
   const [loading, setLoading] = useState(true);
   const [alerta, setAlerta] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [mostrarFormulario, setMostrarFormulario] = useState(false);
+  const [currentProduct, setCurrentProduct] = useState(null);
+  const formRef = useRef(null);
 
   useEffect(() => {
+    console.log("useEffect - categoriaId:", categoriaId);
     const fetchProductos = async () => {
       try {
         const productosCollection = collection(db, `categorias/${categoriaId}/productos`);
         const productosSnapshot = await getDocs(productosCollection);
         const productosList = productosSnapshot.docs.map(doc => ({ id: doc.id, categoriaId: categoriaId, ...doc.data() }));
+        console.log("Productos fetched:", productosList);
         setProductos(productosList);
         setLoading(false);
       } catch (error) {
@@ -32,37 +37,114 @@ const Productos = ({ onAddToCart, currentUser }) => {
   }, [categoriaId]);
 
   const handleIncrementStock = async (productoId, campo) => {
+    console.log("handleIncrementStock - productoId:", productoId, "campo:", campo);
     try {
       const productoRef = doc(db, `categorias/${categoriaId}/productos`, productoId);
       const producto = productos.find(p => p.id === productoId);
-      const newCantidad = parseInt(producto[campo]) + 1;
 
-      await updateDoc(productoRef, {
-        [campo]: newCantidad
-      });
+      if (producto && producto[campo] !== undefined && !isNaN(producto[campo])) {
+        const newCantidad = parseInt(producto[campo]) + 1;
 
-      setProductos(productos.map(p => p.id === productoId ? { ...p, [campo]: newCantidad } : p));
+        await updateDoc(productoRef, {
+          [campo]: newCantidad
+        });
 
-      setAlerta('Stock actualizado con éxito');
-      setTimeout(() => {
-        setAlerta('');
-      }, 3000);
+        setProductos(productos.map(p => p.id === productoId ? { ...p, [campo]: newCantidad } : p));
+
+        setAlerta('Stock actualizado con éxito');
+        setTimeout(() => {
+          setAlerta('');
+        }, 3000);
+      } else {
+        console.error("Error: El campo especificado no es un número válido o no existe.");
+      }
     } catch (error) {
       console.error("Error updating stock: ", error);
     }
   };
 
-  const handleShowModal = (productoId, campo) => {
-    handleIncrementStock(productoId, campo);
+  const handleAddToCart = (producto, sucursal) => {
+    console.log("handleAddToCart - producto:", producto, "sucursal:", sucursal);
+    const productoEnCarrito = { ...producto, sucursal };
+    const productoStock = parseInt(producto[`cantidadDisponible${sucursal}`]);
+
+    if (!isNaN(productoStock) && productoStock > 0) {
+      onAddToCart(productoEnCarrito);
+      alert('Producto añadido al carrito con éxito');
+    } else {
+      alert('No hay suficiente stock para añadir este producto al carrito');
+    }
+  };
+
+  const handleTerminarVenta = async (producto, sucursal) => {
+    console.log("handleTerminarVenta - producto:", producto, "sucursal:", sucursal);
+    const productoRef = doc(db, `categorias/${categoriaId}/productos`, producto.id);
+    const productoStock = parseInt(producto[`cantidadDisponible${sucursal}`]);
+    const newCantidad = productoStock - 1;
+
+    if (!isNaN(productoStock) && productoStock > 0) {
+      try {
+        await updateDoc(productoRef, {
+          [`cantidadDisponible${sucursal}`]: newCantidad
+        });
+        setProductos(productos.map(p => p.id === producto.id ? { ...p, [`cantidadDisponible${sucursal}`]: newCantidad } : p));
+        alert('Venta realizada con éxito. Stock actualizado.');
+      } catch (error) {
+        console.error("Error updating stock: ", error);
+      }
+    } else {
+      alert('No hay suficiente stock para realizar la venta');
+    }
+  };
+
+  const handleShowFormulario = (producto) => {
+    console.log("handleShowFormulario - producto:", producto);
+    setCurrentProduct(producto);
+    setMostrarFormulario(true);
   };
 
   const handleSearchChange = (e) => {
+    console.log("handleSearchChange - value:", e.target.value);
     setSearchQuery(e.target.value);
   };
 
-  const handleAddToCart = (producto) => {
-    onAddToCart(producto);
-    alert('Producto añadido al carrito con éxito');
+  const handleCloseFormulario = () => {
+    console.log("handleCloseFormulario");
+    setMostrarFormulario(false);
+    setCurrentProduct(null);
+  };
+
+  const handleDeleteProduct = async (productoId) => {
+    console.log("handleDeleteProduct - productoId:", productoId);
+    try {
+      await deleteDoc(doc(db, `categorias/${categoriaId}/productos`, productoId));
+      setProductos(productos.filter(p => p.id !== productoId));
+      alert('Producto eliminado con éxito');
+    } catch (error) {
+      console.error("Error deleting product: ", error);
+    }
+  };
+
+  const handleUpdateProduct = async (productoId) => {
+    console.log("handleUpdateProduct - productoId:", productoId);
+    try {
+      const productoRef = doc(db, `categorias/${categoriaId}/productos`, productoId);
+      await updateDoc(productoRef, currentProduct);
+      setProductos(productos.map(p => p.id === productoId ? currentProduct : p));
+      alert('Producto actualizado con éxito');
+      handleCloseFormulario();
+    } catch (error) {
+      console.error("Error updating product: ", error);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    console.log("handleInputChange - name:", name, "value:", value);
+    setCurrentProduct(prevState => ({
+      ...prevState,
+      [name]: value
+    }));
   };
 
   const filteredProductos = productos.filter(producto =>
@@ -70,6 +152,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
   );
 
   if (loading) {
+    console.log("Loading...");
     return <Load />;
   }
 
@@ -86,32 +169,114 @@ const Productos = ({ onAddToCart, currentUser }) => {
         />
         <ul>
           {filteredProductos.map(producto => {
-            const outOfStock = producto.cantidadDisponibleAndes4034 === 0 && producto.cantidadDisponibleAndes4320 === 0;
+            const stock4034 = parseInt(producto.cantidadDisponibleAndes4034);
+            const stock4320 = parseInt(producto.cantidadDisponibleAndes4320);
+            const outOfStock4034 = stock4034 === 0;
+            const outOfStock4320 = stock4320 === 0;
+            const outOfStockBoth = outOfStock4034 && outOfStock4320;
+
             return (
-              <li key={producto.id} className={outOfStock ? 'producto-sin-stock' : ''}>
+              <li key={producto.id} className={outOfStockBoth ? 'producto-sin-stock' : ''}>
                 <img src={producto.imagenUrl} alt={producto.nombre} />
                 <div className='detallitos'>
                   <h3>{producto.nombre}</h3>
                   <p>Precio: ${producto.precio}</p>
                   <p>
-                    Stock Andes 4034: {producto.cantidadDisponibleAndes4034}
+                    Stock Los Andes 4034: {stock4034}
                     {currentUser.role === 'jefe' && (
-                      <button onClick={() => handleShowModal(producto.id, 'cantidadDisponibleAndes4034')} className='boton-incrementar'> + </button>
+                      <>
+                        <button onClick={() => handleIncrementStock(producto.id, 'cantidadDisponibleAndes4034')} className='boton-incrementar'> + </button>
+                        <button
+                          onClick={() => handleAddToCart(producto, 'Andes4034')}
+                          disabled={outOfStock4034}
+                          className={`boton-agregar ${outOfStock4034 ? 'boton-sin-stock' : ''}`}
+                        >
+                          +🛒
+                        </button>
+                      </>
                     )}
                   </p>
                   <p>
-                    Stock Andes 4320: {producto.cantidadDisponibleAndes4320}
+                    Stock Los Andes 4320: {stock4320}
                     {currentUser.role === 'jefe' && (
-                      <button onClick={() => handleShowModal(producto.id, 'cantidadDisponibleAndes4320')} className='boton-incrementar'> + </button>
+                      <>
+                        <button onClick={() => handleIncrementStock(producto.id, 'cantidadDisponibleAndes4320')} className='boton-incrementar'> + </button>
+                        <button
+                          onClick={() => handleAddToCart(producto, 'Andes4320')}
+                          disabled={outOfStock4320}
+                          className={`boton-agregar ${outOfStock4320 ? 'boton-sin-stock' : ''}`}
+                        >
+                          +🛒
+                        </button>
+                      </>
                     )}
                   </p>
-                  <button onClick={() => handleAddToCart(producto)} disabled={outOfStock}>Agregar al Carrito</button>
+                  {currentUser.role === 'jefe' && (
+                    <div className='action-buttons'>
+                      <button onClick={() => handleShowFormulario(producto)} className='boton-editar'>Editar</button>
+                      <button onClick={() => handleDeleteProduct(producto.id)} className='boton-borrar'>Borrar</button>
+                    </div>
+                  )}
                 </div>
               </li>
             );
           })}
         </ul>
       </div>
+
+      {mostrarFormulario && currentProduct && (
+        <div className="blur-background">
+          <form className="floating-form" ref={formRef}>
+            <span className="close" onClick={handleCloseFormulario}>&times;</span>
+            <h2>Editar Producto</h2>
+            <div className="form-group">
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Nombre"
+                name="nombre"
+                value={currentProduct.nombre}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Precio"
+                name="precio"
+                value={currentProduct.precio}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Stock Andes 4034"
+                name="cantidadDisponibleAndes4034"
+                value={currentProduct.cantidadDisponibleAndes4034}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Stock Andes 4320"
+                name="cantidadDisponibleAndes4320"
+                value={currentProduct.cantidadDisponibleAndes4320}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <button type="button" className="btn btn-primary" onClick={() => handleUpdateProduct(currentProduct.id)}>Guardar Cambios</button>
+          </form>
+        </div>
+      )}
     </>
   );
 };

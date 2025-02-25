@@ -1,35 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../../firebaseConfig';
-import { collectionGroup, getDocs, deleteDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import './Categorias.css';
 import Load from '../load/Load';
 
 const Categorias = ({ onSelectCategoria, currentUser }) => {
-  const [productos, setProductos] = useState([]);
+  const [categorias, setCategorias] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
   const [password, setPassword] = useState('');
   const [alerta, setAlerta] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchProductosGlobal = async () => {
+    const fetchCategorias = async () => {
       try {
-        const productosQuery = collectionGroup(db, 'productos');
-        const productosSnapshot = await getDocs(productosQuery);
-        const productosList = productosSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setProductos(productosList);
+        const categoriasCollection = collection(db, 'categorias');
+        const categoriasSnapshot = await getDocs(categoriasCollection);
+        const categoriasList = categoriasSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setCategorias(categoriasList);
         setLoading(false);
       } catch (error) {
-        console.error("Error fetching productos: ", error);
+        console.error("Error fetching categorias: ", error);
         setLoading(false);
       }
     };
 
-    fetchProductosGlobal();
+    fetchCategorias();
   }, []);
 
   const handleDeleteCategoria = async (e) => {
@@ -65,14 +64,6 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
     navigate(`/categorias/${id}/productos`);
   };
 
-  const handleSearchChange = (e) => {
-    setSearchQuery(e.target.value);
-  };
-
-  const filteredProductos = productos.filter(producto =>
-    producto.nombre.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   if (loading) {
     return <Load />;
   }
@@ -80,21 +71,14 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
   return (
     <div className="categorias">
       {alerta && <div className="alert alert-danger">{alerta}</div>}
-      <input
-        type="text"
-        placeholder="Buscar productos..."
-        value={searchQuery}
-        onChange={handleSearchChange}
-        className="search-bar"
-      />
       <ul>
-        {filteredProductos.map(producto => (
-          <li key={producto.id} onClick={() => handleSelectCategoria(producto.id)}>
-            <img src={producto.imagenUrl} alt={producto.nombre} />
+        {categorias.map(categoria => (
+          <li key={categoria.id} onClick={() => handleSelectCategoria(categoria.id)}>
+            <img src={categoria.imagenUrl} alt={categoria.nombre} />
             <div className='descripcioncita'>
-              <h3>{producto.nombre}</h3>
+              <h3>{categoria.nombre}</h3>
               {currentUser && currentUser.role === 'jefe' && (
-                <button onClick={(e) => { e.stopPropagation(); promptDeleteCategoria(producto.id); }}>Eliminar</button>
+                <button onClick={(e) => { e.stopPropagation(); promptDeleteCategoria(categoria.id); }}>Eliminar</button>
               )}
             </div>
           </li>

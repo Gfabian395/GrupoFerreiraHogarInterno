@@ -37,10 +37,12 @@ const CierreCaja = ({ currentUser }) => {
 
       ventasList.forEach(venta => {
         if (!vendedoresMap[venta.vendedor]) {
-          vendedoresMap[venta.vendedor] = { cantVentas: 0, totalRecaudado: 0 };
+          vendedoresMap[venta.vendedor] = { cantVentas: 0, totalIngresado: 0, articulosVendidos: 0 };
         }
         vendedoresMap[venta.vendedor].cantVentas += 1;
-        vendedoresMap[venta.vendedor].totalRecaudado += venta.totalCredito;
+        if (venta.articulos && Array.isArray(venta.articulos)) {
+          vendedoresMap[venta.vendedor].articulosVendidos += venta.articulos.length; // Sumar la cantidad de artículos vendidos
+        }
 
         venta.pagos.forEach(pago => {
           movimientosList.push({
@@ -51,6 +53,7 @@ const CierreCaja = ({ currentUser }) => {
             razon: 'Cobro',
             monto: pago.monto
           });
+          vendedoresMap[venta.vendedor].totalIngresado += pago.monto; // Sumar el monto del anticipo o venta al contado
           total += pago.monto;
         });
       });
@@ -69,7 +72,7 @@ const CierreCaja = ({ currentUser }) => {
 
       const ranking = Object.entries(vendedoresMap)
         .map(([vendedor, data]) => ({ vendedor, ...data }))
-        .sort((a, b) => b.totalRecaudado - a.totalRecaudado)
+        .sort((a, b) => b.totalIngresado - a.totalIngresado)
         .slice(0, 3);
 
       setMovimientos(movimientosList);
@@ -79,6 +82,7 @@ const CierreCaja = ({ currentUser }) => {
     };
     fetchMovimientos();
   }, [currentUser]);
+
 
   const handleGeneratePDF = () => {
     setShowPDFPrompt(true);
@@ -150,6 +154,7 @@ const CierreCaja = ({ currentUser }) => {
   const handleCloseGastoForm = () => {
     setShowGastoForm(false);
   };
+
   return (
     <div className="cierre-caja">
       <h2>Cierre de Caja</h2>
@@ -196,7 +201,7 @@ const CierreCaja = ({ currentUser }) => {
                 <tr>
                   <th>Vendedor</th>
                   <th>Cant. Ventas</th>
-                  <th>Total Recaudado</th>
+                  <th>Total Ingresado</th>
                 </tr>
               </thead>
               <tbody>
@@ -204,7 +209,7 @@ const CierreCaja = ({ currentUser }) => {
                   <tr key={index}>
                     <td>{vendedor.vendedor}</td>
                     <td>{vendedor.cantVentas}</td>
-                    <td>${(Math.round(vendedor.totalRecaudado / 1000) * 1000).toLocaleString('es-AR')}</td>
+                    <td>${vendedor.totalIngresado.toLocaleString('es-AR')}</td>
                   </tr>
                 ))}
               </tbody>

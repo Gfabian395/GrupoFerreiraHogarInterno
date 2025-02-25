@@ -37,16 +37,19 @@ const Home = () => {
 
         // Contabilizar ventas por vendedor
         if (!vendedoresMap[venta.vendedor]) {
-          vendedoresMap[venta.vendedor] = { cantVentas: 0, totalRecaudado: 0 };
+          vendedoresMap[venta.vendedor] = { cantVentas: 0, totalIngresado: 0 };
         }
         vendedoresMap[venta.vendedor].cantVentas += 1;
-        vendedoresMap[venta.vendedor].totalRecaudado += venta.totalCredito;
+
+        venta.pagos.forEach(pago => {
+          vendedoresMap[venta.vendedor].totalIngresado += pago.monto; // Sumar el monto del anticipo o venta al contado
+        });
       });
 
       // Generar el ranking de los mejores 3 vendedores
       const ranking = Object.entries(vendedoresMap)
         .map(([vendedor, data]) => ({ vendedor, ...data }))
-        .sort((a, b) => b.totalRecaudado - a.totalRecaudado)
+        .sort((a, b) => b.totalIngresado - a.totalIngresado)
         .slice(0, 3);
 
       setRankingVendedores(ranking);

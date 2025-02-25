@@ -12,6 +12,7 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
   const [deleteId, setDeleteId] = useState(null);
   const [password, setPassword] = useState('');
   const [alerta, setAlerta] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');  // Estado para la búsqueda
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -64,6 +65,10 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
     navigate(`/categorias/${id}/productos`);
   };
 
+  const filteredCategorias = categorias.filter(categoria =>  // Filtrar categorías
+    categoria.nombre.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   if (loading) {
     return <Load />;
   }
@@ -71,8 +76,18 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
   return (
     <div className="categorias">
       {alerta && <div className="alert alert-danger">{alerta}</div>}
+      <div className="search-container">
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Buscar categorías..."
+          className="search-input"
+        />
+      </div>
+
       <ul>
-        {categorias.map(categoria => (
+        {filteredCategorias.map(categoria => (
           <li key={categoria.id} onClick={() => handleSelectCategoria(categoria.id)}>
             <img src={categoria.imagenUrl} alt={categoria.nombre} />
             <div className='descripcioncita'>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { db } from '../../firebaseConfig';
-import { collection, getDocs, updateDoc, deleteDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, updateDoc, deleteDoc, addDoc, doc } from 'firebase/firestore'; // Asegúrate de importar addDoc también
 import Load from '../load/Load';
 import './Productos.css';
 
@@ -13,6 +13,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
   const [currentProduct, setCurrentProduct] = useState(null);
+  const [categorias, setCategorias] = useState([]); // Definir categorias
   const formRef = useRef(null);
 
   useEffect(() => {
@@ -31,9 +32,17 @@ const Productos = ({ onAddToCart, currentUser }) => {
       }
     };
 
+    const fetchCategorias = async () => {
+      const categoriasCollection = collection(db, 'categorias');
+      const categoriasSnapshot = await getDocs(categoriasCollection);
+      const categoriasList = categoriasSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setCategorias(categoriasList);
+    };
+
     if (categoriaId) {
       fetchProductos();
     }
+    fetchCategorias();
   }, [categoriaId]);
 
   const handleIncrementStock = async (productoId, campo) => {
@@ -128,9 +137,26 @@ const Productos = ({ onAddToCart, currentUser }) => {
   const handleUpdateProduct = async (productoId) => {
     console.log("handleUpdateProduct - productoId:", productoId);
     try {
-      const productoRef = doc(db, `categorias/${categoriaId}/productos`, productoId);
-      await updateDoc(productoRef, currentProduct);
-      setProductos(productos.map(p => p.id === productoId ? currentProduct : p));
+      const { categoria: nuevaCategoria, ...productoData } = currentProduct;
+
+      if (nuevaCategoria !== categoriaId) {
+        // Mover el producto a la nueva categoría
+        const nuevaCategoriaRef = collection(db, `categorias/${nuevaCategoria}/productos`);
+        await addDoc(nuevaCategoriaRef, productoData);
+
+        // Eliminar el producto de la categoría actual
+        const productoRef = doc(db, `categorias/${categoriaId}/productos`, productoId);
+        await deleteDoc(productoRef);
+
+        // Actualizar el estado de los productos
+        setProductos(productos.filter(p => p.id !== productoId));
+      } else {
+        // Actualizar el producto en la misma categoría
+        const productoRef = doc(db, `categorias/${categoriaId}/productos`, productoId);
+        await updateDoc(productoRef, currentProduct);
+        setProductos(productos.map(p => p.id === productoId ? currentProduct : p));
+      }
+
       alert('Producto actualizado con éxito');
       handleCloseFormulario();
     } catch (error) {
@@ -155,6 +181,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
     console.log("Loading...");
     return <Load />;
   }
+
 
   return (
     <>
@@ -181,7 +208,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
                 <div className='detallitos'>
                   <h3>{producto.nombre}</h3>
                   <p>Precio: ${producto.precio}</p>
-                  
+
                   <p>
                     Stock Los Andes 4034: {stock4034}
                     {['jefe', 'vendedor'].includes(currentUser.role) && (
@@ -283,12 +310,26 @@ const Productos = ({ onAddToCart, currentUser }) => {
                 required
               />
             </div>
+            <div className="form-group">
+              <select
+                className="form-control"
+                name="categoria"
+                value={currentProduct.categoria}
+                onChange={handleInputChange}
+                required
+              >
+                <option value="">-- Selecciona una Categoría --</option>
+                {categorias.map(categoria => (
+                  <option key={categoria.id} value={categoria.id}>{categoria.nombre}</option>
+                ))}
+              </select>
+            </div>
             <button type="button" className="btn btn-primary" onClick={() => handleUpdateProduct(currentProduct.id)}>Guardar Cambios</button>
           </form>
         </div>
       )}
     </>
   );
-};
+}
 
 export default Productos;

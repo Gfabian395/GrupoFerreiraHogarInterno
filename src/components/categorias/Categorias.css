@@ -21,27 +21,23 @@
   margin-bottom: 15px;
   padding: 10px;
   border: 1px solid #ddd;
-  border-radius: 5px;
-  transition: background-color 0.3sease;
+  border-radius: 25px;
   width: 300px;
   height: 300px;
   flex-direction: column;
   flex-wrap: nowrap;
   justify-content: center;
-}
-
-.categorias li:hover {
-  background-color: #f9f9f9;
+  box-shadow: 5px 5px 10px rgb(98, 101, 103);
 }
 
 .categorias img {
   width: 200px;
-   height: 200px; 
+  height: 200px;
   margin-right: 10px;
   border-radius: 5px;
 }
 
-.descripcioncita{
+.descripcioncita {
   width: 100%;
   text-align: center;
 }
@@ -61,10 +57,6 @@
   transition: background-color 0.3s ease;
 }
 
-.categorias button:hover {
-  background-color: #cc0000;
-}
-
 /* Estilos para el formulario flotante */
 .overlay {
   position: fixed;
@@ -77,7 +69,8 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000; /* Asegura que el overlay esté por encima de otros elementos */
+  z-index: 1000;
+  /* Asegura que el overlay esté por encima de otros elementos */
 }
 
 .form-popup {
@@ -87,5 +80,50 @@
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   width: 90%;
   max-width: 500px;
-  z-index: 1001; /* Asegura que el popup esté por encima del overlay */
+  z-index: 1001;
+  /* Asegura que el popup esté por encima del overlay */
+}
+
+.search-input {
+  width: 100%;
+  max-width: 400px;
+  padding: 12px 20px;
+  margin: 20px auto;
+  /* Centrar horizontalmente */
+  box-sizing: border-box;
+  border: 1px solid #ccc;
+  border-radius: 25px;
+  /* Bordes redondeados */
+  font-size: 16px;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  display: block;
+  /* Asegura que ocupe toda la fila para centrar correctamente */
+}
+
+.search-input:focus {
+  border-color: #5c6ac4;
+  /* Color del borde al enfocar */
+  box-shadow: 0 0 8px rgba(92, 106, 196, 0.5);
+  /* Sombra al enfocar */
+  outline: none;
+}
+
+.search-input::placeholder {
+  color: #999;
+  /* Color del texto del placeholder */
+  font-style: italic;
+}
+
+.search-input:focus::placeholder {
+  color: #ccc;
+  /* Color del placeholder al enfocar */
+}
+
+.search-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  margin-top: 20px;
+  /* Espacio superior para ajustarlo */
 }

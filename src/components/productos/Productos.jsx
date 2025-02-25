@@ -181,11 +181,11 @@ const Productos = ({ onAddToCart, currentUser }) => {
                 <div className='detallitos'>
                   <h3>{producto.nombre}</h3>
                   <p>Precio: ${producto.precio}</p>
+                  
                   <p>
                     Stock Los Andes 4034: {stock4034}
-                    {currentUser.role === 'jefe' && (
+                    {['jefe', 'vendedor'].includes(currentUser.role) && (
                       <>
-                        <button onClick={() => handleIncrementStock(producto.id, 'cantidadDisponibleAndes4034')} className='boton-incrementar'> + </button>
                         <button
                           onClick={() => handleAddToCart(producto, 'Andes4034')}
                           disabled={outOfStock4034}
@@ -195,45 +195,31 @@ const Productos = ({ onAddToCart, currentUser }) => {
                         </button>
                       </>
                     )}
+                    {currentUser.role === 'jefe' && (
+                      <>
+                        <button onClick={() => handleIncrementStock(producto.id, 'cantidadDisponibleAndes4034')} className='boton-incrementar'> + </button>
+                      </>
+                    )}
                   </p>
                   <p>
-  Stock Los Andes 4034: {stock4034}
-  {['jefe', 'vendedor'].includes(currentUser.role) && (
-    <>
-      <button
-        onClick={() => handleAddToCart(producto, 'Andes4034')}
-        disabled={outOfStock4034}
-        className={`boton-agregar ${outOfStock4034 ? 'boton-sin-stock' : ''}`}
-      >
-        +🛒
-      </button>
-    </>
-  )}
-  {currentUser.role === 'jefe' && (
-    <>
-      <button onClick={() => handleIncrementStock(producto.id, 'cantidadDisponibleAndes4034')} className='boton-incrementar'> + </button>
-    </>
-  )}
-</p>
-<p>
-  Stock Los Andes 4320: {stock4320}
-  {['jefe', 'vendedor'].includes(currentUser.role) && (
-    <>
-      <button
-        onClick={() => handleAddToCart(producto, 'Andes4320')}
-        disabled={outOfStock4320}
-        className={`boton-agregar ${outOfStock4320 ? 'boton-sin-stock' : ''}`}
-      >
-        +🛒
-      </button>
-    </>
-  )}
-  {currentUser.role === 'jefe' && (
-    <>
-      <button onClick={() => handleIncrementStock(producto.id, 'cantidadDisponibleAndes4320')} className='boton-incrementar'> + </button>
-    </>
-  )}
-</p>
+                    Stock Los Andes 4320: {stock4320}
+                    {['jefe', 'vendedor'].includes(currentUser.role) && (
+                      <>
+                        <button
+                          onClick={() => handleAddToCart(producto, 'Andes4320')}
+                          disabled={outOfStock4320}
+                          className={`boton-agregar ${outOfStock4320 ? 'boton-sin-stock' : ''}`}
+                        >
+                          +🛒
+                        </button>
+                      </>
+                    )}
+                    {currentUser.role === 'jefe' && (
+                      <>
+                        <button onClick={() => handleIncrementStock(producto.id, 'cantidadDisponibleAndes4320')} className='boton-incrementar'> + </button>
+                      </>
+                    )}
+                  </p>
 
                   {currentUser.role === 'jefe' && (
                     <div className='action-buttons'>

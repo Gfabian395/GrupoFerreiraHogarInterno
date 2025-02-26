@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../../firebaseConfig';
-import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import './Categorias.css';
 import Load from '../load/Load';
 
@@ -12,7 +12,11 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
   const [deleteId, setDeleteId] = useState(null);
   const [password, setPassword] = useState('');
   const [alerta, setAlerta] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');  // Estado para la búsqueda
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showEditPrompt, setShowEditPrompt] = useState(false);
+  const [editCategoria, setEditCategoria] = useState(null);
+  const [editNombre, setEditNombre] = useState('');
+  const [editImagenUrl, setEditImagenUrl] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -39,7 +43,7 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
         await deleteDoc(doc(db, 'categorias', deleteId));
         setAlerta('Categoría eliminada con éxito');
         setTimeout(() => {
-          window.location.reload(); // Refrescar la página
+          window.location.reload();
         }, 1000);
       } catch (error) {
         console.error("Error deleting categoria: ", error);
@@ -60,12 +64,45 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
     }
   };
 
+  const handleEditCategoria = (categoria) => {
+    if (currentUser && currentUser.role === 'jefe') {
+      setEditCategoria(categoria);
+      setEditNombre(categoria.nombre);
+      setEditImagenUrl(categoria.imagenUrl);
+      setShowEditPrompt(true);
+    } else {
+      setAlerta('No tiene permiso para editar esta categoría.');
+      setTimeout(() => setAlerta(''), 3000);
+    }
+  };
+
+  const saveEditCategoria = async (e) => {
+    e.preventDefault();
+    try {
+      const categoriaRef = doc(db, 'categorias', editCategoria.id);
+      await updateDoc(categoriaRef, {
+        nombre: editNombre,
+        imagenUrl: editImagenUrl
+      });
+      setAlerta('Categoría actualizada con éxito');
+      setTimeout(() => {
+        setShowEditPrompt(false);
+        setEditCategoria(null);
+        setEditNombre('');
+        setEditImagenUrl('');
+        window.location.reload();
+      }, 1000);
+    } catch (error) {
+      console.error("Error updating categoria: ", error);
+    }
+  };
+
   const handleSelectCategoria = (id) => {
     onSelectCategoria(id);
     navigate(`/categorias/${id}/productos`);
   };
 
-  const filteredCategorias = categorias.filter(categoria =>  // Filtrar categorías
+  const filteredCategorias = categorias.filter(categoria =>
     categoria.nombre.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -91,7 +128,10 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
             <div className='descripcioncita'>
               <h3>{categoria.nombre}</h3>
               {currentUser && currentUser.role === 'jefe' && (
-                <button onClick={(e) => { e.stopPropagation(); promptDeleteCategoria(categoria.id); }}>Eliminar</button>
+                <>
+                  <button onClick={(e) => { e.stopPropagation(); promptDeleteCategoria(categoria.id); }}>Eliminar</button>
+                  <button onClick={(e) => { e.stopPropagation(); handleEditCategoria(categoria); }}>Editar</button>
+                </>
               )}
             </div>
           </li>
@@ -117,8 +157,35 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
           </div>
         </div>
       )}
+
+      {showEditPrompt && (
+        <div className="overlay">
+          <div className="form-popup">
+            <h3>Editar Categoría</h3>
+            <form onSubmit={saveEditCategoria}>
+              <input
+                type="text"
+                className="form-control"
+                value={editNombre}
+                onChange={(e) => setEditNombre(e.target.value)}
+                placeholder="Nombre de la Categoría"
+                required
+              />
+              <input
+                type="text"
+                className="form-control"
+                value={editImagenUrl}
+                onChange={(e) => setEditImagenUrl(e.target.value)}
+                placeholder="URL de la Imagen"
+                required
+              />
+              <button type="submit" className="btn btn-success">Guardar</button>
+              <button onClick={() => { setShowEditPrompt(false); setEditCategoria(null); }} className="btn btn-secondary">Cancelar</button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
-};
-
+}
 export default Categorias;

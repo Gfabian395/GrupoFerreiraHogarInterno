@@ -1,7 +1,3 @@
-.productos {
-  padding: 20px;
-}
-
 .productos h2 {
   color: #5c6ac4;
 }
@@ -189,9 +185,9 @@
 }
 .search-bar {
   width: 100%;
-  max-width: 400px;
+  max-width: 350px;
   padding: 12px 20px;
-  margin: 20px auto; /* Centrar horizontalmente */
+  margin:  auto; /* Centrar horizontalmente */
   box-sizing: border-box;
   border: 1px solid #ccc;
   border-radius: 25px; /* Bordes redondeados */

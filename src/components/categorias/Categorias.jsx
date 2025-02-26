@@ -76,15 +76,13 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
   return (
     <div className="categorias">
       {alerta && <div className="alert alert-danger">{alerta}</div>}
-      <div className="search-container">
-        <input
-          type="text"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Buscar categorías..."
-          className="search-input"
-        />
-      </div>
+      <input
+        type="text"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        placeholder="Buscar categorías..."
+        className="search-input"
+      />
 
       <ul>
         {filteredCategorias.map(categoria => (

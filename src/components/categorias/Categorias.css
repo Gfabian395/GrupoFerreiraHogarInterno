@@ -86,7 +86,7 @@
 
 .search-input {
   width: 100%;
-  max-width: 400px;
+  max-width: 350px;
   padding: 12px 20px;
   margin: 20px auto;
   /* Centrar horizontalmente */
@@ -117,13 +117,4 @@
 .search-input:focus::placeholder {
   color: #ccc;
   /* Color del placeholder al enfocar */
-}
-
-.search-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  margin-top: 20px;
-  /* Espacio superior para ajustarlo */
 }

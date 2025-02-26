@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, getDocs, addDoc, deleteDoc, query, where } from 'firebase/firestore'; // Importa deleteDoc y query
+import { collection, getDocs, addDoc, query, where } from 'firebase/firestore';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { db } from '../../firebaseConfig';
@@ -13,9 +13,9 @@ const CierreCaja = ({ currentUser }) => {
   const [totalRecaudado, setTotalRecaudado] = useState(0);
   const [rankingVendedores, setRankingVendedores] = useState([]);
   const [showPDFPrompt, setShowPDFPrompt] = useState(false);
-  const [showGastoForm, setShowGastoForm] = useState(false); // Nuevo estado para mostrar el formulario de gasto
-  const [gastoMonto, setGastoMonto] = useState(''); // Nuevo estado para el monto del gasto
-  const [gastoRazon, setGastoRazon] = useState(''); // Nuevo estado para la razón del gasto
+  const [showGastoForm, setShowGastoForm] = useState(false);
+  const [gastoMonto, setGastoMonto] = useState('');
+  const [gastoRazon, setGastoRazon] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -23,6 +23,7 @@ const CierreCaja = ({ currentUser }) => {
       alert('No tienes permiso para acceder a esta página.');
       return;
     }
+
     const fetchMovimientos = async () => {
       const ventasCollection = collection(db, 'ventas');
       const gastosCollection = collection(db, 'gastos');
@@ -41,7 +42,7 @@ const CierreCaja = ({ currentUser }) => {
         }
         vendedoresMap[venta.vendedor].cantVentas += 1;
         if (venta.articulos && Array.isArray(venta.articulos)) {
-          vendedoresMap[venta.vendedor].articulosVendidos += venta.articulos.length; // Sumar la cantidad de artículos vendidos
+          vendedoresMap[venta.vendedor].articulosVendidos += venta.articulos.length;
         }
 
         venta.pagos.forEach(pago => {
@@ -53,21 +54,21 @@ const CierreCaja = ({ currentUser }) => {
             razon: 'Cobro',
             monto: pago.monto
           });
-          vendedoresMap[venta.vendedor].totalIngresado += pago.monto; // Sumar el monto del anticipo o venta al contado
+          vendedoresMap[venta.vendedor].totalIngresado += pago.monto;
           total += pago.monto;
         });
       });
 
       gastosList.forEach(gasto => {
         movimientosList.push({
-          idVenta: gasto.id, // ID de gasto
-          clienteId: '', // No hay cliente asociado a un gasto
-          vendedor: '', // No hay vendedor asociado a un gasto
+          idVenta: gasto.id,
+          clienteId: '',
+          vendedor: '',
           fecha: new Date(gasto.fecha.seconds * 1000).toLocaleDateString(),
           razon: gasto.tipo,
           monto: gasto.monto
         });
-        total -= gasto.monto; // Restar los gastos del total recaudado
+        total -= gasto.monto;
       });
 
       const ranking = Object.entries(vendedoresMap)
@@ -80,9 +81,40 @@ const CierreCaja = ({ currentUser }) => {
       setRankingVendedores(ranking);
       setLoading(false);
     };
-    fetchMovimientos();
-  }, [currentUser]);
 
+    const saveMonthlyRanking = async () => {
+      const currentMonth = new Date().getMonth();
+      const rankingCollection = collection(db, 'ranking');
+
+      const q = query(rankingCollection, where('month', '==', currentMonth));
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        await addDoc(rankingCollection, {
+          month: currentMonth,
+          ranking: rankingVendedores,
+          date: new Date()
+        });
+      }
+    };
+
+    const loadRanking = async () => {
+      const currentMonth = new Date().getMonth();
+      const rankingCollection = collection(db, 'ranking');
+      const q = query(rankingCollection, where('month', '==', currentMonth));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        const savedRanking = querySnapshot.docs[0].data().ranking;
+        setRankingVendedores(savedRanking);
+      }
+
+      await fetchMovimientos();
+      await saveMonthlyRanking();
+    };
+
+    loadRanking();
+  }, [currentUser]);
 
   const handleGeneratePDF = () => {
     setShowPDFPrompt(true);
@@ -121,7 +153,6 @@ const CierreCaja = ({ currentUser }) => {
 
     setMovimientos([]);
     setTotalRecaudado(0);
-    setRankingVendedores([]);
     setShowPDFPrompt(false);
   };
 
@@ -134,14 +165,14 @@ const CierreCaja = ({ currentUser }) => {
     const razon = gastoRazon;
     if (monto && !isNaN(monto) && razon) {
       await addDoc(collection(db, 'gastos'), {
-        monto: Math.round(monto / 1000) * 1000, // Redondeado
+        monto: Math.round(monto / 1000) * 1000,
         fecha: new Date(),
         tipo: razon
       });
       alert('Gasto agregado correctamente.');
-      setShowGastoForm(false); // Cierra el formulario después de agregar el gasto
-      setGastoMonto(''); // Limpiar campo del monto
-      setGastoRazon(''); // Limpiar campo de la razón
+      setShowGastoForm(false);
+      setGastoMonto('');
+      setGastoRazon('');
     } else {
       alert('Por favor ingrese un monto y una razón válidos.');
     }
@@ -154,6 +185,8 @@ const CierreCaja = ({ currentUser }) => {
   const handleCloseGastoForm = () => {
     setShowGastoForm(false);
   };
+
+
 
   return (
     <div className="cierre-caja">
@@ -205,13 +238,19 @@ const CierreCaja = ({ currentUser }) => {
                 </tr>
               </thead>
               <tbody>
-                {rankingVendedores.map((vendedor, index) => (
-                  <tr key={index}>
-                    <td>{vendedor.vendedor}</td>
-                    <td>{vendedor.cantVentas}</td>
-                    <td>${vendedor.totalIngresado.toLocaleString('es-AR')}</td>
+                {rankingVendedores.length > 0 ? (
+                  rankingVendedores.map((vendedor, index) => (
+                    <tr key={index}>
+                      <td>{vendedor.vendedor}</td>
+                      <td>{vendedor.cantVentas}</td>
+                      <td>${vendedor.totalIngresado.toLocaleString('es-AR')}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="3">Aún no hay datos para el ranking de este mes.</td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, getDocs, addDoc, query, where } from 'firebase/firestore';
+import { collection, getDocs, addDoc } from 'firebase/firestore';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { db } from '../../firebaseConfig';
@@ -18,104 +18,6 @@ const CierreCaja = ({ currentUser }) => {
   const [gastoRazon, setGastoRazon] = useState('');
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (currentUser.role !== 'jefe') {
-      alert('No tienes permiso para acceder a esta página.');
-      return;
-    }
-
-    const fetchMovimientos = async () => {
-      const ventasCollection = collection(db, 'ventas');
-      const gastosCollection = collection(db, 'gastos');
-      const ventasSnapshot = await getDocs(ventasCollection);
-      const gastosSnapshot = await getDocs(gastosCollection);
-      const ventasList = ventasSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      const gastosList = gastosSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-      let total = 0;
-      const movimientosList = [];
-      const vendedoresMap = {};
-
-      ventasList.forEach(venta => {
-        if (!vendedoresMap[venta.vendedor]) {
-          vendedoresMap[venta.vendedor] = { cantVentas: 0, totalIngresado: 0, articulosVendidos: 0 };
-        }
-        vendedoresMap[venta.vendedor].cantVentas += 1;
-        if (venta.articulos && Array.isArray(venta.articulos)) {
-          vendedoresMap[venta.vendedor].articulosVendidos += venta.articulos.length;
-        }
-
-        venta.pagos.forEach(pago => {
-          movimientosList.push({
-            idVenta: venta.id,
-            clienteId: venta.clienteId,
-            vendedor: pago.usuario,
-            fecha: new Date(pago.fecha).toLocaleDateString(),
-            razon: 'Cobro',
-            monto: pago.monto
-          });
-          vendedoresMap[venta.vendedor].totalIngresado += pago.monto;
-          total += pago.monto;
-        });
-      });
-
-      gastosList.forEach(gasto => {
-        movimientosList.push({
-          idVenta: gasto.id,
-          clienteId: '',
-          vendedor: '',
-          fecha: new Date(gasto.fecha.seconds * 1000).toLocaleDateString(),
-          razon: gasto.tipo,
-          monto: gasto.monto
-        });
-        total -= gasto.monto;
-      });
-
-      const ranking = Object.entries(vendedoresMap)
-        .map(([vendedor, data]) => ({ vendedor, ...data }))
-        .sort((a, b) => b.totalIngresado - a.totalIngresado)
-        .slice(0, 3);
-
-      setMovimientos(movimientosList);
-      setTotalRecaudado(total);
-      setRankingVendedores(ranking);
-      setLoading(false);
-    };
-
-    const saveMonthlyRanking = async () => {
-      const currentMonth = new Date().getMonth();
-      const rankingCollection = collection(db, 'ranking');
-
-      const q = query(rankingCollection, where('month', '==', currentMonth));
-      const querySnapshot = await getDocs(q);
-
-      if (querySnapshot.empty) {
-        await addDoc(rankingCollection, {
-          month: currentMonth,
-          ranking: rankingVendedores,
-          date: new Date()
-        });
-      }
-    };
-
-    const loadRanking = async () => {
-      const currentMonth = new Date().getMonth();
-      const rankingCollection = collection(db, 'ranking');
-      const q = query(rankingCollection, where('month', '==', currentMonth));
-      const querySnapshot = await getDocs(q);
-
-      if (!querySnapshot.empty) {
-        const savedRanking = querySnapshot.docs[0].data().ranking;
-        setRankingVendedores(savedRanking);
-      }
-
-      await fetchMovimientos();
-      await saveMonthlyRanking();
-    };
-
-    loadRanking();
-  }, [currentUser]);
-
   const handleGeneratePDF = () => {
     setShowPDFPrompt(true);
   };
@@ -125,16 +27,15 @@ const CierreCaja = ({ currentUser }) => {
     doc.setFontSize(10);
     const today = new Date().toLocaleDateString();
     doc.text(`Reporte de Cierre de Caja de ${today}`, 40, 30);
-    const tableColumn = ["ID", "Cliente", "Vendedor", "Fecha", "Razón", "Monto"];
+    const tableColumn = ["ID", "Cliente", "Vendedor", "Fecha", "Monto"];
     const tableRows = [];
 
     movimientos.forEach(movimiento => {
       const movimientoData = [
-        movimiento.idVenta,
+        movimiento.id,
         movimiento.clienteId,
         movimiento.vendedor,
         movimiento.fecha,
-        movimiento.razon,
         `$${movimiento.monto.toLocaleString('es-AR')}`
       ];
       tableRows.push(movimientoData);
@@ -186,7 +87,76 @@ const CierreCaja = ({ currentUser }) => {
     setShowGastoForm(false);
   };
 
+  const calcularRankingVendedores = (ventasList) => {
+    const ranking = {};
 
+    ventasList.forEach((venta) => {
+      if (!ranking[venta.vendedor]) {
+        ranking[venta.vendedor] = {
+          vendedor: venta.vendedor,
+          cantVentas: 0,
+          totalIngresado: 0,
+        };
+      }
+
+      ranking[venta.vendedor].cantVentas += 1;
+      ranking[venta.vendedor].totalIngresado += venta.monto;
+    });
+
+    const rankingArray = Object.values(ranking).sort((a, b) => b.totalIngresado - a.totalIngresado);
+    return rankingArray.slice(0, 3);
+  };
+
+  useEffect(() => {
+    if (currentUser.role !== 'jefe') {
+      alert('No tienes permiso para acceder a esta página.');
+      navigate('/');
+      return;
+    }
+
+    const fetchMovimientos = async () => {
+      const ventasCollection = collection(db, 'ventas');
+      const ventasSnapshot = await getDocs(ventasCollection);
+      const ventasList = ventasSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    
+      let total = 0;
+    
+      for (const venta of ventasList) {
+        if (venta.fecha && venta.fecha.seconds) {
+          venta.fecha = new Date(venta.fecha.seconds * 1000);
+        }
+    
+        let montoRecibido = 0;
+        if (venta.pagos && venta.pagos.length > 0) {
+          montoRecibido = venta.pagos.reduce((total, pago) => total + parseFloat(pago.monto), 0);
+        }
+        venta.monto = montoRecibido;
+    
+        total += montoRecibido;
+    
+        console.log('Venta procesada:', venta);
+      }
+    
+      // Ordenar las ventas por fecha más reciente
+      ventasList.sort((a, b) => b.fecha - a.fecha);
+    
+      // Convertir fechas a cadena después de ordenar
+      ventasList.forEach(venta => {
+        if (venta.fecha instanceof Date) {
+          venta.fecha = venta.fecha.toLocaleDateString();
+        }
+      });
+    
+      setMovimientos(ventasList);
+      setTotalRecaudado(total);
+      setRankingVendedores(calcularRankingVendedores(ventasList));
+      setLoading(false);
+    };
+    
+
+
+    fetchMovimientos();
+  }, [currentUser, navigate]);
 
   return (
     <div className="cierre-caja">
@@ -203,19 +173,17 @@ const CierreCaja = ({ currentUser }) => {
                   <th>Cliente</th>
                   <th>Vendedor</th>
                   <th>Fecha</th>
-                  <th>Razón</th>
                   <th>Monto</th>
                 </tr>
               </thead>
               <tbody>
                 {movimientos.map((movimiento, index) => (
                   <tr key={index}>
-                    <td>{movimiento.idVenta}</td>
-                    <td>{movimiento.clienteId}</td>
-                    <td>{movimiento.vendedor}</td>
-                    <td>{movimiento.fecha}</td>
-                    <td>{movimiento.razon}</td>
-                    <td>${movimiento.monto.toLocaleString('es-AR')}</td>
+                    <td>{movimiento.id || 'N/A'}</td>
+                    <td>{movimiento.clienteId || 'N/A'}</td>
+                    <td>{movimiento.vendedor || 'N/A'}</td>
+                    <td>{movimiento.fecha || 'N/A'}</td>
+                    <td>{`$${movimiento.monto.toLocaleString('es-AR')}` || 'N/A'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -227,7 +195,6 @@ const CierreCaja = ({ currentUser }) => {
           <button onClick={handleShowGastoForm}>Agregar Gasto</button>
 
           <h2>Ranking de Mejores 3 Vendedores Mensuales</h2>
-
           <div className="table-responsive">
             <table className="table table-bordered">
               <thead>
@@ -243,7 +210,7 @@ const CierreCaja = ({ currentUser }) => {
                     <tr key={index}>
                       <td>{vendedor.vendedor}</td>
                       <td>{vendedor.cantVentas}</td>
-                      <td>${vendedor.totalIngresado.toLocaleString('es-AR')}</td>
+                      <td>{`$${vendedor.totalIngresado.toLocaleString('es-AR')}`}</td>
                     </tr>
                   ))
                 ) : (
@@ -293,5 +260,6 @@ const CierreCaja = ({ currentUser }) => {
     </div>
   );
 };
+
 
 export default CierreCaja;

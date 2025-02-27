@@ -262,72 +262,84 @@ const Productos = ({ onAddToCart, currentUser }) => {
       </div>
 
       {mostrarFormulario && currentProduct && (
-        <div className="blur-background">
-          <form className="floating-form" ref={formRef}>
-            <span className="close" onClick={handleCloseFormulario}>&times;</span>
-            <h2>Editar Producto</h2>
-            <div className="form-group">
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Nombre"
-                name="nombre"
-                value={currentProduct.nombre}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Precio"
-                name="precio"
-                value={currentProduct.precio}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Stock Andes 4034"
-                name="cantidadDisponibleAndes4034"
-                value={currentProduct.cantidadDisponibleAndes4034}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Stock Andes 4320"
-                name="cantidadDisponibleAndes4320"
-                value={currentProduct.cantidadDisponibleAndes4320}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <select
-                className="form-control"
-                name="categoria"
-                value={currentProduct.categoria}
-                onChange={handleInputChange}
-                required
-              >
-                <option value="">-- Selecciona una Categoría --</option>
-                {categorias.map(categoria => (
-                  <option key={categoria.id} value={categoria.id}>{categoria.nombre}</option>
-                ))}
-              </select>
-            </div>
-            <button type="button" className="btn btn-primary" onClick={() => handleUpdateProduct(currentProduct.id)}>Guardar Cambios</button>
-          </form>
-        </div>
-      )}
+  <div className="blur-background">
+    <form className="floating-form" ref={formRef}>
+      <span className="close" onClick={handleCloseFormulario}>&times;</span>
+      <h2>Editar Producto</h2>
+      <div className="form-group">
+        <input
+          type="text"
+          className="form-control"
+          placeholder="Nombre"
+          name="nombre"
+          value={currentProduct.nombre}
+          onChange={handleInputChange}
+          required
+        />
+      </div>
+      <div className="form-group">
+        <input
+          type="text"
+          className="form-control"
+          placeholder="Precio"
+          name="precio"
+          value={currentProduct.precio}
+          onChange={handleInputChange}
+          required
+        />
+      </div>
+      <div className="form-group">
+        <input
+          type="text"
+          className="form-control"
+          placeholder="Stock Andes 4034"
+          name="cantidadDisponibleAndes4034"
+          value={currentProduct.cantidadDisponibleAndes4034}
+          onChange={handleInputChange}
+          required
+        />
+      </div>
+      <div className="form-group">
+        <input
+          type="text"
+          className="form-control"
+          placeholder="Stock Andes 4320"
+          name="cantidadDisponibleAndes4320"
+          value={currentProduct.cantidadDisponibleAndes4320}
+          onChange={handleInputChange}
+          required
+        />
+      </div>
+      <div className="form-group">
+        <input
+          type="text"
+          className="form-control"
+          placeholder="URL de la Imagen"
+          name="urlImagen"
+          value={currentProduct.urlImagen}
+          onChange={handleInputChange}
+          required
+        />
+      </div>
+      <div className="form-group">
+        <select
+          className="form-control"
+          name="categoria"
+          value={currentProduct.categoria}
+          onChange={handleInputChange}
+          required
+        >
+          <option value="">-- Selecciona una Categoría --</option>
+          {categorias.map(categoria => (
+            <option key={categoria.id} value={categoria.id}>{categoria.nombre}</option>
+          ))}
+        </select>
+      </div>
+      <button type="button" className="btn btn-primary" onClick={() => handleUpdateProduct(currentProduct.id)}>Guardar Cambios</button>
+    </form>
+  </div>
+)}
+
     </>
   );
 }

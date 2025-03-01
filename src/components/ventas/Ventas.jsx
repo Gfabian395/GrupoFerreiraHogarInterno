@@ -138,7 +138,7 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
     const doc = new jsPDF('p', 'pt', 'a4'); // A4 size
 
     // Agregar el logo en la parte superior
-    const logoUrl = 'https://scontent.faep37-1.fna.fbcdn.net/v/t39.30808-6/480109992_122105885180760410_4771551403182724247_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=f727a1&_nc_ohc=lpMIF9WmQ8EQ7kNvgHym_hb&_nc_oc=AdiOkP0N0qKoBfD1l1nA_QA7xBv3L6_ALCuvesldnW-g8USqa_GuSoWmcPZeWce5Ro4&_nc_zt=23&_nc_ht=scontent.faep37-1.fna&_nc_gid=AJDzdIg7r0Bch0dt6UGKHjd&oh=00_AYC4z6kUNLjANB8PSJjst-5-pp527-9jvmgAj0gNz1INMg&oe=67B44E99'; // URL del logo
+    const logoUrl = 'https://firebasestorage.googleapis.com/v0/b/ferreirahogar-376dd.firebasestorage.app/o/categorias%2Flogo.png?alt=media&token=c589846d-04eb-478f-b6a6-4d91c1c8a8aa'; // URL del logo
     // Asegúrate de usar las dimensiones correctas para que el logo no se deforme.
     doc.addImage(logoUrl, 'JPEG', 250, 20, 80, 80); // Coordenadas X e Y, Ancho y Alto
 

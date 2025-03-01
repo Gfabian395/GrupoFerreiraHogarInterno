@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, getDocs, addDoc } from 'firebase/firestore';
+import { collection, getDocs, addDoc, doc, getDoc, setDoc } from 'firebase/firestore';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { db } from '../../firebaseConfig';
@@ -114,49 +114,71 @@ const CierreCaja = ({ currentUser }) => {
       return;
     }
 
+    const checkAndResetData = async () => {
+      const resetDateDoc = await getDoc(doc(db, 'config', 'resetDate'));
+      const lastResetDate = resetDateDoc.exists() ? resetDateDoc.data().date.toDate() : new Date(0);
+      const today = new Date();
+
+      if (today.getDate() === 1 && lastResetDate.getMonth() !== today.getMonth()) {
+        // Es el primer día del mes y no se ha reiniciado en este mes
+        await resetData();
+        await setDoc(doc(db, 'config', 'resetDate'), { date: today });
+      } else {
+        await fetchMovimientos();
+      }
+    };
+
+    const resetData = async () => {
+      // Aquí puedes implementar la lógica para reiniciar los datos
+      setMovimientos([]);
+      setTotalRecaudado(0);
+      setRankingVendedores([]);
+    };
+
     const fetchMovimientos = async () => {
       const ventasCollection = collection(db, 'ventas');
       const ventasSnapshot = await getDocs(ventasCollection);
       const ventasList = ventasSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    
+
       let total = 0;
-    
-      for (const venta of ventasList) {
+      const today = new Date();
+
+      const ventasHoy = ventasList.filter(venta => {
         if (venta.fecha && venta.fecha.seconds) {
           venta.fecha = new Date(venta.fecha.seconds * 1000);
         }
-    
+        return venta.fecha.getDate() === today.getDate() && venta.fecha.getMonth() === today.getMonth();
+      });
+
+      for (const venta of ventasHoy) {
         let montoRecibido = 0;
         if (venta.pagos && venta.pagos.length > 0) {
           montoRecibido = venta.pagos.reduce((total, pago) => total + parseFloat(pago.monto), 0);
         }
         venta.monto = montoRecibido;
-    
         total += montoRecibido;
-    
-        console.log('Venta procesada:', venta);
       }
-    
+
       // Ordenar las ventas por fecha más reciente
-      ventasList.sort((a, b) => b.fecha - a.fecha);
-    
+      ventasHoy.sort((a, b) => b.fecha - a.fecha);
+
       // Convertir fechas a cadena después de ordenar
-      ventasList.forEach(venta => {
+      ventasHoy.forEach(venta => {
         if (venta.fecha instanceof Date) {
           venta.fecha = venta.fecha.toLocaleDateString();
         }
       });
-    
-      setMovimientos(ventasList);
+
+      setMovimientos(ventasHoy);
       setTotalRecaudado(total);
-      setRankingVendedores(calcularRankingVendedores(ventasList));
+      setRankingVendedores(calcularRankingVendedores(ventasHoy));
       setLoading(false);
     };
-    
 
-
-    fetchMovimientos();
+    checkAndResetData();
   }, [currentUser, navigate]);
+
+
 
   return (
     <div className="cierre-caja">
@@ -193,7 +215,7 @@ const CierreCaja = ({ currentUser }) => {
           <button onClick={handleGeneratePDF}>Generar PDF</button>
           <button onClick={handleGenerateResumen}>Ver Resumen</button>
           <button onClick={handleShowGastoForm}>Agregar Gasto</button>
-
+  
           <h2>Ranking de Mejores 3 Vendedores Mensuales</h2>
           <div className="table-responsive">
             <table className="table table-bordered">
@@ -221,7 +243,7 @@ const CierreCaja = ({ currentUser }) => {
               </tbody>
             </table>
           </div>
-
+  
           {showGastoForm && (
             <div className="overlay">
               <div className="form-popup">
@@ -245,7 +267,7 @@ const CierreCaja = ({ currentUser }) => {
               </div>
             </div>
           )}
-
+  
           {showPDFPrompt && (
             <div className="overlay">
               <div className="form-popup">
@@ -259,6 +281,7 @@ const CierreCaja = ({ currentUser }) => {
       )}
     </div>
   );
+  
 };
 
 

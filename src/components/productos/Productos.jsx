@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { db } from '../../firebaseConfig';
-import { collection, getDocs, updateDoc, deleteDoc, addDoc, doc } from 'firebase/firestore'; // Asegúrate de importar addDoc también
+import { collection, getDocs, updateDoc, deleteDoc, addDoc, doc } from 'firebase/firestore';
 import Load from '../load/Load';
 import './Productos.css';
 
@@ -13,7 +13,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
   const [currentProduct, setCurrentProduct] = useState(null);
-  const [categorias, setCategorias] = useState([]); // Definir categorias
+  const [categorias, setCategorias] = useState([]);
   const formRef = useRef(null);
 
   useEffect(() => {
@@ -22,10 +22,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
         const productosCollection = collection(db, `categorias/${categoriaId}/productos`);
         const productosSnapshot = await getDocs(productosCollection);
         const productosList = productosSnapshot.docs.map(doc => ({ id: doc.id, categoriaId: categoriaId, ...doc.data() }));
-
-        // Ordenar los productos de la A a la Z
         productosList.sort((a, b) => a.nombre.localeCompare(b.nombre));
-
         setProductos(productosList);
         setLoading(false);
       } catch (error) {
@@ -54,13 +51,8 @@ const Productos = ({ onAddToCart, currentUser }) => {
 
       if (producto && producto[campo] !== undefined && !isNaN(producto[campo])) {
         const newCantidad = parseInt(producto[campo]) + 1;
-
-        await updateDoc(productoRef, {
-          [campo]: newCantidad
-        });
-
+        await updateDoc(productoRef, { [campo]: newCantidad });
         setProductos(productos.map(p => p.id === productoId ? { ...p, [campo]: newCantidad } : p));
-
         setAlerta('Stock actualizado con éxito');
         setTimeout(() => {
           setAlerta('');
@@ -76,7 +68,6 @@ const Productos = ({ onAddToCart, currentUser }) => {
   const handleAddToCart = (producto, sucursal) => {
     const productoEnCarrito = { ...producto, sucursal };
     const productoStock = parseInt(producto[`cantidadDisponible${sucursal}`]);
-
     if (!isNaN(productoStock) && productoStock > 0) {
       onAddToCart(productoEnCarrito);
       alert('Producto añadido al carrito con éxito');
@@ -89,12 +80,9 @@ const Productos = ({ onAddToCart, currentUser }) => {
     const productoRef = doc(db, `categorias/${categoriaId}/productos`, producto.id);
     const productoStock = parseInt(producto[`cantidadDisponible${sucursal}`]);
     const newCantidad = productoStock - 1;
-
     if (!isNaN(productoStock) && productoStock > 0) {
       try {
-        await updateDoc(productoRef, {
-          [`cantidadDisponible${sucursal}`]: newCantidad
-        });
+        await updateDoc(productoRef, { [`cantidadDisponible${sucursal}`]: newCantidad });
         setProductos(productos.map(p => p.id === producto.id ? { ...p, [`cantidadDisponible${sucursal}`]: newCantidad } : p));
         alert('Venta realizada con éxito. Stock actualizado.');
       } catch (error) {
@@ -130,55 +118,26 @@ const Productos = ({ onAddToCart, currentUser }) => {
   };
 
   const handleUpdateProduct = async (productoId) => {
-    console.log("handleUpdateProduct - productoId:", productoId);
     try {
       const productoData = { ...currentProduct };
-      console.log("Datos del producto actual:", currentProduct);
-      console.log("Datos del producto a actualizar:", productoData);
-  
-      // Verificar si la categoría ha cambiado
-      const nuevaCategoria = productoData.categoria || categoriaId; // Usa la categoría actual si la categoría del producto es undefined
-      console.log("Categoría nueva o actual del producto:", nuevaCategoria);
-      console.log("Categoría actual:", categoriaId);
-  
+      const nuevaCategoria = productoData.categoria || categoriaId;
       if (nuevaCategoria !== categoriaId) {
-        console.log("La categoría ha cambiado, moviendo el producto a la nueva categoría.");
-        // Mover el producto a la nueva categoría
         const nuevaCategoriaRef = collection(db, `categorias/${nuevaCategoria}/productos`);
         await addDoc(nuevaCategoriaRef, productoData);
-        console.log("Producto agregado a la nueva categoría:", productoData);
-  
-        // Eliminar el producto de la categoría actual
         const productoRef = doc(db, `categorias/${categoriaId}/productos`, productoId);
         await deleteDoc(productoRef);
-        console.log("Producto eliminado de la categoría actual:", productoId);
-  
-        // Actualizar el estado de los productos
         setProductos(productos.filter(p => p.id !== productoId));
-        console.log("Estado de productos actualizado después de mover:", productos);
       } else {
-        console.log("La categoría no ha cambiado, actualizando el producto en la misma categoría.");
-        // Actualizar el producto en la misma categoría
         const productoRef = doc(db, `categorias/${categoriaId}/productos`, productoId);
         await updateDoc(productoRef, productoData);
-        console.log("Producto actualizado en la misma categoría:", productoData);
-  
-        // Actualizar el estado de los productos
         setProductos(productos.map(p => p.id === productoId ? { ...p, ...productoData } : p));
-        console.log("Estado de productos actualizado:", productos);
       }
-  
       alert('Producto actualizado con éxito');
       handleCloseFormulario();
     } catch (error) {
       console.error("Error updating product: ", error);
     }
   };
-  
-  
-  
-  
-  
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

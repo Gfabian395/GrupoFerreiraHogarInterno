@@ -130,33 +130,55 @@ const Productos = ({ onAddToCart, currentUser }) => {
   };
 
   const handleUpdateProduct = async (productoId) => {
+    console.log("handleUpdateProduct - productoId:", productoId);
     try {
-      const { categoria: nuevaCategoria, ...productoData } = currentProduct;
-
+      const productoData = { ...currentProduct };
+      console.log("Datos del producto actual:", currentProduct);
+      console.log("Datos del producto a actualizar:", productoData);
+  
+      // Verificar si la categoría ha cambiado
+      const nuevaCategoria = productoData.categoria || categoriaId; // Usa la categoría actual si la categoría del producto es undefined
+      console.log("Categoría nueva o actual del producto:", nuevaCategoria);
+      console.log("Categoría actual:", categoriaId);
+  
       if (nuevaCategoria !== categoriaId) {
+        console.log("La categoría ha cambiado, moviendo el producto a la nueva categoría.");
         // Mover el producto a la nueva categoría
         const nuevaCategoriaRef = collection(db, `categorias/${nuevaCategoria}/productos`);
         await addDoc(nuevaCategoriaRef, productoData);
-
+        console.log("Producto agregado a la nueva categoría:", productoData);
+  
         // Eliminar el producto de la categoría actual
         const productoRef = doc(db, `categorias/${categoriaId}/productos`, productoId);
         await deleteDoc(productoRef);
-
+        console.log("Producto eliminado de la categoría actual:", productoId);
+  
         // Actualizar el estado de los productos
         setProductos(productos.filter(p => p.id !== productoId));
+        console.log("Estado de productos actualizado después de mover:", productos);
       } else {
+        console.log("La categoría no ha cambiado, actualizando el producto en la misma categoría.");
         // Actualizar el producto en la misma categoría
         const productoRef = doc(db, `categorias/${categoriaId}/productos`, productoId);
-        await updateDoc(productoRef, currentProduct);
-        setProductos(productos.map(p => p.id === productoId ? currentProduct : p));
+        await updateDoc(productoRef, productoData);
+        console.log("Producto actualizado en la misma categoría:", productoData);
+  
+        // Actualizar el estado de los productos
+        setProductos(productos.map(p => p.id === productoId ? { ...p, ...productoData } : p));
+        console.log("Estado de productos actualizado:", productos);
       }
-
+  
       alert('Producto actualizado con éxito');
       handleCloseFormulario();
     } catch (error) {
       console.error("Error updating product: ", error);
     }
   };
+  
+  
+  
+  
+  
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

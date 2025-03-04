@@ -8,6 +8,7 @@ import Load from '../load/Load';
 const Categorias = ({ onSelectCategoria, currentUser }) => {
   const [categorias, setCategorias] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [imagesLoading, setImagesLoading] = useState(true);
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
   const [password, setPassword] = useState('');
@@ -25,8 +26,10 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
         const categoriasCollection = collection(db, 'categorias');
         const categoriasSnapshot = await getDocs(categoriasCollection);
         const categoriasList = categoriasSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        categoriasList.sort((a, b) => a.nombre.localeCompare(b.nombre));
         setCategorias(categoriasList);
         setLoading(false);
+        setImagesLoading(false);
       } catch (error) {
         console.error("Error fetching categorias: ", error);
         setLoading(false);
@@ -35,6 +38,13 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
 
     fetchCategorias();
   }, []);
+
+  const handleImageLoad = () => {
+    const allImagesLoaded = document.querySelectorAll("img").every((img) => img.complete);
+    if (allImagesLoaded) {
+      setImagesLoading(false);
+    }
+  };
 
   const handleDeleteCategoria = async (e) => {
     e.preventDefault();
@@ -106,7 +116,7 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
     categoria.nombre.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (loading) {
+  if (loading || imagesLoading) {
     return <Load />;
   }
 
@@ -124,7 +134,7 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
       <ul>
         {filteredCategorias.map(categoria => (
           <li key={categoria.id} onClick={() => handleSelectCategoria(categoria.id)}>
-            <img src={categoria.imagenUrl} alt={categoria.nombre} />
+            <img src={categoria.imagenUrl} alt={categoria.nombre} onLoad={handleImageLoad} />
             <div className='descripcioncita'>
               <h3>{categoria.nombre}</h3>
               {currentUser && currentUser.role === 'jefe' && (
@@ -188,4 +198,5 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
     </div>
   );
 }
+
 export default Categorias;

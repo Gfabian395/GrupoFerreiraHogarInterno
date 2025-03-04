@@ -17,13 +17,15 @@ const Productos = ({ onAddToCart, currentUser }) => {
   const formRef = useRef(null);
 
   useEffect(() => {
-    console.log("useEffect - categoriaId:", categoriaId);
     const fetchProductos = async () => {
       try {
         const productosCollection = collection(db, `categorias/${categoriaId}/productos`);
         const productosSnapshot = await getDocs(productosCollection);
         const productosList = productosSnapshot.docs.map(doc => ({ id: doc.id, categoriaId: categoriaId, ...doc.data() }));
-        console.log("Productos fetched:", productosList);
+
+        // Ordenar los productos de la A a la Z
+        productosList.sort((a, b) => a.nombre.localeCompare(b.nombre));
+
         setProductos(productosList);
         setLoading(false);
       } catch (error) {
@@ -46,7 +48,6 @@ const Productos = ({ onAddToCart, currentUser }) => {
   }, [categoriaId]);
 
   const handleIncrementStock = async (productoId, campo) => {
-    console.log("handleIncrementStock - productoId:", productoId, "campo:", campo);
     try {
       const productoRef = doc(db, `categorias/${categoriaId}/productos`, productoId);
       const producto = productos.find(p => p.id === productoId);
@@ -73,7 +74,6 @@ const Productos = ({ onAddToCart, currentUser }) => {
   };
 
   const handleAddToCart = (producto, sucursal) => {
-    console.log("handleAddToCart - producto:", producto, "sucursal:", sucursal);
     const productoEnCarrito = { ...producto, sucursal };
     const productoStock = parseInt(producto[`cantidadDisponible${sucursal}`]);
 
@@ -86,7 +86,6 @@ const Productos = ({ onAddToCart, currentUser }) => {
   };
 
   const handleTerminarVenta = async (producto, sucursal) => {
-    console.log("handleTerminarVenta - producto:", producto, "sucursal:", sucursal);
     const productoRef = doc(db, `categorias/${categoriaId}/productos`, producto.id);
     const productoStock = parseInt(producto[`cantidadDisponible${sucursal}`]);
     const newCantidad = productoStock - 1;
@@ -107,24 +106,20 @@ const Productos = ({ onAddToCart, currentUser }) => {
   };
 
   const handleShowFormulario = (producto) => {
-    console.log("handleShowFormulario - producto:", producto);
     setCurrentProduct(producto);
     setMostrarFormulario(true);
   };
 
   const handleSearchChange = (e) => {
-    console.log("handleSearchChange - value:", e.target.value);
     setSearchQuery(e.target.value);
   };
 
   const handleCloseFormulario = () => {
-    console.log("handleCloseFormulario");
     setMostrarFormulario(false);
     setCurrentProduct(null);
   };
 
   const handleDeleteProduct = async (productoId) => {
-    console.log("handleDeleteProduct - productoId:", productoId);
     try {
       await deleteDoc(doc(db, `categorias/${categoriaId}/productos`, productoId));
       setProductos(productos.filter(p => p.id !== productoId));
@@ -135,7 +130,6 @@ const Productos = ({ onAddToCart, currentUser }) => {
   };
 
   const handleUpdateProduct = async (productoId) => {
-    console.log("handleUpdateProduct - productoId:", productoId);
     try {
       const { categoria: nuevaCategoria, ...productoData } = currentProduct;
 
@@ -166,7 +160,6 @@ const Productos = ({ onAddToCart, currentUser }) => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    console.log("handleInputChange - name:", name, "value:", value);
     setCurrentProduct(prevState => ({
       ...prevState,
       [name]: value
@@ -178,10 +171,8 @@ const Productos = ({ onAddToCart, currentUser }) => {
   );
 
   if (loading) {
-    console.log("Loading...");
     return <Load />;
   }
-
 
   return (
     <>
@@ -262,86 +253,88 @@ const Productos = ({ onAddToCart, currentUser }) => {
       </div>
 
       {mostrarFormulario && currentProduct && (
-  <div className="blur-background">
-    <form className="floating-form" ref={formRef}>
-      <span className="close" onClick={handleCloseFormulario}>&times;</span>
-      <h2>Editar Producto</h2>
-      <div className="form-group">
-        <input
-          type="text"
-          className="form-control"
-          placeholder="Nombre"
-          name="nombre"
-          value={currentProduct.nombre}
-          onChange={handleInputChange}
-          required
-        />
-      </div>
-      <div className="form-group">
-        <input
-          type="text"
-          className="form-control"
-          placeholder="Precio"
-          name="precio"
-          value={currentProduct.precio}
-          onChange={handleInputChange}
-          required
-        />
-      </div>
-      <div className="form-group">
-        <input
-          type="text"
-          className="form-control"
-          placeholder="Stock Andes 4034"
-          name="cantidadDisponibleAndes4034"
-          value={currentProduct.cantidadDisponibleAndes4034}
-          onChange={handleInputChange}
-          required
-        />
-      </div>
-      <div className="form-group">
-        <input
-          type="text"
-          className="form-control"
-          placeholder="Stock Andes 4320"
-          name="cantidadDisponibleAndes4320"
-          value={currentProduct.cantidadDisponibleAndes4320}
-          onChange={handleInputChange}
-          required
-        />
-      </div>
-      <div className="form-group">
-        <input
-          type="text"
-          className="form-control"
-          placeholder="URL de la Imagen"
-          name="urlImagen"
-          value={currentProduct.urlImagen}
-          onChange={handleInputChange}
-          required
-        />
-      </div>
-      <div className="form-group">
-        <select
-          className="form-control"
-          name="categoria"
-          value={currentProduct.categoria}
-          onChange={handleInputChange}
-          required
-        >
-          <option value="">-- Selecciona una Categoría --</option>
-          {categorias.map(categoria => (
-            <option key={categoria.id} value={categoria.id}>{categoria.nombre}</option>
-          ))}
-        </select>
-      </div>
-      <button type="button" className="btn btn-primary" onClick={() => handleUpdateProduct(currentProduct.id)}>Guardar Cambios</button>
-    </form>
-  </div>
-)}
+        <div className="blur-background">
+          <form className="floating-form" ref={formRef}>
+            <span className="close" onClick={handleCloseFormulario}>&times;</span>
+            <h2>Editar Producto</h2>
+            <div className="form-group">
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Nombre"
+                name="nombre"
+                value={currentProduct.nombre}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Precio"
+                name="precio"
+                value={currentProduct.precio}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Stock Andes 4034"
+                name="cantidadDisponibleAndes4034"
+                value={currentProduct.cantidadDisponibleAndes4034}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Stock Andes 4320"
+                name="cantidadDisponibleAndes4320"
+                value={currentProduct.cantidadDisponibleAndes4320}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <input
+                type="text"
+                className="form-control"
+                placeholder="URL de la Imagen"
+                name="imagenUrl"
+                value={currentProduct.imagenUrl}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <select
+                className="form-control"
+                name="categoria"
+                value={categoriaId} // Valor de la categoría actual
+                onChange={handleInputChange}
+                required
+              >
+                <option value="">-- Selecciona una Categoría --</option>
+                {categorias.map(categoria => (
+                  <option key={categoria.id} value={categoria.id}>{categoria.nombre}</option>
+                ))}
+              </select>
+            </div>
+
+            <button type="button" className="btn btn-primary" onClick={() => handleUpdateProduct(currentProduct.id)}>Guardar Cambios</button>
+          </form>
+        </div>
+      )}
 
     </>
   );
+
 }
 
 export default Productos;

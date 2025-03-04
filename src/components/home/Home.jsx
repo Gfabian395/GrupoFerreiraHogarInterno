@@ -31,19 +31,21 @@ const Home = () => {
       const vendedoresMap = {};
 
       ventasList.forEach(venta => {
-        // Verificar si la venta es del mes actual
-        const ventaDate = new Date(venta.fecha.seconds * 1000);
-        if (ventaDate.getMonth() !== currentMonth) return;
+        // Verificar si la venta tiene una fecha válida
+        if (venta.fecha && venta.fecha.seconds) {
+          const ventaDate = new Date(venta.fecha.seconds * 1000);
+          if (ventaDate.getMonth() !== currentMonth) return;
 
-        // Contabilizar ventas por vendedor
-        if (!vendedoresMap[venta.vendedor]) {
-          vendedoresMap[venta.vendedor] = { cantVentas: 0, totalIngresado: 0 };
+          // Contabilizar ventas por vendedor
+          if (!vendedoresMap[venta.vendedor]) {
+            vendedoresMap[venta.vendedor] = { cantVentas: 0, totalIngresado: 0 };
+          }
+          vendedoresMap[venta.vendedor].cantVentas += 1;
+
+          venta.pagos.forEach(pago => {
+            vendedoresMap[venta.vendedor].totalIngresado += pago.monto; // Sumar el monto del anticipo o venta al contado
+          });
         }
-        vendedoresMap[venta.vendedor].cantVentas += 1;
-
-        venta.pagos.forEach(pago => {
-          vendedoresMap[venta.vendedor].totalIngresado += pago.monto; // Sumar el monto del anticipo o venta al contado
-        });
       });
 
       // Generar el ranking de los mejores 3 vendedores

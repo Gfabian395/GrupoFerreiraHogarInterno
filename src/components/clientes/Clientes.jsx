@@ -8,7 +8,7 @@ import Load from '../load/Load';
 const Clientes = ({ currentUser }) => {
   const [clientes, setClientes] = useState([]);
   const [filteredClientes, setFilteredClientes] = useState([]);
-  const [newCliente, setNewCliente] = useState({ dni: '', nombreCompleto: '', direccion: '', entrecalles: '', telefono1: '', telefono2: '', imagenUrl: '' });
+  const [newCliente, setNewCliente] = useState({ dni: '', nombreCompleto: '', direccion: '', entrecalles: '', telefono1: '', telefono2: '', imagenUrl: 'https://placehold.co/200x200' });
   const [editClienteId, setEditClienteId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
@@ -26,9 +26,13 @@ const Clientes = ({ currentUser }) => {
         const clienteCollection = collection(db, 'clientes');
         const clienteSnapshot = await getDocs(clienteCollection);
         const clienteList = clienteSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        clienteList.sort((a, b) => a.nombreCompleto.localeCompare(b.nombreCompleto));
         setClientes(clienteList);
         setFilteredClientes(clienteList);
         setLoading(false);
+
+        // Llama a la función para actualizar los clientes
+        actualizarClientes(clienteList);
       } catch (error) {
         console.error("Error fetching clientes: ", error);
       }
@@ -46,7 +50,7 @@ const Clientes = ({ currentUser }) => {
   }, [searchTerm, clientes]);
 
   const handleAddButtonClick = () => {
-    setNewCliente({ dni: '', nombreCompleto: '', direccion: '', entrecalles: '', telefono1: '', telefono2: '', imagenUrl: '' }); // Limpia los datos del formulario
+    setNewCliente({ dni: '', nombreCompleto: '', direccion: '', entrecalles: '', telefono1: '', telefono2: '', imagenUrl: 'https://placehold.co/200x200' }); // Limpia los datos del formulario
     setMostrarFormulario(true);
   }
 
@@ -56,8 +60,9 @@ const Clientes = ({ currentUser }) => {
     await setDoc(clienteDoc, {
       ...newCliente, // Mantén los otros campos como están
       dni: newCliente.dni.toString(), // Asegúrate de que el DNI se guarde como string
+      nombreCompleto: formatNombre(newCliente.nombreCompleto), // Formatea el nombre
     });
-    setNewCliente({ dni: '', nombreCompleto: '', direccion: '', entrecalles: '', telefono1: '', telefono2: '', imagenUrl: '' });
+    setNewCliente({ dni: '', nombreCompleto: '', direccion: '', entrecalles: '', telefono1: '', telefono2: '', imagenUrl: 'https://placehold.co/200x200' });
     alert('Cliente agregado exitosamente');
     window.location.reload(); // Refresca la página
   };
@@ -75,9 +80,10 @@ const Clientes = ({ currentUser }) => {
     await setDoc(clienteDoc, {
       ...newCliente, // Mantén los otros campos como están
       dni: newCliente.dni.toString(), // Asegúrate de que el DNI se guarde como string
+      nombreCompleto: formatNombre(newCliente.nombreCompleto), // Formatea el nombre
     });
     setEditClienteId(null);
-    setNewCliente({ dni: '', nombreCompleto: '', direccion: '', entrecalles: '', telefono1: '', telefono2: '', imagenUrl: '' });
+    setNewCliente({ dni: '', nombreCompleto: '', direccion: '', entrecalles: '', telefono1: '', telefono2: '', imagenUrl: 'https://placehold.co/200x200' });
     alert('Cliente actualizado exitosamente');
     window.location.reload(); // Refresca la página
   };
@@ -127,6 +133,30 @@ const Clientes = ({ currentUser }) => {
   if (loading) {
     return <Load />;
   }
+
+  const formatNombre = (nombre) => {
+    return nombre
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+  }
+
+  const actualizarClientes = async (clienteList) => {
+    try {
+      clienteList.forEach(async (cliente) => {
+        const clienteDoc = doc(db, 'clientes', cliente.dni);
+        await setDoc(clienteDoc, {
+          ...cliente,
+          nombreCompleto: formatNombre(cliente.nombreCompleto),
+        });
+      });
+
+      console.log('Clientes actualizados exitosamente');
+    } catch (error) {
+      console.error('Error actualizando clientes: ', error);
+    }
+  };
+  
   return (
     <div className="container">
       <button onClick={handleAddButtonClick} className="floating-btn">
@@ -213,7 +243,7 @@ const Clientes = ({ currentUser }) => {
         <div className="blur-background">
           <form onSubmit={handleUpdateCliente} className="floating-form" ref={editFormRef}>
             <div className="form-group">
-              <input
+            <input
                 type="text"
                 className="form-control"
                 placeholder="DNI"

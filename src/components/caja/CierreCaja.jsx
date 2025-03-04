@@ -107,7 +107,7 @@ const CierreCaja = ({ currentUser }) => {
     return rankingArray.slice(0, 3);
   };
 
-  useEffect(() => {
+    useEffect(() => {
     if (currentUser.role !== 'jefe') {
       alert('No tienes permiso para acceder a esta página.');
       navigate('/');
@@ -119,8 +119,8 @@ const CierreCaja = ({ currentUser }) => {
       const lastResetDate = resetDateDoc.exists() ? resetDateDoc.data().date.toDate() : new Date(0);
       const today = new Date();
 
+      // Corrección: Verificar si es el primer día del mes y el año es el mismo.
       if (today.getDate() === 1 && lastResetDate.getMonth() !== today.getMonth()) {
-        // Es el primer día del mes y no se ha reiniciado en este mes
         await resetData();
         await setDoc(doc(db, 'config', 'resetDate'), { date: today });
       } else {
@@ -129,7 +129,6 @@ const CierreCaja = ({ currentUser }) => {
     };
 
     const resetData = async () => {
-      // Aquí puedes implementar la lógica para reiniciar los datos
       setMovimientos([]);
       setTotalRecaudado(0);
       setRankingVendedores([]);
@@ -142,15 +141,18 @@ const CierreCaja = ({ currentUser }) => {
 
       let total = 0;
       const today = new Date();
+      const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+      const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 
-      const ventasHoy = ventasList.filter(venta => {
+
+      const ventasDelMes = ventasList.filter(venta => {
         if (venta.fecha && venta.fecha.seconds) {
           venta.fecha = new Date(venta.fecha.seconds * 1000);
         }
-        return venta.fecha.getDate() === today.getDate() && venta.fecha.getMonth() === today.getMonth();
+        return venta.fecha >= firstDayOfMonth && venta.fecha <= lastDayOfMonth;
       });
 
-      for (const venta of ventasHoy) {
+      for (const venta of ventasDelMes) {
         let montoRecibido = 0;
         if (venta.pagos && venta.pagos.length > 0) {
           montoRecibido = venta.pagos.reduce((total, pago) => total + parseFloat(pago.monto), 0);
@@ -159,19 +161,16 @@ const CierreCaja = ({ currentUser }) => {
         total += montoRecibido;
       }
 
-      // Ordenar las ventas por fecha más reciente
-      ventasHoy.sort((a, b) => b.fecha - a.fecha);
-
-      // Convertir fechas a cadena después de ordenar
-      ventasHoy.forEach(venta => {
+      ventasDelMes.sort((a, b) => b.fecha - a.fecha);
+      ventasDelMes.forEach(venta => {
         if (venta.fecha instanceof Date) {
           venta.fecha = venta.fecha.toLocaleDateString();
         }
       });
 
-      setMovimientos(ventasHoy);
+      setMovimientos(ventasDelMes);
       setTotalRecaudado(total);
-      setRankingVendedores(calcularRankingVendedores(ventasHoy));
+      setRankingVendedores(calcularRankingVendedores(ventasDelMes));
       setLoading(false);
     };
 

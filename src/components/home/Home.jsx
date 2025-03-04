@@ -6,9 +6,9 @@ import './Home.css';
 const usuariosDB = [
   { username: 'Gfabian395', password: 'Gfabian395', role: 'jefe', imageUrl: 'https://i.etsystatic.com/44733518/r/il/9a3b61/5741845381/il_1080xN.5741845381_ljvq.jpg' },
   { username: 'VaneDavis', password: '554972', role: 'jefe', imageUrl: 'path/to/VaneDavis.jpg' },
-  { username: 'RoFlrtin', password: 'jose1946', role: 'vendedor', imageUrl: 'https://firebasestorage.googleapis.com/v0/b/ferreirahogar-376dd.firebasestorage.app/o/vendedores%2FRONY.jpg?alt=media&token=975ae82e-bec6-4de0-943c-db8066ef6105' },
+  { username: 'RoFlrtin', password: 'jose1946', role: 'vendedor', imageUrl: 'https://firebasestorage.googleapis.com/v0/b/ferreirahogar-376dd.firebasestorage.app/o/vendedores%2FRONY.jpg?alt=media&token=0d4972fd-aaad-4bdf-8aa3-8cec741a6c22' },
   { username: 'FrancoGF', password: 'Grupof2025', role: 'vendedor', imageUrl: 'path/to/FrancoGF.jpg' },
-  { username: 'Carmen Galarza', password: 'Gordis2024', role: 'vendedor', imageUrl: 'https://firebasestorage.googleapis.com/v0/b/ferreirahogar-376dd.firebasestorage.app/o/vendedores%2FGORDI.jpg?alt=media&token=d6126eaf-e5c7-4240-84b6-2add90771faa' },
+  { username: 'Carmen Galarza', password: 'Gordis2024', role: 'vendedor', imageUrl: 'https://firebasestorage.googleapis.com/v0/b/ferreirahogar-376dd.firebasestorage.app/o/vendedores%2FGORDIS.jpg?alt=media&token=daf50c13-9c88-49ba-85d2-6f61e01bd322' },
   { username: 'Carol B', password: 'Tokyoghoul', role: 'vendedor', imageUrl: 'path/to/CarolB.jpg' },
   { username: 'TamaraAbigail', password: 'Tamara07', role: 'vendedor', imageUrl: 'path/to/TamaraAbigail.jpg' },
   { username: 'Yuli182', password: '244962', role: 'vendedor', imageUrl: 'path/to/Yuli182.jpg' },

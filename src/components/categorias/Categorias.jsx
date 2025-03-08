@@ -39,8 +39,11 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
     fetchCategorias();
   }, []);
 
+  // Corrección aquí: Convirtiendo NodeList a array
   const handleImageLoad = () => {
-    const allImagesLoaded = document.querySelectorAll("img").every((img) => img.complete);
+    const allImagesLoaded = Array.from(document.querySelectorAll("img")).every(
+      (img) => img.complete
+    );
     if (allImagesLoaded) {
       setImagesLoading(false);
     }

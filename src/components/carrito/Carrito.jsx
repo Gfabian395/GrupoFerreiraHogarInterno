@@ -8,51 +8,100 @@ const Carrito = ({ productos, onRemoveFromCart, onClearCart }) => {
 
   useEffect(() => {
     const verificarStock = () => {
-      const haySinStock = productos.some(producto => producto.stock === 0);
+      const haySinStock = productos.some(producto => {
+        const stockField = `cantidadDisponible${producto.sucursal.replace(/\s/g, '')}`;
+        return producto[stockField] === 0 || producto[stockField] === undefined;
+      });
       setHayProductosSinStock(haySinStock);
     };
 
     verificarStock();
   }, [productos]);
 
-  const subtotal = productos.reduce((acc, producto) => acc + producto.precio * producto.cantidad, 0);
+  useEffect(() => {
+    // Log para verificar desde qué sucursal se reciben los productos en el carrito
+    productos.forEach(producto => {
+      console.log(
+        `Producto recibido en el carrito: ${producto.nombre}, Sucursal: ${producto.sucursal}`
+      );
+    });
+  }, [productos]);
+
+  const subtotal = productos.reduce((acc, producto) => {
+    const totalProducto = producto.precio * producto.cantidad || 0;
+    return acc + totalProducto;
+  }, 0);
 
   const handleFinalizarCompra = () => {
+    console.log('Datos enviados al finalizar:', { subtotal, productos });
+  
     if (hayProductosSinStock) {
-      alert('No puedes finalizar la compra, hay productos sin stock');
+      alert('No puedes finalizar la compra, hay productos sin stock.');
       return;
     }
-
-    navigate('/ventas', { state: { subtotal, productos } });
+  
+    // Añadiendo sucursal explícitamente al estado enviado
+    const sucursal = productos.length > 0 ? productos[0].sucursal : '';
+    navigate('/ventas', { state: { subtotal, productos, sucursal } });
   };
+  
 
   return (
     <div className="carrito">
       <h2>Carrito</h2>
       <div className="card-container">
         {productos.map(producto => {
-          const outOfStock = producto.stock === 0;
+          const stockField = `cantidadDisponible${producto.sucursal.replace(/\s/g, '')}`;
+          const stock = producto[stockField] || 0;
+          const outOfStock = stock === 0;
+
           return (
-            <div className={`card ${outOfStock ? 'producto-sin-stock' : ''}`} key={producto.id}>
+            <div
+              key={producto.id}
+              className={`card ${outOfStock ? 'producto-sin-stock' : ''}`}
+            >
               <img src={producto.imagenUrl} alt={producto.nombre} className="card-img-top" />
               <div className="card-body">
                 <h5 className="card-title">{producto.nombre}</h5>
-                <p className="card-text">Precio: ${producto.precio.toLocaleString('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 })}</p>
+                <p className="card-text">Precio: ${producto.precio.toLocaleString('es-AR')}</p>
                 <p className="card-text">Cantidad: {producto.cantidad}</p>
                 <p className="card-text">Sucursal: {producto.sucursal}</p>
-                <p className="card-text">Subtotal: ${(producto.precio * producto.cantidad).toLocaleString('es-AR', { minimumFractionDigits: 0 })}</p>
-                <button className="btn btn-danger mt-2" onClick={() => onRemoveFromCart(producto.id)} disabled={outOfStock}>Eliminar</button>
+                <p className="card-text">
+                  Subtotal: $
+                  {(producto.precio * producto.cantidad).toLocaleString('es-AR')}
+                </p>
+                <button
+                  className="btn btn-danger mt-2"
+                  onClick={() => onRemoveFromCart(producto.id)}
+                  disabled={outOfStock}
+                >
+                  Eliminar
+                </button>
               </div>
             </div>
           );
         })}
       </div>
+
       <h3>Resumen del Pedido</h3>
-      <p><strong>Subtotal:</strong> ${subtotal.toLocaleString('es-AR', { minimumFractionDigits: 0 })}</p>
+      <p>
+        <strong>Subtotal:</strong> $
+        {subtotal.toLocaleString('es-AR')}
+      </p>
 
-      <button className={`btn btn-primary mt-4 ${hayProductosSinStock ? 'boton-deshabilitado' : ''}`} onClick={handleFinalizarCompra} disabled={hayProductosSinStock}>Terminar Venta</button>
+      <button
+        className={`btn btn-primary mt-4 ${
+          hayProductosSinStock ? 'boton-deshabilitado' : ''
+        }`}
+        onClick={handleFinalizarCompra}
+        disabled={hayProductosSinStock}
+      >
+        Terminar Venta
+      </button>
 
-      <button className="btn btn-danger mt-4" onClick={onClearCart}>Vaciar Carrito</button>
+      <button className="btn btn-danger mt-4" onClick={onClearCart}>
+        Vaciar Carrito
+      </button>
     </div>
   );
 };

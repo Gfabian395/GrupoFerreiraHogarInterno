@@ -154,14 +154,14 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
         alert('Por favor, selecciona un cliente, las cuotas y el chofer para entrega a domicilio.');
         return;
       }
-  
+
       console.log('Datos iniciales en Ventas.jsx:', {
         carrito,
         subtotal,
         productos,
         sucursal: location.state?.sucursal,
       });
-  
+
       // Inicialización de la sucursal
       const sucursal = location.state?.sucursal || 'Sin definir';
       if (!sucursal || sucursal === 'Sin definir') {
@@ -170,13 +170,13 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
         return;
       }
       console.log('Sucursal inicializada:', sucursal);
-  
+
       // Cálculo de crédito y cuota
       const cuotaSeleccionada = configuracionCuotas.find(c => c.cuotas === cuotasSeleccionadas);
       const interes = cuotaSeleccionada?.interes || 0;
       const totalCredito = subtotal * (1 + interes / 100);
       const valorCuotaCalculado = Math.round(totalCredito / cuotasSeleccionadas / 1000) * 1000;
-  
+
       // Crear objeto de venta
       const ventasCollection = collection(db, 'ventas');
       const venta = {
@@ -192,12 +192,12 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
         entrega: entrega,
         chofer: entrega === 'domicilio' ? selectedChofer : null,
       };
-  
+
       console.log('Venta a guardar en Firebase:', venta);
-  
+
       // Guardar la venta en Firebase
       const ventaRef = await addDoc(ventasCollection, venta);
-  
+
       // Actualización del inventario
       for (const producto of carrito) {
         try {
@@ -205,24 +205,24 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
             console.error(`El producto ${producto.id} no tiene categoriaId asignado.`);
             continue;
           }
-  
+
           const productoRef = doc(db, `categorias/${producto.categoriaId}/productos`, producto.id);
-  
+
           const fieldKey =
             producto.sucursal === 'Andes4034'
               ? 'cantidadDisponibleAndes4034'
               : producto.sucursal === 'Andes4320'
                 ? 'cantidadDisponibleAndes4320'
                 : null;
-  
+
           if (!fieldKey) {
             console.error('Sucursal no válida:', producto.sucursal);
             continue;
           }
-  
+
           const stockActual = parseInt(producto[fieldKey]);
           const stockNuevo = stockActual - producto.cantidad;
-  
+
           if (isNaN(stockActual) || stockActual <= 0 || stockNuevo < 0) {
             console.error(
               `Stock insuficiente para el producto ${producto.id}. Stock actual: ${stockActual}, Intento de stock nuevo: ${stockNuevo}`
@@ -230,41 +230,40 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
             alert(`El producto "${producto.nombre}" no tiene suficiente stock en la sucursal ${producto.sucursal}.`);
             continue;
           }
-  
+
           console.log(`Stock actualizado para el producto ${producto.id}:`, {
             fieldKey,
             stockActual,
             cantidadVendida: producto.cantidad,
             stockNuevo,
           });
-  
+
           await updateDoc(productoRef, { [fieldKey]: stockNuevo });
         } catch (error) {
           console.error(`Error procesando el producto ${producto.id}:`, error);
         }
       }
-  
+
       // Registrar el primer pago si corresponde
-if (cargarPrimerCuota) {
-  const ahora = new Date();
-  const fechaPago = ahora.toLocaleDateString('es-AR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
-  const montoPago = valorCuotaCalculado;
-  const pagosIniciales = [{ fecha: fechaPago, monto: montoPago, usuario: currentUser.username }];
-  await updateDoc(ventaRef, { pagos: pagosIniciales });
+      if (cargarPrimerCuota) {
+        const ahora = new Date();
+        // Formatear la fecha a YYYY-MM-DD
+        const fechaPago = ahora.toISOString().split('T')[0]; // Extrae solo la parte de la fecha
+        const montoPago = valorCuotaCalculado;
+        const pagosIniciales = [
+          { fecha: fechaPago, monto: montoPago, usuario: currentUser.username },
+        ];
+        await updateDoc(ventaRef, { pagos: pagosIniciales });
 
-  console.log('Pago inicial registrado:', pagosIniciales);
-}
+        console.log('Pago inicial registrado:', pagosIniciales);
+      }
 
-  
+
       // Finalizar la venta
       setVentaRealizada(true);
       onClearCart();
       alert('Venta realizada con éxito');
-  
+
       // Redirigir a la lista de clientes
       navigate('/clientes');
     } catch (error) {
@@ -272,8 +271,8 @@ if (cargarPrimerCuota) {
       alert('Ocurrió un error al realizar la venta. Por favor, inténtalo nuevamente.');
     }
   };
-  
-  
+
+
 
   return (
     <div className="ventas">

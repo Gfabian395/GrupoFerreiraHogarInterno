@@ -5,6 +5,8 @@ import { db } from '../../firebaseConfig';
 import { collection, getDocs, setDoc, deleteDoc, doc } from 'firebase/firestore';
 import Load from '../load/Load';
 
+/* HASTA ACA FUNCIONA PERFECTO */
+
 const Clientes = ({ currentUser }) => {
   const [clientes, setClientes] = useState([]);
   const [filteredClientes, setFilteredClientes] = useState([]);
@@ -50,7 +52,7 @@ const Clientes = ({ currentUser }) => {
   }, [searchTerm, clientes]);
 
   const handleAddButtonClick = () => {
-    setNewCliente({ dni: '', nombreCompleto: '', direccion: '', entrecalles: '', telefono1: '', telefono2: '', imagenUrl: 'https://placehold.co/200x200' }); // Limpia los datos del formulario
+    setNewCliente({ dni: '', nombreCompleto: '', direccion: '', entrecalles: '', telefono1: '+549', telefono2: '+549', imagenUrl: 'https://placehold.co/200x200' }); // Limpia los datos del formulario
     setMostrarFormulario(true);
   }
 
@@ -210,8 +212,8 @@ const Clientes = ({ currentUser }) => {
                 type="tel"
                 className="form-control"
                 placeholder="Teléfono 1"
-                value={`+54${newCliente.telefono1}`}
-                onChange={(e) => setNewCliente({ ...newCliente, telefono1: e.target.value.replace('+54', '') })}
+                value={`${newCliente.telefono1}`}
+                onChange={(e) => setNewCliente({ ...newCliente, telefono1: e.target.value.replace('', '') })}
                 required
               />
             </div>
@@ -220,8 +222,8 @@ const Clientes = ({ currentUser }) => {
                 type="tel"
                 className="form-control"
                 placeholder="Teléfono 2"
-                value={`+54${newCliente.telefono2}`}
-                onChange={(e) => setNewCliente({ ...newCliente, telefono2: e.target.value.replace('+54', '') })}
+                value={`${newCliente.telefono2}`}
+                onChange={(e) => setNewCliente({ ...newCliente, telefono2: e.target.value.replace('', '') })}
               />
             </div>
 
@@ -287,7 +289,7 @@ const Clientes = ({ currentUser }) => {
                 type="tel"
                 className="form-control"
                 placeholder="Teléfono 1"
-                value={newCliente.telefono1.startsWith('+54') ? newCliente.telefono1 : `+54${newCliente.telefono1}`}
+                value={newCliente.telefono1.startsWith('') ? newCliente.telefono1 : `${newCliente.telefono1}`}
                 onChange={(e) => setNewCliente({ ...newCliente, telefono1: e.target.value })}
                 required
               />
@@ -297,7 +299,7 @@ const Clientes = ({ currentUser }) => {
                 type="tel"
                 className="form-control"
                 placeholder="Teléfono 2"
-                value={newCliente.telefono2.startsWith('+54') ? newCliente.telefono2 : `+54${newCliente.telefono2}`}
+                value={newCliente.telefono2.startsWith('') ? newCliente.telefono2 : `${newCliente.telefono2}`}
                 onChange={(e) => setNewCliente({ ...newCliente, telefono2: e.target.value })}
               />
             </div>

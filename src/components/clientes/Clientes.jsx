@@ -83,7 +83,7 @@ const Clientes = ({ currentUser }) => {
       nombreCompleto: formatNombre(newCliente.nombreCompleto), // Formatea el nombre
     });
     setEditClienteId(null);
-    setNewCliente({ dni: '', nombreCompleto: '', direccion: '', entrecalles: '', telefono1: '', telefono2: '', imagenUrl: 'https://placehold.co/200x200' });
+    setNewCliente({ dni: '', nombreCompleto: '', direccion: '', entrecalles: '', telefono1: '+549', telefono2: '+549', imagenUrl: 'https://placehold.co/200x200' });
     alert('Cliente actualizado exitosamente');
     window.location.reload(); // Refresca la página
   };
@@ -145,12 +145,15 @@ const Clientes = ({ currentUser }) => {
     try {
       clienteList.forEach(async (cliente) => {
         const clienteDoc = doc(db, 'clientes', cliente.dni);
+  
         await setDoc(clienteDoc, {
           ...cliente,
           nombreCompleto: formatNombre(cliente.nombreCompleto),
+          telefono1: cliente.telefono1.startsWith('+549') ? cliente.telefono1 : `+549${cliente.telefono1}`,
+          telefono2: cliente.telefono2.startsWith('+549') ? cliente.telefono2 : `+549${cliente.telefono2}`,
         });
       });
-
+  
       console.log('Clientes actualizados exitosamente');
     } catch (error) {
       console.error('Error actualizando clientes: ', error);
@@ -211,7 +214,7 @@ const Clientes = ({ currentUser }) => {
                 className="form-control"
                 placeholder="Teléfono 1"
                 value={`+54${newCliente.telefono1}`}
-                onChange={(e) => setNewCliente({ ...newCliente, telefono1: e.target.value.replace('+54', '') })}
+                onChange={(e) => setNewCliente({ ...newCliente, telefono1: e.target.value.replace('+549', '') })}
                 required
               />
             </div>
@@ -221,7 +224,7 @@ const Clientes = ({ currentUser }) => {
                 className="form-control"
                 placeholder="Teléfono 2"
                 value={`+54${newCliente.telefono2}`}
-                onChange={(e) => setNewCliente({ ...newCliente, telefono2: e.target.value.replace('+54', '') })}
+                onChange={(e) => setNewCliente({ ...newCliente, telefono2: e.target.value.replace('+549', '') })}
               />
             </div>
 

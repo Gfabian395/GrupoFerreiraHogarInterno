@@ -1,110 +1,159 @@
 @keyframes bounce {
-    0%, 20%, 50%, 80%, 100% {
-      transform: translateY(0);
-    }
-    40% {
-      transform: translateY(-30px);
-    }
-    60% {
-      transform: translateY(-15px);
-    }
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
   }
-  
-  @keyframes confetti {
-    0% {
-      opacity: 1;
-      transform: translateY(0) rotate(0deg);
-    }
-    100% {
-      opacity: 0;
-      transform: translateY(100px) rotate(360deg);
-    }
+  40% {
+    transform: translateY(-30px);
   }
-  
-  .home {
-    padding: 20px;
-    text-align: center;
+  60% {
+    transform: translateY(-15px);
   }
-  
-  .home h2 {
-    margin-bottom: 20px;
+}
+
+@keyframes confetti {
+  0% {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg);
   }
-  
-  .ranking-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
+  100% {
+    opacity: 0;
+    transform: translateY(100px) rotate(360deg);
   }
-  
-  .ranking-item {
-    position: relative;
-    display: flex
-;
-    flex-direction: column;
-    align-items: center;
-     padding: 7px; 
-    border: 2px solid #ccc;
-    border-radius: 10px;
-    width: 120px;
-    animation: bounce 2s infinite;
-  }
-  
-  .ranking-1 {
-    background-color: gold;
-  }
-  
-  .ranking-2 {
-    background-color: silver;
-  }
-  
-  .ranking-3 {
-    background-color: #cd7f32; /* Bronce */
-  }
-  
-  .medal {
-    font-size: 30px;
-    margin-bottom: 10px;
-  }
-  
-  .vendedor-image {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    margin-bottom: 10px;
-  }
-  
-  .vendedor-name {
-    font-size: 18px;
-    font-weight: bold;
-  }
-  
-  .vendedor-sales {
-    font-size: 16px;
-    margin-top: 5px;
-  }
-  
-  .ranking-item::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 50%;
-    width: 5px;
-    height: 5px;
-    background-color: #ff0;
-    border-radius: 50%;
-    animation: confetti 2s infinite;
-  }
-  
-  .ranking-1::before {
-    background-color: #ffd700; /* Gold */
-  }
-  
-  .ranking-2::before {
-    background-color: #c0c0c0; /* Silver */
-  }
-  
-  .ranking-3::before {
-    background-color: #cd7f32; /* Bronze */
-  }
-  
+}
+
+.home {
+  padding: 20px;
+  text-align: center;
+}
+
+.home h2 {
+  margin-bottom: 20px;
+}
+
+.ranking-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+.ranking-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 7px;
+  border: 2px solid #ccc;
+  border-radius: 10px;
+  width: 120px;
+  animation: bounce 2s infinite;
+}
+
+.ranking-1 {
+  background-color: gold;
+}
+
+.ranking-2 {
+  background-color: silver;
+}
+
+.ranking-3 {
+  background-color: #cd7f32; /* Bronce */
+}
+
+.medal {
+  font-size: 30px;
+  margin-bottom: 10px;
+}
+
+.vendedor-image {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  margin-bottom: 10px;
+}
+
+.vendedor-name {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.vendedor-sales {
+  font-size: 16px;
+  margin-top: 5px;
+}
+
+.ranking-item::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  background-color: #ff0;
+  border-radius: 50%;
+  animation: confetti 2s infinite;
+}
+
+.ranking-1::before {
+  background-color: #ffd700; /* Gold */
+}
+
+.ranking-2::before {
+  background-color: #c0c0c0; /* Silver */
+}
+
+.ranking-3::before {
+  background-color: #cd7f32; /* Bronze */
+}
+
+/* Tabla de clientes y pagos */
+.clientes-pagos-container {
+  margin-top: 30px;
+  text-align: center;
+}
+
+.clientes-title {
+  font-size: 22px;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+}
+
+.clientes-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.clientes-table th,
+.clientes-table td {
+  border: 1px solid #ccc;
+  padding: 10px;
+  text-align: center;
+}
+
+.clientes-table th {
+  background-color: #f4f4f4;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.clientes-table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.cliente-item-row {
+  transition: background-color 0.2s ease;
+}
+
+.cliente-item-row:hover {
+  background-color: #eef;
+}
+
+.cliente-nombre,
+.cliente-dni,
+.cliente-cuota,
+.cliente-vendedor,
+.cliente-fecha {
+  text-transform: capitalize;
+}

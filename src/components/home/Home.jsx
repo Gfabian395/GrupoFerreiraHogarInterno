@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs, updateDoc, doc } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../../firebaseConfig';
 import './Home.css';
 
@@ -20,6 +20,7 @@ const usuariosDB = [
 
 const Home = () => {
   const [rankingVendedores, setRankingVendedores] = useState([]);
+  const [clientesConPagosProximos, setClientesConPagosProximos] = useState([]);
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
 
   useEffect(() => {
@@ -31,24 +32,23 @@ const Home = () => {
       const vendedoresMap = {};
 
       ventasList.forEach(venta => {
-        // Verificar si la venta tiene una fecha válida
         if (venta.fecha && venta.fecha.seconds) {
           const ventaDate = new Date(venta.fecha.seconds * 1000);
           if (ventaDate.getMonth() !== currentMonth) return;
 
-          // Contabilizar ventas por vendedor
           if (!vendedoresMap[venta.vendedor]) {
             vendedoresMap[venta.vendedor] = { cantVentas: 0, totalIngresado: 0 };
           }
           vendedoresMap[venta.vendedor].cantVentas += 1;
 
-          venta.pagos.forEach(pago => {
-            vendedoresMap[venta.vendedor].totalIngresado += pago.monto; // Sumar el monto del anticipo o venta al contado
-          });
+          if (venta.pagos) {
+            venta.pagos.forEach(pago => {
+              vendedoresMap[venta.vendedor].totalIngresado += pago.monto || 0;
+            });
+          }
         }
       });
 
-      // Generar el ranking de los mejores 3 vendedores
       const ranking = Object.entries(vendedoresMap)
         .map(([vendedor, data]) => ({ vendedor, ...data }))
         .sort((a, b) => b.totalIngresado - a.totalIngresado)
@@ -56,12 +56,55 @@ const Home = () => {
 
       setRankingVendedores(ranking);
     };
+
     fetchRankingVendedores();
   }, [currentMonth]);
 
+  useEffect(() => {
+    const fetchClientesConPagosProximos = async () => {
+      const ventasCollection = collection(db, 'ventas');
+      const ventasSnapshot = await getDocs(ventasCollection);
+      const ventasList = ventasSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+      const hoy = new Date();
+      const clientesProximos = [];
+
+      ventasList.forEach(venta => {
+        const { clienteId, valorCuota, pagos, vendedor, nombreCompleto } = venta;
+
+        const ultimaFecha = pagos && pagos.length > 0
+          ? new Date(pagos[pagos.length - 1].fecha)
+          : (venta.fecha && venta.fecha.seconds
+            ? new Date(venta.fecha.seconds * 1000)
+            : null);
+
+        if (!ultimaFecha) return;
+
+        const proximaFecha = new Date(ultimaFecha);
+        proximaFecha.setMonth(proximaFecha.getMonth() + 1);
+
+        const diferenciaDias = Math.floor((proximaFecha - hoy) / (1000 * 60 * 60 * 24));
+
+        if (diferenciaDias >= 0 && diferenciaDias <= 7) {
+          clientesProximos.push({
+            clienteId,
+            nombreCompleto,
+            valorCuota,
+            vendedor,
+            proximaFecha: proximaFecha.toLocaleDateString('es-AR'),
+          });
+        }
+      });
+
+      setClientesConPagosProximos(clientesProximos);
+    };
+
+    fetchClientesConPagosProximos();
+  }, []);
+
   return (
     <div className="home">
-      <h2>Nuestro Mejor Vendedor del Mes</h2>
+      <h2 className="ranking-title">Nuestro Mejor Vendedor del Mes</h2>
       <div className="ranking-container">
         {rankingVendedores.map((vendedor, index) => {
           const user = usuariosDB.find(user => user.username === vendedor.vendedor);
@@ -75,6 +118,35 @@ const Home = () => {
           );
         })}
       </div>
+
+      <h2 className="clientes-title">Clientes que deben pagar en los próximos 7 días</h2>
+      <div className="clientes-pagos-container">
+        {clientesConPagosProximos.length > 0 ? (
+          <table className="clientes-table">
+            <thead>
+              <tr>
+                <th>DNI</th>
+                <th>Monto de Cuota</th>
+                <th>Vendedor</th>
+                <th>Próxima Fecha de Pago</th>
+              </tr>
+            </thead>
+            <tbody>
+              {clientesConPagosProximos.map((cliente, index) => (
+                <tr key={index} className="cliente-item-row">
+                  <td className="cliente-dni">{cliente.clienteId}</td>
+                  <td className="cliente-cuota">${cliente.valorCuota.toLocaleString('es-AR')}</td>
+                  <td className="cliente-vendedor">{cliente.vendedor}</td>
+                  <td className="cliente-fecha">{cliente.proximaFecha}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <p className="no-clientes">No hay clientes con pagos en los próximos 7 días.</p>
+        )}
+      </div>
+
     </div>
   );
 };

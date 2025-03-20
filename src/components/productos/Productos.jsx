@@ -16,7 +16,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
   const [categorias, setCategorias] = useState([]);
   const formRef = useRef(null);
 
-  // Función para cargar productos y categorías
+  // Cargar productos y categorías
   useEffect(() => {
     const fetchProductos = async () => {
       try {
@@ -54,17 +54,23 @@ const Productos = ({ onAddToCart, currentUser }) => {
     fetchCategorias();
   }, [categoriaId]);
 
-  // Actualización del formulario dinámico
+  // Manejar cambios en el formulario
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setCurrentProduct((prevProduct) => ({
       ...prevProduct,
-      [name]: value, // Esto asegurará que "categoriaId" se actualice correctamente
+      [name]: value,
     }));
   };
 
-  // Actualización del producto en Firebase
+  // Actualizar producto en Firebase
   const handleUpdateProduct = async (productoId) => {
+    if (currentUser.role !== 'jefe' && currentUser.role !== 'encargado') {
+      setAlerta('No tienes permiso para editar productos.');
+      setTimeout(() => setAlerta(''), 3000);
+      return;
+    }
+
     try {
       const productoRef = doc(db, `categorias/${categoriaId}/productos`, productoId);
       await updateDoc(productoRef, { ...currentProduct });
@@ -81,9 +87,8 @@ const Productos = ({ onAddToCart, currentUser }) => {
     }
   };
 
-  // Manejo del formulario de edición
+  // Mostrar formulario de edición
   const handleShowFormulario = (producto) => {
-    console.log("Datos actuales del producto:", producto); // Aquí verificamos los datos del producto
     setCurrentProduct(producto);
     setMostrarFormulario(true);
   };
@@ -93,7 +98,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
     setCurrentProduct(null);
   };
 
-  // Manejo de búsqueda
+  // Filtrar productos por búsqueda
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
   };
@@ -102,20 +107,18 @@ const Productos = ({ onAddToCart, currentUser }) => {
     producto.nombre.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // Eliminar producto
   const handleDeleteProduct = async (productoId) => {
+    if (currentUser.role !== 'jefe') {
+      setAlerta('No tienes permiso para eliminar productos.');
+      setTimeout(() => setAlerta(''), 3000);
+      return;
+    }
+
     try {
-      // Referencia al documento del producto en Firebase
       const productoRef = doc(db, `categorias/${categoriaId}/productos`, productoId);
-  
-      // Elimina el producto de Firebase
       await deleteDoc(productoRef);
-  
-      // Actualiza el estado local
-      setProductos((prevProductos) =>
-        prevProductos.filter((p) => p.id !== productoId)
-      );
-  
-      // Alerta de éxito
+      setProductos((prevProductos) => prevProductos.filter((p) => p.id !== productoId));
       setAlerta('Producto eliminado con éxito');
       setTimeout(() => setAlerta(''), 3000);
     } catch (error) {
@@ -123,28 +126,26 @@ const Productos = ({ onAddToCart, currentUser }) => {
     }
   };
 
+  // Incrementar stock
   const handleIncrementStock = async (productoId, campo) => {
+    if (currentUser.role !== 'jefe' && currentUser.role !== 'encargado') {
+      setAlerta('No tienes permiso para actualizar el stock.');
+      setTimeout(() => setAlerta(''), 3000);
+      return;
+    }
+
     try {
-      // Referencia al documento del producto en Firebase
       const productoRef = doc(db, `categorias/${categoriaId}/productos`, productoId);
-  
-      // Encuentra el producto en el estado actual
       const producto = productos.find((p) => p.id === productoId);
-  
+
       if (producto && producto[campo] !== undefined && !isNaN(producto[campo])) {
         const newCantidad = parseInt(producto[campo]) + 1;
-  
-        // Actualiza Firebase
         await updateDoc(productoRef, { [campo]: newCantidad });
-  
-        // Actualiza el estado local
         setProductos(
           productos.map((p) =>
             p.id === productoId ? { ...p, [campo]: newCantidad } : p
           )
         );
-  
-        // Muestra alerta de éxito
         setAlerta('Stock actualizado con éxito');
         setTimeout(() => setAlerta(''), 3000);
       } else {
@@ -155,12 +156,11 @@ const Productos = ({ onAddToCart, currentUser }) => {
     }
   };
 
+  // Añadir al carrito
   const handleAddToCart = (producto, sucursal) => {
-    console.log(`Añadiendo al carrito desde sucursal: ${sucursal}`);
-    
     const productoEnCarrito = { ...producto, sucursal };
     const productoStock = parseInt(producto[`cantidadDisponible${sucursal}`]);
-  
+
     if (!isNaN(productoStock) && productoStock > 0) {
       onAddToCart(productoEnCarrito);
       alert('Producto añadido al carrito con éxito');
@@ -168,7 +168,91 @@ const Productos = ({ onAddToCart, currentUser }) => {
       alert('No hay suficiente stock para añadir este producto al carrito');
     }
   };
+
+  const handleTemporalPriceChange = async (producto) => {
+    const originalPrice = producto.precio; // Guardamos el precio original
+    const nuevoPrecio = prompt("Introduce el nuevo precio temporal:", producto.precio);
+    const temporalTime = 50; // 2 minutos en segundos
+    const expirationTime = Date.now() + temporalTime * 1000; // Tiempo de expiración en milisegundos
   
+  
+    if (nuevoPrecio && !isNaN(nuevoPrecio)) {
+      try {
+        // Actualizar el precio temporal en Firebase
+        const productoRef = doc(db, `categorias/${categoriaId}/productos`, producto.id);
+        await updateDoc(productoRef, { precio: parseFloat(nuevoPrecio) });
+  
+        // Almacenar datos en localStorage
+        localStorage.setItem(
+          `producto-${producto.id}`,
+          JSON.stringify({ expirationTime, originalPrice })
+        );
+  
+        // Actualizar el estado local
+        setProductos((prevProductos) =>
+          prevProductos.map((p) =>
+            p.id === producto.id
+              ? { ...p, precio: parseFloat(nuevoPrecio), isTemporal: true, countdown: temporalTime }
+              : p
+          )
+        );
+  
+        alert("Precio cambiado temporalmente.");
+      } catch (error) {
+        console.error("Error al cambiar el precio temporalmente:", error);
+        alert("Hubo un error al actualizar el precio.");
+      }
+    } else {
+      alert("Por favor, introduce un precio válido.");
+    }
+  };
+  
+  // Restaurar precios y sincronizar la cuenta regresiva tras recargar
+  useEffect(() => {
+    const syncCountdowns = () => {
+      const now = Date.now();
+      setProductos((prevProductos) =>
+        prevProductos.map((producto) => {
+          const temporalData = localStorage.getItem(`producto-${producto.id}`);
+          if (temporalData) {
+            const { expirationTime, originalPrice } = JSON.parse(temporalData);
+            const remainingTime = Math.floor((expirationTime - now) / 1000);
+  
+            if (remainingTime <= 0) {
+              // Restaurar el precio si el tiempo ha expirado
+              localStorage.removeItem(`producto-${producto.id}`); // Limpia el almacenamiento
+              const productoRef = doc(db, `categorias/${categoriaId}/productos`, producto.id);
+              updateDoc(productoRef, { precio: originalPrice }) // Restaurar en Firebase
+                .then(() => {
+                  alert(`El precio del producto "${producto.nombre}" ha sido restablecido a su valor original: $${originalPrice}.`);
+                  // Actualizar el estado local al aceptar el alert
+                  setProductos((prevProductos) =>
+                    prevProductos.map((p) =>
+                      p.id === producto.id
+                        ? { ...p, precio: originalPrice, isTemporal: false, countdown: 0 }
+                        : p
+                    )
+                  );
+                })
+                .catch((error) => console.error("Error restaurando el precio en Firebase:", error));
+              return { ...producto, precio: originalPrice, isTemporal: false, countdown: 0 };
+            } else {
+              // Actualizar el countdown restante
+              return { ...producto, countdown: remainingTime, isTemporal: true };
+            }
+          }
+          return producto; // Sin cambios si no tiene precio temporal
+        })
+      );
+    };
+  
+    // Establecer un único intervalo para gestionar las restauraciones
+    const interval = setInterval(syncCountdowns, 1000);
+  
+    return () => {
+      clearInterval(interval); // Limpia el intervalo al desmontar
+    };
+  }, []); // Evita reinicios infinitos eliminando dependencias
   
   if (loading) return <Load />;
 
@@ -184,7 +268,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
           className="search-bar"
         />
         <ul>
-          {filteredProductos.map(producto => {
+          {filteredProductos.map((producto) => {
             const stock4034 = parseInt(producto.cantidadDisponibleAndes4034 || 0, 10); // Evitar valores undefined
             const stock4320 = parseInt(producto.cantidadDisponibleAndes4320 || 0, 10);
             const outOfStock4034 = stock4034 === 0;
@@ -193,14 +277,26 @@ const Productos = ({ onAddToCart, currentUser }) => {
 
             return (
               <li key={producto.id} className={outOfStockBoth ? 'producto-sin-stock' : ''}>
-                <img src={producto.imagenUrl} alt={producto.nombre} />
-                <div className='detallitos'>
-                  <h3>{producto.nombre}</h3>
-                  <p>Precio: ${producto.precio}</p>
+                <img
+                  src={producto.imagenUrl || 'https://via.placeholder.com/150'}
+                  alt={producto.nombre || 'Sin nombre'}
+                  className="producto-imagen"
+                />
+                <div className="detallitos">
+                  <h3>{producto.nombre || 'Sin nombre'}</h3>
+                  <p>Precio: ${producto.precio || '0.00'}</p>
 
+                  {/* Mostrar cuenta regresiva si el precio es temporal */}
+                  {producto.isTemporal && (
+                    <p className="countdown">
+                      Tiempo restante: {producto.countdown ? `${producto.countdown} segundos` : 'Restaurando...'}
+                    </p>
+                  )}
+
+                  {/* Stock para Andes 4034 */}
                   <p>
                     Stock Los Andes 4034: {stock4034}
-                    {['jefe', 'vendedor'].includes(currentUser.role) && (
+                    {['jefe', 'vendedor', 'encargado'].includes(currentUser.role) && (
                       <button
                         onClick={() => handleAddToCart(producto, 'Andes4034')}
                         disabled={outOfStock4034}
@@ -209,14 +305,20 @@ const Productos = ({ onAddToCart, currentUser }) => {
                         +🛒
                       </button>
                     )}
-                    {currentUser.role === 'jefe' && (
-                      <button onClick={() => handleIncrementStock(producto.id, 'cantidadDisponibleAndes4034')} className='boton-incrementar'>+</button>
+                    {['jefe', 'encargado'].includes(currentUser.role) && (
+                      <button
+                        onClick={() => handleIncrementStock(producto.id, 'cantidadDisponibleAndes4034')}
+                        className="boton-incrementar"
+                      >
+                        +
+                      </button>
                     )}
                   </p>
 
+                  {/* Stock para Andes 4320 */}
                   <p>
                     Stock Los Andes 4320: {stock4320}
-                    {['jefe', 'vendedor'].includes(currentUser.role) && (
+                    {['jefe', 'vendedor', 'encargado'].includes(currentUser.role) && (
                       <button
                         onClick={() => handleAddToCart(producto, 'Andes4320')}
                         disabled={outOfStock4320}
@@ -225,17 +327,48 @@ const Productos = ({ onAddToCart, currentUser }) => {
                         +🛒
                       </button>
                     )}
-                    {currentUser.role === 'jefe' && (
-                      <button onClick={() => handleIncrementStock(producto.id, 'cantidadDisponibleAndes4320')} className='boton-incrementar'>+</button>
+                    {['jefe', 'encargado'].includes(currentUser.role) && (
+                      <button
+                        onClick={() => handleIncrementStock(producto.id, 'cantidadDisponibleAndes4320')}
+                        className="boton-incrementar"
+                      >
+                        +
+                      </button>
                     )}
                   </p>
 
-                  {currentUser.role === 'jefe' && (
-                    <div className='action-buttons'>
-                      <button onClick={() => handleShowFormulario(producto)} className='boton-editar'>Editar</button>
-                      <button onClick={() => handleDeleteProduct(producto.id)} className='boton-borrar'>Borrar</button>
+                  {/* Acciones permitidas solo al jefe o encargado */}
+                  {['jefe', 'encargado'].includes(currentUser.role) && (
+                    <div className="action-buttons">
+                      {/* Botón para editar */}
+                      <button
+                        onClick={() => handleShowFormulario(producto)}
+                        className="boton-editar"
+                      >
+                        Editar
+                      </button>
+
+                      {/* Botón para cambiar precio temporalmente */}
+                      <button
+                        onClick={() => handleTemporalPriceChange(producto)} // Llama a la lógica de precio temporal
+                        className="boton-precio-temporal"
+                        title="Cambiar precio temporalmente"
+                      >
+                        ⏱
+                      </button>
+
+                      {/* Botón para eliminar, permitido solo al jefe */}
+                      {currentUser.role === 'jefe' && (
+                        <button
+                          onClick={() => handleDeleteProduct(producto.id)}
+                          className="boton-borrar"
+                        >
+                          Borrar
+                        </button>
+                      )}
                     </div>
                   )}
+
                 </div>
               </li>
             );
@@ -253,7 +386,9 @@ const Productos = ({ onAddToCart, currentUser }) => {
               handleUpdateProduct(currentProduct.id);
             }}
           >
-            <span className="close" onClick={handleCloseFormulario}>&times;</span>
+            <span className="close" onClick={handleCloseFormulario}>
+              &times;
+            </span>
             <h2>Editar Producto</h2>
 
             {/* Nombre */}
@@ -325,8 +460,8 @@ const Productos = ({ onAddToCart, currentUser }) => {
             <div className="form-group">
               <select
                 className="form-control"
-                name="categoriaId" // Cambia a "categoriaId" para usar el valor correcto
-                value={currentProduct.categoriaId || ''} // Usa "categoriaId" en lugar de "categoria"
+                name="categoriaId"
+                value={currentProduct.categoriaId || ''}
                 onChange={handleInputChange}
                 required
               >
@@ -344,18 +479,19 @@ const Productos = ({ onAddToCart, currentUser }) => {
               <button type="submit" className="btn btn-primary">
                 Guardar Cambios
               </button>
-              <button type="button" className="btn btn-secondary" onClick={handleCloseFormulario}>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={handleCloseFormulario}
+              >
                 Cancelar
               </button>
             </div>
           </form>
         </div>
       )}
-
     </>
   );
-
-
 }
 
 export default Productos;

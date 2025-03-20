@@ -22,6 +22,21 @@ const Clientes = ({ currentUser }) => {
   const editFormRef = useRef(null);
   const deleteFormRef = useRef(null);
 
+  // Mover actualizarClientes antes de su uso
+  const actualizarClientes = async (clienteList) => {
+    try {
+      for (const cliente of clienteList) {
+        const clienteDoc = doc(db, 'clientes', cliente.dni);
+        await setDoc(clienteDoc, {
+          ...cliente,
+          nombreCompleto: formatNombre(cliente.nombreCompleto),
+        });
+      }
+    } catch (error) {
+      console.error('Error actualizando clientes: ', error);
+    }
+  };
+
   useEffect(() => {
     const fetchClientes = async () => {
       try {
@@ -33,7 +48,7 @@ const Clientes = ({ currentUser }) => {
         setFilteredClientes(clienteList);
         setLoading(false);
 
-        // Llama a la función para actualizar los clientes
+        // Llama a actualizarClientes después de haberla declarado
         actualizarClientes(clienteList);
       } catch (error) {
         console.error("Error fetching clientes: ", error);
@@ -52,46 +67,46 @@ const Clientes = ({ currentUser }) => {
   }, [searchTerm, clientes]);
 
   const handleAddButtonClick = () => {
-    setNewCliente({ dni: '', nombreCompleto: '', direccion: '', entrecalles: '', telefono1: '+549', telefono2: '+549', imagenUrl: 'https://placehold.co/200x200' }); // Limpia los datos del formulario
+    setNewCliente({ dni: '', nombreCompleto: '', direccion: '', entrecalles: '', telefono1: '+549', telefono2: '+549', imagenUrl: 'https://placehold.co/200x200' });
     setMostrarFormulario(true);
-  }
+  };
 
   const handleAddCliente = async (e) => {
     e.preventDefault();
-    const clienteDoc = doc(db, 'clientes', newCliente.dni); // Usa el DNI como ID del documento
+    const clienteDoc = doc(db, 'clientes', newCliente.dni);
     await setDoc(clienteDoc, {
-      ...newCliente, // Mantén los otros campos como están
-      dni: newCliente.dni.toString(), // Asegúrate de que el DNI se guarde como string
-      nombreCompleto: formatNombre(newCliente.nombreCompleto), // Formatea el nombre
+      ...newCliente,
+      dni: newCliente.dni.toString(),
+      nombreCompleto: formatNombre(newCliente.nombreCompleto),
     });
     setNewCliente({ dni: '', nombreCompleto: '', direccion: '', entrecalles: '', telefono1: '', telefono2: '', imagenUrl: 'https://placehold.co/200x200' });
     alert('Cliente agregado exitosamente');
-    window.location.reload(); // Refresca la página
+    window.location.reload();
   };
 
   const handleDeleteCliente = async (id) => {
     const clienteDoc = doc(db, 'clientes', id);
     await deleteDoc(clienteDoc);
     alert('Cliente eliminado exitosamente');
-    window.location.reload(); // Refresca la página
+    window.location.reload();
   };
 
   const handleUpdateCliente = async (e) => {
     e.preventDefault();
     const clienteDoc = doc(db, 'clientes', editClienteId);
     await setDoc(clienteDoc, {
-      ...newCliente, // Mantén los otros campos como están
-      dni: newCliente.dni.toString(), // Asegúrate de que el DNI se guarde como string
-      nombreCompleto: formatNombre(newCliente.nombreCompleto), // Formatea el nombre
+      ...newCliente,
+      dni: newCliente.dni.toString(),
+      nombreCompleto: formatNombre(newCliente.nombreCompleto),
     });
     setEditClienteId(null);
     setNewCliente({ dni: '', nombreCompleto: '', direccion: '', entrecalles: '', telefono1: '', telefono2: '', imagenUrl: 'https://placehold.co/200x200' });
     alert('Cliente actualizado exitosamente');
-    window.location.reload(); // Refresca la página
+    window.location.reload();
   };
 
   const startEditCliente = (cliente) => {
-    setEditClienteId(cliente.dni); // Usa el DNI para editar el cliente
+    setEditClienteId(cliente.dni);
     setNewCliente({
       dni: cliente.dni,
       nombreCompleto: cliente.nombreCompleto,
@@ -99,7 +114,7 @@ const Clientes = ({ currentUser }) => {
       entrecalles: cliente.entrecalles,
       telefono1: cliente.telefono1,
       telefono2: cliente.telefono2,
-      imagenUrl: cliente.imagenUrl
+      imagenUrl: cliente.imagenUrl,
     });
     setMostrarEditar(true);
   };
@@ -141,24 +156,8 @@ const Clientes = ({ currentUser }) => {
       .split(' ')
       .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
       .join(' ');
-  }
-
-  const actualizarClientes = async (clienteList) => {
-    try {
-      clienteList.forEach(async (cliente) => {
-        const clienteDoc = doc(db, 'clientes', cliente.dni);
-        await setDoc(clienteDoc, {
-          ...cliente,
-          nombreCompleto: formatNombre(cliente.nombreCompleto),
-        });
-      });
-
-      console.log('Clientes actualizados exitosamente');
-    } catch (error) {
-      console.error('Error actualizando clientes: ', error);
-    }
   };
-  
+
   return (
     <div className="container">
       <button onClick={handleAddButtonClick} className="floating-btn">
@@ -245,7 +244,7 @@ const Clientes = ({ currentUser }) => {
         <div className="blur-background">
           <form onSubmit={handleUpdateCliente} className="floating-form" ref={editFormRef}>
             <div className="form-group">
-            <input
+              <input
                 type="text"
                 className="form-control"
                 placeholder="DNI"
@@ -341,7 +340,11 @@ const Clientes = ({ currentUser }) => {
       <div className="card-container mt-4">
         {filteredClientes.map(cliente => (
           <div className="card" key={cliente.dni} onClick={() => handleClienteClick(cliente.dni)}>
-            <img src={cliente.imagenUrl} alt={cliente.nombreCompleto} className="card-img-top" />
+            <img
+              src={cliente.imagenUrl || 'https://placehold.co/200x200'}
+              alt={cliente.nombreCompleto}
+              className="card-img-top"
+            />
             <div className="card-body">
               <h5 className="card-title">{cliente.nombreCompleto}</h5>
               <a
@@ -352,18 +355,36 @@ const Clientes = ({ currentUser }) => {
               >
                 Chat en WhatsApp
               </a>
+              {currentUser && (currentUser.role === 'jefe' || currentUser.role === 'encargado') && (
+                <button
+                  className="btn btn-warning"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    startEditCliente(cliente);
+                  }}
+                >
+                  Editar
+                </button>
+              )}
               {currentUser && currentUser.role === 'jefe' && (
-                <>
-                  <button className="btn btn-warning" onClick={(e) => { e.stopPropagation(); startEditCliente(cliente); }}>Editar</button>
-                  <button className="btn btn-danger ml-2" onClick={(e) => { e.stopPropagation(); setEditClienteId(cliente.dni); setMostrarEliminar(true); }}>Eliminar</button>
-                </>
+                <button
+                  className="btn btn-danger ml-2"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setEditClienteId(cliente.dni);
+                    setMostrarEliminar(true);
+                  }}
+                >
+                  Eliminar
+                </button>
               )}
             </div>
           </div>
         ))}
       </div>
+
     </div>
   );
-}
+};
 
 export default Clientes;

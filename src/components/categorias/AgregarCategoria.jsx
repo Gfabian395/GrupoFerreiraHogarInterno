@@ -11,19 +11,27 @@ const AgregarCategoria = ({ currentUser }) => {
 
   const handleAddCategoria = async (e) => {
     e.preventDefault();
-    const categoriasCollection = collection(db, 'categorias');
-    await addDoc(categoriasCollection, { nombre, imagenUrl });
-    setNombre('');
-    setImagenUrl('');
-    setAlerta('Categoría agregada con éxito');
-    setTimeout(() => {
-      setAlerta('');
-      window.location.reload(); // Refrescar la página
-    }, 1000);
+
+    try {
+      const categoriasCollection = collection(db, 'categorias');
+      await addDoc(categoriasCollection, { nombre, imagenUrl });
+      setNombre('');
+      setImagenUrl('');
+      setAlerta('Categoría agregada con éxito');
+      setTimeout(() => {
+        setAlerta('');
+        window.location.reload(); // Refrescar la página
+      }, 1000);
+    } catch (error) {
+      console.error("Error al agregar la categoría:", error);
+      setAlerta('Hubo un error al agregar la categoría');
+      setTimeout(() => setAlerta(''), 3000);
+    }
   };
 
-  if (currentUser.role !== 'jefe') {
-    return null; // Si el usuario no es "jefe", no se muestra nada
+  // Validar roles permitidos (jefe o encargado)
+  if (currentUser.role !== 'jefe' && currentUser.role !== 'encargado') {
+    return null; // Si el usuario no es "jefe" ni "encargado", no se muestra nada
   }
 
   return (

@@ -218,3 +218,32 @@
   width: 100%;
   margin-top: 20px; /* Espacio superior para ajustarlo */
 }
+
+/* Estilo para la cuenta regresiva */
+.countdown {
+  font-size: 18px;
+  font-weight: bold;
+  color: #d9534f; /* Rojo brillante */
+  animation: fade-out 1s linear; /* Añadido efecto de desvanecimiento */
+}
+
+/* Animación para desvanecer la cuenta atrás */
+@keyframes fade-out {
+  0% {
+    opacity: 1; /* Totalmente visible */
+  }
+  100% {
+    opacity: 0.5; /* Semidesvanecido */
+  }
+}
+
+/* Aseguramos que la cuenta atrás se vea claramente */
+.productos .countdown {
+  background-color: rgba(217, 83, 79, 0.1); /* Fondo semitransparente en rojo */
+  padding: 5px 10px;
+  border-radius: 5px;
+}
+
+.boton-precio-temporal{
+  border-radius: 50%;
+}

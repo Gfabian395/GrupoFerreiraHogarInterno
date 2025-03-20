@@ -78,7 +78,7 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
   };
 
   const handleEditCategoria = (categoria) => {
-    if (currentUser && currentUser.role === 'jefe') {
+    if (currentUser && (currentUser.role === 'jefe' || currentUser.role === 'encargado')) {
       setEditCategoria(categoria);
       setEditNombre(categoria.nombre);
       setEditImagenUrl(categoria.imagenUrl);
@@ -138,15 +138,20 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
         {filteredCategorias.map(categoria => (
           <li key={categoria.id} onClick={() => handleSelectCategoria(categoria.id)}>
             <img src={categoria.imagenUrl} alt={categoria.nombre} onLoad={handleImageLoad} />
-            <div className='descripcioncita'>
+            <div className="descripcioncita">
               <h3>{categoria.nombre}</h3>
-              {currentUser && currentUser.role === 'jefe' && (
+              {currentUser && (
                 <>
-                  <button onClick={(e) => { e.stopPropagation(); promptDeleteCategoria(categoria.id); }}>Eliminar</button>
-                  <button onClick={(e) => { e.stopPropagation(); handleEditCategoria(categoria); }}>Editar</button>
+                  {(currentUser.role === 'jefe' || currentUser.role === 'encargado') && (
+                    <button onClick={(e) => { e.stopPropagation(); handleEditCategoria(categoria); }}>Editar</button>
+                  )}
+                  {currentUser.role === 'jefe' && (
+                    <button onClick={(e) => { e.stopPropagation(); promptDeleteCategoria(categoria.id); }}>Eliminar</button>
+                  )}
                 </>
               )}
             </div>
+
           </li>
         ))}
       </ul>

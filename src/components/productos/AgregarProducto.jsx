@@ -19,10 +19,14 @@ const AgregarProducto = ({ currentUser }) => {
 
   useEffect(() => {
     const fetchCategorias = async () => {
-      const categoriasCollection = collection(db, 'categorias');
-      const categoriasSnapshot = await getDocs(categoriasCollection);
-      const categoriasList = categoriasSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setCategorias(categoriasList);
+      try {
+        const categoriasCollection = collection(db, 'categorias');
+        const categoriasSnapshot = await getDocs(categoriasCollection);
+        const categoriasList = categoriasSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setCategorias(categoriasList);
+      } catch (error) {
+        console.error("Error al cargar categorías: ", error);
+      }
     };
 
     fetchCategorias();
@@ -30,29 +34,37 @@ const AgregarProducto = ({ currentUser }) => {
 
   const handleAddProducto = async (e) => {
     e.preventDefault();
+
     if (!selectedCategoria) {
-      alert('Por favor, selecciona una categoría.');
+      setAlerta('Por favor, selecciona una categoría.');
+      setTimeout(() => setAlerta(''), 3000);
       return;
     }
-    const productosCollection = collection(db, `categorias/${selectedCategoria}/productos`);
-    await addDoc(productosCollection, producto);
-    setProducto({
-      nombre: '',
-      precio: '',
-      cantidadDisponibleAndes4034: '',
-      cantidadDisponibleAndes4320: '',
-      imagenUrl: '',
-      descripcion: ''
-    });
-    setAlerta('Producto agregado con éxito');
-    setTimeout(() => {
-      setAlerta('');
-      window.location.reload(); // Refrescar la página
-    }, 1000);
+
+    try {
+      const productosCollection = collection(db, `categorias/${selectedCategoria}/productos`);
+      await addDoc(productosCollection, producto);
+      setProducto({
+        nombre: '',
+        precio: '',
+        cantidadDisponibleAndes4034: '',
+        cantidadDisponibleAndes4320: '',
+        imagenUrl: '',
+        descripcion: ''
+      });
+      setAlerta('Producto agregado con éxito');
+      setTimeout(() => setAlerta(''), 3000);
+      setMostrarFormulario(false); // Cerrar el formulario al terminar
+    } catch (error) {
+      console.error("Error al agregar producto: ", error);
+      setAlerta('Hubo un problema al agregar el producto.');
+      setTimeout(() => setAlerta(''), 3000);
+    }
   };
 
-  if (currentUser.role !== 'jefe') {
-    return null; // Si el usuario no es "jefe", no se muestra nada
+  // Validar roles para mostrar el formulario
+  if (!['jefe', 'encargado'].includes(currentUser.role)) {
+    return null; // Oculta el componente para roles no autorizados
   }
 
   return (
@@ -63,6 +75,7 @@ const AgregarProducto = ({ currentUser }) => {
             <h2>Agregar Producto</h2>
             {alerta && <div className="alert alert-success">{alerta}</div>}
             <form onSubmit={handleAddProducto}>
+              {/* Selección de Categoría */}
               <div className="form-group">
                 <label htmlFor="categoriaSelect">Seleccionar Categoría</label>
                 <select
@@ -73,11 +86,13 @@ const AgregarProducto = ({ currentUser }) => {
                   required
                 >
                   <option value="">-- Selecciona una Categoría --</option>
-                  {categorias.map(categoria => (
+                  {categorias.map((categoria) => (
                     <option key={categoria.id} value={categoria.id}>{categoria.nombre}</option>
                   ))}
                 </select>
               </div>
+
+              {/* Datos del Producto */}
               <div className="form-group">
                 <input
                   type="text"
@@ -136,12 +151,15 @@ const AgregarProducto = ({ currentUser }) => {
                   onChange={(e) => setProducto({ ...producto, descripcion: e.target.value })}
                 />
               </div>
+
+              {/* Botones del Formulario */}
               <button type="submit" className="btn btn-primary">Agregar Producto</button>
             </form>
             <button onClick={() => setMostrarFormulario(false)} className="btn btn-secondary">Cerrar</button>
           </div>
         </div>
       )}
+
       {/* Botón flotante */}
       <button
         onClick={() => setMostrarFormulario(!mostrarFormulario)}

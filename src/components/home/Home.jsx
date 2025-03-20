@@ -65,42 +65,52 @@ const Home = () => {
       const ventasCollection = collection(db, 'ventas');
       const ventasSnapshot = await getDocs(ventasCollection);
       const ventasList = ventasSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
+  
       const hoy = new Date();
       const clientesProximos = [];
-
+  
       ventasList.forEach(venta => {
         const { clienteId, valorCuota, pagos, vendedor, nombreCompleto } = venta;
-
+  
         const ultimaFecha = pagos && pagos.length > 0
           ? new Date(pagos[pagos.length - 1].fecha)
           : (venta.fecha && venta.fecha.seconds
             ? new Date(venta.fecha.seconds * 1000)
             : null);
-
+  
         if (!ultimaFecha) return;
-
+  
         const proximaFecha = new Date(ultimaFecha);
         proximaFecha.setMonth(proximaFecha.getMonth() + 1);
-
+  
         const diferenciaDias = Math.floor((proximaFecha - hoy) / (1000 * 60 * 60 * 24));
-
+  
         if (diferenciaDias >= 0 && diferenciaDias <= 7) {
           clientesProximos.push({
             clienteId,
             nombreCompleto,
             valorCuota,
             vendedor,
-            proximaFecha: proximaFecha.toLocaleDateString('es-AR'),
+            proximaFecha: proximaFecha,
           });
         }
       });
-
-      setClientesConPagosProximos(clientesProximos);
+  
+      // Ordenar clientes por fecha más cercana primero
+      clientesProximos.sort((a, b) => a.proximaFecha - b.proximaFecha);
+  
+      // Formatear las fechas a cadenas legibles antes de guardar
+      const clientesOrdenados = clientesProximos.map(cliente => ({
+        ...cliente,
+        proximaFecha: cliente.proximaFecha.toLocaleDateString('es-AR'),
+      }));
+  
+      setClientesConPagosProximos(clientesOrdenados);
     };
-
+  
     fetchClientesConPagosProximos();
   }, []);
+  
 
   return (
     <div className="home">

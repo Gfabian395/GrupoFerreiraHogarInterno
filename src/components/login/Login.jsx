@@ -10,12 +10,23 @@ const usuariosDB = [
   { username: 'Carmen Galarza', password: 'Gordis2024', role: 'vendedor', imageUrl: 'https://firebasestorage.googleapis.com/v0/b/ferreirahogar-376dd.firebasestorage.app/o/vendedores%2F5.png?alt=media&token=9530608a-7cc2-4807-bd6f-d2ce55c29c0a' },
   { username: 'Carol B', password: 'Tokyoghoul', role: 'vendedor', imageUrl: 'https://firebasestorage.googleapis.com/v0/b/ferreirahogar-376dd.firebasestorage.app/o/vendedores%2F11.png?alt=media&token=b83cafcc-a9bb-4ae0-9609-2e8f65c95d10' },
   { username: 'TamaraAbigail', password: 'Tamara07', role: 'vendedor', imageUrl: 'https://firebasestorage.googleapis.com/v0/b/ferreirahogar-376dd.firebasestorage.app/o/vendedores%2F3.png?alt=media&token=6a2d2262-604a-41c3-baab-051b0cd2e32a' },
-  { username: 'Yuli182', password: '244962', role: 'vendedor', imageUrl: 'https://firebasestorage.googleapis.com/v0/b/ferreirahogar-376dd.firebasestorage.app/o/vendedores%2F1.png?alt=media&token=53e5fde2-f246-47d4-b329-436d866ac66c' },
+  { username: 'Yuli182', password: '244962', role: 'encargado', imageUrl: 'https://firebasestorage.googleapis.com/v0/b/ferreirahogar-376dd.firebasestorage.app/o/vendedores%2F1.png?alt=media&token=53e5fde2-f246-47d4-b329-436d866ac66c' },
   { username: 'Gustavito02', password: '36520975', role: 'vendedor', imageUrl: 'https://firebasestorage.googleapis.com/v0/b/ferreirahogar-376dd.firebasestorage.app/o/vendedores%2F10.png?alt=media&token=44148120-0d0c-41ee-99aa-f4dfc4e50f7e' },
   { username: 'Elias G', password: 'Elemento', role: 'vendedor', imageUrl: 'path/to/EliasG.jpg' },
   { username: 'Micaela G', password: 'Galarza24', role: 'vendedor', imageUrl: 'path/to/MicaelaG.jpg' },
   { username: 'prueba', password: 'prueba', role: 'vendedor', imageUrl: 'path/to/prueba.jpg' },
 ];
+
+// Función para verificar los permisos según el rol
+const verificarPermisos = (role, accion, tipo) => {
+  const permisos = {
+    jefe: { categorias: ['agregar', 'editar', 'borrar'], productos: ['agregar', 'editar', 'borrar'], clientes: ['agregar', 'editar', 'borrar'] },
+    encargado: { categorias: ['agregar', 'editar'], productos: ['agregar', 'editar'], clientes: ['agregar', 'editar'] },
+    vendedor: { categorias: [], productos: [], clientes: [] },
+  };
+
+  return permisos[role]?.[tipo]?.includes(accion);
+};
 
 const Login = ({ onLogin }) => {
   const [username, setUsername] = useState('');
@@ -28,9 +39,7 @@ const Login = ({ onLogin }) => {
     if (usuario) {
       // Guardar la información del usuario en localStorage
       localStorage.setItem('usuario', JSON.stringify(usuario));
-      if (usuario.role === 'jefe') {
-        alert('Bienvenido, jefe!');
-      }
+      alert(`Bienvenido, ${usuario.role}!`);
       onLogin(usuario);
     } else {
       setAlerta('Usuario o contraseña incorrectos');
@@ -60,5 +69,13 @@ const Login = ({ onLogin }) => {
     </div>
   );
 };
+
+// Ejemplo de uso de la función verificarPermisos
+const ejemploUsoPermisos = () => {
+  const rolUsuario = 'encargado';
+  const puedeEditarCategoria = verificarPermisos(rolUsuario, 'editar', 'categorias');
+};
+
+ejemploUsoPermisos();
 
 export default Login;

@@ -172,7 +172,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
   const handleTemporalPriceChange = async (producto) => {
     const originalPrice = producto.precio; // Guardamos el precio original
     const nuevoPrecio = prompt("Introduce el nuevo precio temporal:", producto.precio);
-    const temporalTime = 50; // 2 minutos en segundos
+    const temporalTime = 120; // 2 minutos en segundos
     const expirationTime = Date.now() + temporalTime * 1000; // Tiempo de expiración en milisegundos
   
   

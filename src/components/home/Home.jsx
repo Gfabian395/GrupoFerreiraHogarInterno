@@ -23,6 +23,7 @@ const Home = () => {
   const [clientesConPagosProximos, setClientesConPagosProximos] = useState([]);
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
 
+  // Ranking de vendedores
   useEffect(() => {
     const fetchRankingVendedores = async () => {
       const ventasCollection = collection(db, 'ventas');
@@ -60,57 +61,61 @@ const Home = () => {
     fetchRankingVendedores();
   }, [currentMonth]);
 
+  // Clientes con pagos próximos
   useEffect(() => {
     const fetchClientesConPagosProximos = async () => {
       const ventasCollection = collection(db, 'ventas');
       const ventasSnapshot = await getDocs(ventasCollection);
       const ventasList = ventasSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  
+
       const hoy = new Date();
       const clientesProximos = [];
-  
+
       ventasList.forEach(venta => {
-        const { clienteId, valorCuota, pagos, vendedor, nombreCompleto } = venta;
-  
+        const { clienteId, valorCuota, pagos, cuotas, totalCredito, vendedor, nombreCompleto } = venta;
+
+        // Excluir ventas pagadas al contado o completamente pagadas
+        if (cuotas === 1 || (pagos && pagos.length > 0)) {
+          const totalPagado = pagos.reduce((sum, pago) => sum + (pago.monto || 0), 0);
+          if (totalPagado >= totalCredito) return;
+        }
+
         const ultimaFecha = pagos && pagos.length > 0
           ? new Date(pagos[pagos.length - 1].fecha)
           : (venta.fecha && venta.fecha.seconds
             ? new Date(venta.fecha.seconds * 1000)
             : null);
-  
+
         if (!ultimaFecha) return;
-  
+
         const proximaFecha = new Date(ultimaFecha);
         proximaFecha.setMonth(proximaFecha.getMonth() + 1);
-  
+
         const diferenciaDias = Math.floor((proximaFecha - hoy) / (1000 * 60 * 60 * 24));
-  
+
         if (diferenciaDias >= 0 && diferenciaDias <= 7) {
           clientesProximos.push({
             clienteId,
             nombreCompleto,
             valorCuota,
             vendedor,
-            proximaFecha: proximaFecha,
+            proximaFecha,
           });
         }
       });
-  
-      // Ordenar clientes por fecha más cercana primero
+
       clientesProximos.sort((a, b) => a.proximaFecha - b.proximaFecha);
-  
-      // Formatear las fechas a cadenas legibles antes de guardar
+
       const clientesOrdenados = clientesProximos.map(cliente => ({
         ...cliente,
         proximaFecha: cliente.proximaFecha.toLocaleDateString('es-AR'),
       }));
-  
+
       setClientesConPagosProximos(clientesOrdenados);
     };
-  
+
     fetchClientesConPagosProximos();
   }, []);
-  
 
   return (
     <div className="home">
@@ -119,7 +124,7 @@ const Home = () => {
         {rankingVendedores.map((vendedor, index) => {
           const user = usuariosDB.find(user => user.username === vendedor.vendedor);
           return (
-            <div key={index} className={`ranking-item ranking-${index + 1}`}>
+            <div key={vendedor.vendedor} className={`ranking-item ranking-${index + 1}`}>
               <div className="confetti"></div>
               <div className="medal">{index + 1 === 1 ? '🥇' : index + 1 === 2 ? '🥈' : '🥉'}</div>
               <img src={user?.imageUrl} alt={vendedor.vendedor} className="vendedor-image" />
@@ -142,8 +147,8 @@ const Home = () => {
               </tr>
             </thead>
             <tbody>
-              {clientesConPagosProximos.map((cliente, index) => (
-                <tr key={index} className="cliente-item-row">
+              {clientesConPagosProximos.map(cliente => (
+                <tr key={cliente.clienteId} className="cliente-item-row">
                   <td className="cliente-dni">{cliente.clienteId}</td>
                   <td className="cliente-cuota">${cliente.valorCuota.toLocaleString('es-AR')}</td>
                   <td className="cliente-vendedor">{cliente.vendedor}</td>
@@ -156,7 +161,6 @@ const Home = () => {
           <p className="no-clientes">No hay clientes con pagos en los próximos 7 días.</p>
         )}
       </div>
-
     </div>
   );
 };

@@ -1,18 +1,19 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 
-// Configuración de Firebase
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_APIKEY,
-  authDomain: import.meta.env.VITE_AUTHDOMAIN,
-  projectId: import.meta.env.VITE_PROJECTID,
-  storageBucket: import.meta.env.VITE_STORAGEBUCKET,
-  messagingSenderId: import.meta.env.VITE_MESSAGINGSENDERID,
-  appId: import.meta.env.VITE_APPID
+  apiKey: "AIzaSyB-xX1IpY7NeOw8y5fRA-2wm8pR8oMy9Zc",
+  authDomain: "ferreirahogar-376dd.firebaseapp.com",
+  projectId: "ferreirahogar-376dd",
+  storageBucket: "ferreirahogar-376dd.appspot.com",
+  messagingSenderId: "1047003364413",
+  appId: "1:1047003364413:web:c7a687d4bdf0bd5c3e0d3b"
 };
 
-// Inicialización de Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 export { db };
+/* 
+HASTA ACA FUNCIONA PERFECTO ESTE ES EL ORIGINAL
+*/

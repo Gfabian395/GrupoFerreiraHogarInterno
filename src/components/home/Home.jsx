@@ -74,7 +74,6 @@ const Home = () => {
       ventasList.forEach(venta => {
         const { clienteId, valorCuota, pagos, cuotas, totalCredito, vendedor, nombreCompleto } = venta;
 
-        // Excluir ventas pagadas al contado o completamente pagadas
         if (cuotas === 1 || (pagos && pagos.length > 0)) {
           const totalPagado = pagos.reduce((sum, pago) => sum + (pago.monto || 0), 0);
           if (totalPagado >= totalCredito) return;
@@ -93,6 +92,19 @@ const Home = () => {
 
         const diferenciaDias = Math.floor((proximaFecha - hoy) / (1000 * 60 * 60 * 24));
 
+        // Si el cliente tiene pagos atrasados
+        if (diferenciaDias < 0) {
+          clientesProximos.push({
+            clienteId,
+            nombreCompleto,
+            valorCuota,
+            vendedor,
+            proximaFecha,
+            atrasado: true, // Indica que el cliente está atrasado
+          });
+        }
+
+        // Si el cliente tiene pagos próximos (dentro de los próximos 7 días)
         if (diferenciaDias >= 0 && diferenciaDias <= 7) {
           clientesProximos.push({
             clienteId,
@@ -100,6 +112,7 @@ const Home = () => {
             valorCuota,
             vendedor,
             proximaFecha,
+            atrasado: false, // Indica que el cliente está en tiempo
           });
         }
       });
@@ -148,7 +161,10 @@ const Home = () => {
             </thead>
             <tbody>
               {clientesConPagosProximos.map(cliente => (
-                <tr key={cliente.clienteId} className="cliente-item-row">
+                <tr
+                  key={cliente.clienteId}
+                  className={`cliente-item-row ${cliente.atrasado ? 'cliente-atrasado' : ''}`}
+                >
                   <td className="cliente-dni">{cliente.clienteId}</td>
                   <td className="cliente-cuota">${cliente.valorCuota.toLocaleString('es-AR')}</td>
                   <td className="cliente-vendedor">{cliente.vendedor}</td>

@@ -134,3 +134,8 @@
 .cliente-fecha {
   text-transform: capitalize;
 }
+
+.cliente-atrasado {
+  background-color: #ffcccc; /* Color rojo suave */
+  color: #ff0000; /* Texto rojo */
+}

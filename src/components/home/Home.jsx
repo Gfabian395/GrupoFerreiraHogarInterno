@@ -22,6 +22,9 @@ const Home = () => {
   const [rankingVendedores, setRankingVendedores] = useState([]);
   const [clientesConPagosProximos, setClientesConPagosProximos] = useState([]);
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
+  const today = new Date();
+  const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+  const showRanking = today.getDate() >= lastDayOfMonth - 2;
 
   // Ranking de vendedores
   useEffect(() => {
@@ -33,7 +36,7 @@ const Home = () => {
       const vendedoresMap = {};
 
       ventasList.forEach(venta => {
-        if (venta.fecha && venta.fecha.seconds) {
+        if (venta.fecha?.seconds) {
           const ventaDate = new Date(venta.fecha.seconds * 1000);
           if (ventaDate.getMonth() !== currentMonth) return;
 
@@ -42,7 +45,7 @@ const Home = () => {
           }
           vendedoresMap[venta.vendedor].cantVentas += 1;
 
-          if (venta.pagos) {
+          if (Array.isArray(venta.pagos)) {
             venta.pagos.forEach(pago => {
               vendedoresMap[venta.vendedor].totalIngresado += pago.monto || 0;
             });
@@ -72,18 +75,16 @@ const Home = () => {
       const clientesProximos = [];
 
       ventasList.forEach(venta => {
-        const { clienteId, valorCuota, pagos, cuotas, totalCredito, vendedor, nombreCompleto } = venta;
+        const { clienteId, valorCuota, pagos = [], cuotas, totalCredito, vendedor, nombreCompleto } = venta;
 
-        if (cuotas === 1 || (pagos && pagos.length > 0)) {
-          const totalPagado = pagos.reduce((sum, pago) => sum + (pago.monto || 0), 0);
-          if (totalPagado >= totalCredito) return;
-        }
+        const totalPagado = pagos.reduce((sum, pago) => sum + (pago.monto || 0), 0);
+        if (totalPagado >= totalCredito) return;
 
-        const ultimaFecha = pagos && pagos.length > 0
+        const ultimaFecha = pagos.length > 0
           ? new Date(pagos[pagos.length - 1].fecha)
-          : (venta.fecha && venta.fecha.seconds
+          : venta.fecha?.seconds
             ? new Date(venta.fecha.seconds * 1000)
-            : null);
+            : null;
 
         if (!ultimaFecha) return;
 
@@ -92,39 +93,26 @@ const Home = () => {
 
         const diferenciaDias = Math.floor((proximaFecha - hoy) / (1000 * 60 * 60 * 24));
 
-        // Si el cliente tiene pagos atrasados
-        if (diferenciaDias < 0) {
+        if (diferenciaDias < 0 || (diferenciaDias >= 0 && diferenciaDias <= 7)) {
           clientesProximos.push({
             clienteId,
             nombreCompleto,
             valorCuota,
             vendedor,
-            proximaFecha,
-            atrasado: true, // Indica que el cliente está atrasado
-          });
-        }
-
-        // Si el cliente tiene pagos próximos (dentro de los próximos 7 días)
-        if (diferenciaDias >= 0 && diferenciaDias <= 7) {
-          clientesProximos.push({
-            clienteId,
-            nombreCompleto,
-            valorCuota,
-            vendedor,
-            proximaFecha,
-            atrasado: false, // Indica que el cliente está en tiempo
+            proximaFecha: proximaFecha.toLocaleDateString('es-AR'),
+            atrasado: diferenciaDias < 0,
           });
         }
       });
 
-      clientesProximos.sort((a, b) => a.proximaFecha - b.proximaFecha);
+      // Ordenar las fechas correctamente
+      clientesProximos.sort((a, b) => {
+        const dateA = a.proximaFecha.split('/').reverse().join('-'); // Convierte "dd/mm/yyyy" a "yyyy-mm-dd"
+        const dateB = b.proximaFecha.split('/').reverse().join('-');
+        return new Date(dateA) - new Date(dateB);
+      });
 
-      const clientesOrdenados = clientesProximos.map(cliente => ({
-        ...cliente,
-        proximaFecha: cliente.proximaFecha.toLocaleDateString('es-AR'),
-      }));
-
-      setClientesConPagosProximos(clientesOrdenados);
+      setClientesConPagosProximos(clientesProximos);
     };
 
     fetchClientesConPagosProximos();
@@ -132,21 +120,24 @@ const Home = () => {
 
   return (
     <div className="home">
-      {/* <h2 className="ranking-title">Nuestro Mejor Vendedor del Mes</h2>
-      <div className="ranking-container">
-        {rankingVendedores.map((vendedor, index) => {
-          const user = usuariosDB.find(user => user.username === vendedor.vendedor);
-          return (
-            <div key={vendedor.vendedor} className={`ranking-item ranking-${index + 1}`}>
-              <div className="confetti"></div>
-              <div className="medal">{index + 1 === 1 ? '🥇' : index + 1 === 2 ? '🥈' : '🥉'}</div>
-              <img src={user?.imageUrl} alt={vendedor.vendedor} className="vendedor-image" />
-              <div className="vendedor-name">{vendedor.vendedor}</div>
-            </div>
-          );
-        })}
-      </div> */}
-
+      {showRanking && (
+        <>
+          <h2 className="ranking-title">Nuestro Mejor Vendedor del Mes</h2>
+          <div className="ranking-container">
+            {rankingVendedores.map((vendedor, index) => {
+              const user = usuariosDB.find(user => user.username === vendedor.vendedor);
+              return (
+                <div key={vendedor.vendedor} className={`ranking-item ranking-${index + 1}`}>
+                  <div className="confetti"></div>
+                  <div className="medal">{index + 1 === 1 ? '🥇' : index + 1 === 2 ? '🥈' : '🥉'}</div>
+                  <img src={user?.imageUrl} alt={vendedor.vendedor} className="vendedor-image" />
+                  <div className="vendedor-name">{vendedor.vendedor}</div>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
       <h2 className="clientes-title">Clientes que deben pagar en los próximos 7 días</h2>
       <div className="clientes-pagos-container">
         {clientesConPagosProximos.length > 0 ? (
@@ -160,13 +151,15 @@ const Home = () => {
               </tr>
             </thead>
             <tbody>
-              {clientesConPagosProximos.map(cliente => (
+              {clientesConPagosProximos.map((cliente, index) => (
                 <tr
-                  key={cliente.clienteId}
+                  key={`${cliente.clienteId}-${index}`} // Agrega el índice para hacerlo único
                   className={`cliente-item-row ${cliente.atrasado ? 'cliente-atrasado' : ''}`}
                 >
                   <td className="cliente-dni">{cliente.clienteId}</td>
-                  <td className="cliente-cuota">${cliente.valorCuota.toLocaleString('es-AR')}</td>
+                  <td className="cliente-cuota">
+                    ${typeof cliente.valorCuota === 'number' ? cliente.valorCuota.toLocaleString('es-AR') : cliente.valorCuota}
+                  </td>
                   <td className="cliente-vendedor">{cliente.vendedor}</td>
                   <td className="cliente-fecha">{cliente.proximaFecha}</td>
                 </tr>

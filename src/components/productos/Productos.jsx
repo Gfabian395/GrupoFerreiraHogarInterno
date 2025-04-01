@@ -174,20 +174,20 @@ const Productos = ({ onAddToCart, currentUser }) => {
     const nuevoPrecio = prompt("Introduce el nuevo precio temporal:", producto.precio);
     const temporalTime = 120; // 2 minutos en segundos
     const expirationTime = Date.now() + temporalTime * 1000; // Tiempo de expiración en milisegundos
-  
-  
+
+
     if (nuevoPrecio && !isNaN(nuevoPrecio)) {
       try {
         // Actualizar el precio temporal en Firebase
         const productoRef = doc(db, `categorias/${categoriaId}/productos`, producto.id);
         await updateDoc(productoRef, { precio: parseFloat(nuevoPrecio) });
-  
+
         // Almacenar datos en localStorage
         localStorage.setItem(
           `producto-${producto.id}`,
           JSON.stringify({ expirationTime, originalPrice })
         );
-  
+
         // Actualizar el estado local
         setProductos((prevProductos) =>
           prevProductos.map((p) =>
@@ -196,7 +196,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
               : p
           )
         );
-  
+
         alert("Precio cambiado temporalmente.");
       } catch (error) {
         console.error("Error al cambiar el precio temporalmente:", error);
@@ -206,7 +206,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
       alert("Por favor, introduce un precio válido.");
     }
   };
-  
+
   // Restaurar precios y sincronizar la cuenta regresiva tras recargar
   useEffect(() => {
     const syncCountdowns = () => {
@@ -217,7 +217,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
           if (temporalData) {
             const { expirationTime, originalPrice } = JSON.parse(temporalData);
             const remainingTime = Math.floor((expirationTime - now) / 1000);
-  
+
             if (remainingTime <= 0) {
               // Restaurar el precio si el tiempo ha expirado
               localStorage.removeItem(`producto-${producto.id}`); // Limpia el almacenamiento
@@ -245,15 +245,15 @@ const Productos = ({ onAddToCart, currentUser }) => {
         })
       );
     };
-  
+
     // Establecer un único intervalo para gestionar las restauraciones
     const interval = setInterval(syncCountdowns, 1000);
-  
+
     return () => {
       clearInterval(interval); // Limpia el intervalo al desmontar
     };
   }, []); // Evita reinicios infinitos eliminando dependencias
-  
+
   if (loading) return <Load />;
 
   return (
@@ -281,6 +281,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
                   src={producto.imagenUrl || 'https://via.placeholder.com/150'}
                   alt={producto.nombre || 'Sin nombre'}
                   className="producto-imagen"
+                  loading="lazy"
                 />
                 <div className="detallitos">
                   <h3>{producto.nombre || 'Sin nombre'}</h3>

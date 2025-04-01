@@ -137,7 +137,12 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
       <ul>
         {filteredCategorias.map(categoria => (
           <li key={categoria.id} onClick={() => handleSelectCategoria(categoria.id)}>
-            <img src={categoria.imagenUrl} alt={categoria.nombre} onLoad={handleImageLoad} />
+            <img
+              src={categoria.imagenUrl}
+              alt={categoria.nombre}
+              loading="lazy" // Esta es la clave para lazy loading
+              onLoad={handleImageLoad}
+            />
             <div className="descripcioncita">
               <h3>{categoria.nombre}</h3>
               {currentUser && (

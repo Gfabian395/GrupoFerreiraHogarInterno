@@ -337,10 +337,23 @@ const CierreCaja = ({ currentUser }) => {
                 <label>Razón del Gasto:</label>
                 <select value={gastoRazon} onChange={e => setGastoRazon(e.target.value)}>
                   <option value="">Seleccione una opción</option>
+                  <option value="Agua">Agua</option>
+                  <option value="Luz">Luz</option>
+                  <option value="Gas">Gas</option>
                   <option value="Sueldos">Sueldos</option>
                   <option value="Anticipos">Anticipos</option>
-                  <option value="Proveedores">Proveedores</option>
                   <option value="Limpieza">Limpieza</option>
+                  <option value="Patente">Patente</option>
+                  <option value="Seguro">Seguro</option>
+                  <option value="Combustible">Combustible</option>
+                  <option value="Toolo">Toolo</option>
+                  <option value="Chicho">Chicho</option>
+                  <option value="Mica">Mica</option>
+                  <option value="Combustible">Prestamos</option>
+                  <option value="Rondas">Rondas</option>
+                  <option value="Maxi">Maxi</option>
+                  <option value="Lucas">Lucas</option>
+                  <option value="Roxana">Roxana</option>
                   <option value="Otros">Otros</option>
                 </select>
 

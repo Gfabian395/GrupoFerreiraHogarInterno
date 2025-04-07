@@ -287,7 +287,6 @@ const CierreCaja = ({ currentUser }) => {
             </table>
           </div>
 
-          {/* Total afuera de la tabla, igual que el otro */}
           <h3>Total Gastado: ${gastos.reduce((acc, g) => acc + g.monto, 0).toLocaleString('es-AR')}</h3>
 
           <h2>Ranking de Vendedores del Mes</h2>
@@ -364,7 +363,9 @@ const CierreCaja = ({ currentUser }) => {
                   <select value={vendedorSeleccionado} onChange={(e) => setVendedorSeleccionado(e.target.value)}>
                     <option value="">Seleccioná un vendedor</option>
                     {usuariosDB
-                      .filter(user => user.role === 'vendedor')
+                      .filter(user =>
+                        user.role === 'vendedor' || user.role === 'jefe' || user.role === 'encargado'
+                      )
                       .map((user, index) => (
                         <option key={index} value={user.username}>{user.username}</option>
                       ))}

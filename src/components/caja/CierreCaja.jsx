@@ -35,6 +35,7 @@ const CierreCaja = ({ currentUser }) => {
   const [otraRazon, setOtraRazon] = useState('');
   const totalGastado = gastos.reduce((acc, g) => acc + g.monto, 0);
   const navigate = useNavigate();
+  const [vendedorSeleccionado, setVendedorSeleccionado] = useState('');
 
   useEffect(() => {
     if (currentUser.role !== 'jefe') {
@@ -313,8 +314,6 @@ const CierreCaja = ({ currentUser }) => {
             </table>
           </div>
 
-          {/* Tabla de ranking de vendedores (ya existente arriba) */}
-
           <div className="resumen-final" style={{
             marginTop: '20px',
             padding: '20px',
@@ -337,11 +336,12 @@ const CierreCaja = ({ currentUser }) => {
                 <label>Razón del Gasto:</label>
                 <select value={gastoRazon} onChange={e => setGastoRazon(e.target.value)}>
                   <option value="">Seleccione una opción</option>
+                  <option value="Sueldos">Sueldos</option>
+                  <option value="Anticipos">Anticipos</option>
+                  <option value="Contadora">Contadora</option>
                   <option value="Agua">Agua</option>
                   <option value="Luz">Luz</option>
                   <option value="Gas">Gas</option>
-                  <option value="Sueldos">Sueldos</option>
-                  <option value="Anticipos">Anticipos</option>
                   <option value="Limpieza">Limpieza</option>
                   <option value="Patente">Patente</option>
                   <option value="Seguro">Seguro</option>
@@ -354,26 +354,23 @@ const CierreCaja = ({ currentUser }) => {
                   <option value="Maxi">Maxi</option>
                   <option value="Lucas">Lucas</option>
                   <option value="Roxana">Roxana</option>
+                  <option value="JR">JR</option>
+                  <option value="Cuttiani">Cuttiani</option>
+                  <option value="MyO">MyO</option>
                   <option value="Otros">Otros</option>
                 </select>
 
-                {gastoRazon === 'Anticipos' && (
-                  <>
-                    <label>Seleccioná el Vendedor:</label>
-                    <select value={otraRazon} onChange={e => setOtraRazon(e.target.value)}>
-                      <option value="">Seleccionar vendedor</option>
-                      {usuariosDB
-                        .filter(user => user.role === 'vendedor' || user.role === 'encargado')
-                        .map((user, index) => (
-                          <option key={index} value={user.username}>
-                            {user.username}
-                          </option>
-                        ))}
-                    </select>
-                  </>
+                {(gastoRazon === 'Anticipos' || gastoRazon === 'Sueldos') && (
+                  <select value={vendedorSeleccionado} onChange={(e) => setVendedorSeleccionado(e.target.value)}>
+                    <option value="">Seleccioná un vendedor</option>
+                    {usuariosDB
+                      .filter(user => user.role === 'vendedor')
+                      .map((user, index) => (
+                        <option key={index} value={user.username}>{user.username}</option>
+                      ))}
+                  </select>
                 )}
 
-                {/* Si se elige "Otros", pedir razón personalizada */}
                 {gastoRazon === 'Otros' && (
                   <>
                     <label>Especifique otra razón:</label>

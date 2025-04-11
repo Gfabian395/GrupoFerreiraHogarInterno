@@ -27,6 +27,10 @@
   width: 300px;
   flex-direction: column;
   align-items: center;
+  position: relative;
+  z-index: 1;
+  overflow: visible;
+  padding-bottom: 60px; /* espacio para que no se superponga el hover */
 }
 
 .productos img {
@@ -40,8 +44,10 @@
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  margin: 5px;
-  padding: 5px; /* Añadido padding a los botones */
+  margin-top: 10px;
+  padding: 5px;
+  position: relative;
+  z-index: 2;
 }
 
 .boton-agregar:hover {
@@ -90,13 +96,12 @@
   background-color: #c82333;
 }
 
-/* Estilos para los botones "Agregar al Carrito" deshabilitados */
 .boton-sin-stock {
-  background-color: #ccc; /* Color gris para indicar que está deshabilitado */
-  color: #fff; /* Color blanco para el texto */
-  pointer-events: none; /* Deshabilita interacciones */
+  background-color: #ccc;
+  color: #fff;
+  pointer-events: none;
   filter: grayscale(100%);
-  padding: 5px; /* Añadido padding a los botones deshabilitados */
+  padding: 5px;
 }
 
 .detallitos {
@@ -183,32 +188,33 @@
   color: black;
   text-decoration: none;
 }
+
 .search-bar {
   width: 100%;
   max-width: 350px;
   padding: 12px 20px;
-  margin:  auto; /* Centrar horizontalmente */
+  margin: auto;
   box-sizing: border-box;
   border: 1px solid #ccc;
-  border-radius: 25px; /* Bordes redondeados */
+  border-radius: 25px;
   font-size: 16px;
   transition: border-color 0.3s, box-shadow 0.3s;
-  display: block; /* Asegura que ocupe toda la fila para centrar correctamente */
+  display: block;
 }
 
 .search-bar:focus {
-  border-color: #5c6ac4; /* Color del borde al enfocar */
-  box-shadow: 0 0 8px rgba(92, 106, 196, 0.5); /* Sombra al enfocar */
+  border-color: #5c6ac4;
+  box-shadow: 0 0 8px rgba(92, 106, 196, 0.5);
   outline: none;
 }
 
 .search-bar::placeholder {
-  color: #999; /* Color del texto del placeholder */
+  color: #999;
   font-style: italic;
 }
 
 .search-bar:focus::placeholder {
-  color: #ccc; /* Color del placeholder al enfocar */
+  color: #ccc;
 }
 
 .search-container {
@@ -216,34 +222,106 @@
   justify-content: center;
   align-items: center;
   width: 100%;
-  margin-top: 20px; /* Espacio superior para ajustarlo */
+  margin-top: 20px;
 }
 
-/* Estilo para la cuenta regresiva */
 .countdown {
   font-size: 18px;
   font-weight: bold;
-  color: #d9534f; /* Rojo brillante */
-  animation: fade-out 1s linear; /* Añadido efecto de desvanecimiento */
+  color: #d9534f;
+  animation: fade-out 1s linear;
 }
 
-/* Animación para desvanecer la cuenta atrás */
 @keyframes fade-out {
   0% {
-    opacity: 1; /* Totalmente visible */
+    opacity: 1;
   }
   100% {
-    opacity: 0.5; /* Semidesvanecido */
+    opacity: 0.5;
   }
 }
 
-/* Aseguramos que la cuenta atrás se vea claramente */
 .productos .countdown {
-  background-color: rgba(217, 83, 79, 0.1); /* Fondo semitransparente en rojo */
+  background-color: rgba(217, 83, 79, 0.1);
   padding: 5px 10px;
   border-radius: 5px;
 }
 
-.boton-precio-temporal{
+.boton-precio-temporal {
   border-radius: 50%;
+}
+
+.precio-hover-container {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+  font-weight: bold;
+  color: #1a1a1a;
+  transition: transform 0.3s ease-in-out;
+  z-index: 3;
+}
+
+.precio-hover-container:hover {
+  transform: scale(1.05);
+}
+
+.detalle-cuotas {
+  display: none;
+  position: absolute;
+  top: 110%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(240, 240, 240, 0.8));
+  backdrop-filter: blur(6px);
+  padding: 14px 18px;
+  border: 1px solid rgba(200, 200, 200, 0.4);
+  border-radius: 16px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+  z-index: 9999;
+  white-space: nowrap;
+  font-size: 15px;
+  color: #111;
+  animation: fadeIn 0.4s ease-out;
+  min-width: 220px;
+  transition: all 0.3s ease-in-out;
+  filter: brightness(100%) saturate(100%) opacity(95%);
+  pointer-events: none;
+}
+
+.precio-hover-container:hover .detalle-cuotas {
+  display: block;
+  pointer-events: auto;
+}
+
+.detalle-cuotas p {
+  margin: 6px 0;
+  padding: 4px 0;
+  border-bottom: 1px dashed #ccc;
+}
+
+.detalle-cuotas p:last-child {
+  border-bottom: none;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 10px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.detalle-cuotas::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 0 8px 8px 8px;
+  border-style: solid;
+  border-color: transparent transparent rgba(255, 255, 255, 0.8) transparent;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.15));
 }

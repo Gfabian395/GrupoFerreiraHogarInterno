@@ -4,6 +4,7 @@ import { db } from '../../firebaseConfig';
 import { collection, getDocs, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 import Load from '../load/Load';
 import './Productos.css';
+import Cuotas from '../cuotas/Cuotas'; // Ajustá la ruta si está en otra carpeta
 
 const Productos = ({ onAddToCart, currentUser }) => {
   const { categoriaId } = useParams();
@@ -254,6 +255,44 @@ const Productos = ({ onAddToCart, currentUser }) => {
     };
   }, []); // Evita reinicios infinitos eliminando dependencias
 
+  const mostrarCuotas = (monto) => {
+    if (isNaN(monto) || monto <= 0) {
+      return <p>Por favor, ingrese un monto válido.</p>;
+    }
+
+    const configuracionCuotas = [
+      { cuotas: 2, interes: 15 },
+      { cuotas: 3, interes: 25 },
+      { cuotas: 4, interes: 40 },
+      { cuotas: 6, interes: 60 },
+      { cuotas: 9, interes: 75 },
+      { cuotas: 12, interes: 100 },
+      { cuotas: 18, interes: 150 },
+      { cuotas: 24, interes: 180 }
+    ];
+
+    const cuotasFiltradas = configuracionCuotas.filter(opcion => {
+      if (monto < 30000) return opcion.cuotas <= 2;
+      if (monto >= 30000 && monto < 80000) return opcion.cuotas <= 3;
+      if (monto >= 80000 && monto < 150000) return opcion.cuotas <= 6;
+      if (monto >= 150000 && monto < 250000) return opcion.cuotas <= 9;
+      if (monto >= 250000 && monto < 350000) return opcion.cuotas <= 12;
+      if (monto >= 350000 && monto < 500000) return opcion.cuotas <= 18;
+      return true;
+    });
+
+    return cuotasFiltradas.map((opcion, index) => {
+      const { cuotas, interes } = opcion;
+      const montoConInteres = monto * (1 + interes / 100);
+      const montoCuota = Math.round(montoConInteres / cuotas / 1000) * 1000;
+      return (
+        <p key={index}>
+          {cuotas} cuotas de ${montoCuota.toLocaleString('es-AR')}
+        </p>
+      );
+    });
+  };
+
   if (loading) return <Load />;
 
   return (
@@ -285,7 +324,16 @@ const Productos = ({ onAddToCart, currentUser }) => {
                 />
                 <div className="detallitos">
                   <h3>{producto.nombre || 'Sin nombre'}</h3>
-                  <p>Precio: ${producto.precio || '0.00'}</p>
+
+                  {/* Precio con tooltip de cuotas */}
+                  <div className="precio-hover-container">
+                    <span className="precio-texto">
+                      ${producto.precio?.toLocaleString('es-AR') || '0.00'}
+                    </span>
+                    <div className="detalle-cuotas">
+                      {mostrarCuotas(producto.precio)}
+                    </div>
+                  </div>
 
                   {/* Mostrar cuenta regresiva si el precio es temporal */}
                   {producto.isTemporal && (
@@ -351,7 +399,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
 
                       {/* Botón para cambiar precio temporalmente */}
                       <button
-                        onClick={() => handleTemporalPriceChange(producto)} // Llama a la lógica de precio temporal
+                        onClick={() => handleTemporalPriceChange(producto)}
                         className="boton-precio-temporal"
                         title="Cambiar precio temporalmente"
                       >
@@ -369,9 +417,9 @@ const Productos = ({ onAddToCart, currentUser }) => {
                       )}
                     </div>
                   )}
-
                 </div>
               </li>
+
             );
           })}
         </ul>

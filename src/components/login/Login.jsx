@@ -14,7 +14,8 @@ const usuariosDB = [
   { username: 'Gustavo F', password: '36520975', role: 'vendedor', imageUrl: 'https://firebasestorage.googleapis.com/v0/b/ferreirahogar-376dd.firebasestorage.app/o/vendedores%2F10.png?alt=media&token=44148120-0d0c-41ee-99aa-f4dfc4e50f7e' },
   { username: 'Elias G', password: 'Elemento', role: 'vendedor', imageUrl: 'path/to/EliasG.jpg' },
   { username: 'Micaela G', password: 'Galarza24', role: 'vendedor', imageUrl: 'path/to/MicaelaG.jpg' },
-  { username: 'prueba1', password: 'prueba1', role: 'vendedor', imageUrl: 'path/to/prueba.jpg' },
+  { username: 'Higinio F', password: 'Higinio', role: 'vendedor', imageUrl: 'https://placehold.co/50x50' },
+  { username: 'prueba', password: 'prueba', role: 'vendedor', imageUrl: 'https://placehold.co/50x50' },
 ];
 
 // Función para verificar los permisos según el rol

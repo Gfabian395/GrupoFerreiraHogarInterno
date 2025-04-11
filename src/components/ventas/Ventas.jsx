@@ -17,7 +17,8 @@ const usuariosDB = [
   { username: 'Gustavo F', password: '36520975', role: 'vendedor', imageUrl: 'https://firebasestorage.googleapis.com/v0/b/ferreirahogar-376dd.firebasestorage.app/o/vendedores%2F10.png?alt=media&token=44148120-0d0c-41ee-99aa-f4dfc4e50f7e' },
   { username: 'Elias G', password: 'Elemento', role: 'vendedor', imageUrl: 'path/to/EliasG.jpg' },
   { username: 'Micaela G', password: 'Galarza24', role: 'vendedor', imageUrl: 'path/to/MicaelaG.jpg' },
-  { username: 'prueba', password: 'prueba', role: 'vendedor', imageUrl: 'path/to/prueba.jpg' },
+  { username: 'Higinio F', password: 'Higinio', role: 'vendedor', imageUrl: 'https://placehold.co/50x50' },
+  { username: 'prueba', password: 'prueba', role: 'vendedor', imageUrl: 'https://placehold.co/50x50' },
 ];
 
 // Configuración de cuotas
@@ -37,7 +38,8 @@ const configuracionCuotas = [
 const choferes = [
   { nombre: 'Vanesa Ferreira', patente: 'AD417CW', telefono: '11-3800-2078' },
   { nombre: 'Carolina Ferreira', patente: 'AD754DG', telefono: '11-6308-3159' },
-  { nombre: 'Gustavo Ferreira', patente: 'AD614CN', telefono: '11-6592-2180' }
+  { nombre: 'Gustavo Ferreira', patente: 'AD614CN', telefono: '11-6592-2180' },
+  { nombre: 'Higinio Ferreira', patente: 'AD812ST', telefono: '11-2894-5800' }
 ];
 
 const Ventas = ({ carrito, onClearCart, currentUser }) => {

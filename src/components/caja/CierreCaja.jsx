@@ -24,7 +24,10 @@ const usuariosDB = [
 
 const CierreCaja = ({ currentUser }) => {
   const [movimientos, setMovimientos] = useState([]);
+  const [cobros, setCobros] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [ventasTotal, setVentasTotal] = useState(0);
+  const [cobrosTotal, setCobrosTotal] = useState(0);
   const [totalRecaudado, setTotalRecaudado] = useState(0);
   const [rankingVendedores, setRankingVendedores] = useState([]);
   const [showPDFPrompt, setShowPDFPrompt] = useState(false);
@@ -36,6 +39,11 @@ const CierreCaja = ({ currentUser }) => {
   const totalGastado = gastos.reduce((acc, g) => acc + g.monto, 0);
   const navigate = useNavigate();
   const [vendedorSeleccionado, setVendedorSeleccionado] = useState('');
+
+  // Cada vez que cambien ventasTotal o cobrosTotal se actualiza el total recaudado
+  useEffect(() => {
+    setTotalRecaudado(ventasTotal + cobrosTotal);
+  }, [ventasTotal, cobrosTotal]);
 
   useEffect(() => {
     if (currentUser.role !== 'jefe') {
@@ -66,6 +74,7 @@ const CierreCaja = ({ currentUser }) => {
         }
 
         await fetchMovimientos();
+        await fetchCobros();
         await fetchGastos();
       } catch (error) {
         console.error('Error al verificar o reiniciar datos:', error);
@@ -74,9 +83,11 @@ const CierreCaja = ({ currentUser }) => {
 
     const resetData = async () => {
       setMovimientos([]);
-      setTotalRecaudado(0);
+      setVentasTotal(0);
       setRankingVendedores([]);
       setGastos([]);
+      setCobros([]);
+      setCobrosTotal(0);
     };
 
     const fetchMovimientos = async () => {
@@ -106,7 +117,7 @@ const CierreCaja = ({ currentUser }) => {
         });
 
         setMovimientos(ventasDelMes);
-        setTotalRecaudado(total);
+        setVentasTotal(total);
         setRankingVendedores(calcularRankingVendedores(ventasDelMes));
         setLoading(false);
       } catch (error) {
@@ -114,26 +125,70 @@ const CierreCaja = ({ currentUser }) => {
       }
     };
 
+    // Función para obtener los cobros del mes
+    const fetchCobros = async () => {
+      try {
+        const ventasSnapshot = await getDocs(collection(db, 'ventas'));
+        const hoy = new Date();
+        const primerDiaDelMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+        const ultimoDiaDelMes = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
+    
+        const cobrosDelMes = [];
+    
+        ventasSnapshot.forEach(doc => {
+          const venta = { id: doc.id, ...doc.data() };
+    
+          if (Array.isArray(venta.pagos)) {
+            venta.pagos.forEach(pago => {
+              const fechaPago = pago.fecha ? new Date(pago.fecha) : null;
+    
+              if (fechaPago && fechaPago >= primerDiaDelMes && fechaPago <= ultimoDiaDelMes) {
+                cobrosDelMes.push({
+                  clienteId: venta.clienteId || '',
+                  fecha: fechaPago,
+                  fechaStr: fechaPago.toLocaleDateString('es-AR'),
+                  monto: Number(pago.monto || 0),
+                  usuario: pago.usuario || '-',
+                  ventaId: venta.id
+                });
+              }
+            });
+          }
+        });
+    
+        // Ordenar por fecha descendente (más reciente primero)
+        cobrosDelMes.sort((a, b) => b.fecha - a.fecha);
+    
+        setCobros(cobrosDelMes);
+    
+        const totalDelMes = cobrosDelMes.reduce((acc, cobro) => acc + cobro.monto, 0);
+        setTotalRecaudado(prev => prev + totalDelMes);
+    
+      } catch (error) {
+        console.error('Error al obtener cobros:', error);
+      }
+    };    
+
     const fetchGastos = async () => {
       try {
         const gastosSnapshot = await getDocs(collection(db, 'gastos'));
         const hoy = new Date();
-        const primerDia = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
-        const ultimoDia = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
+        const primerDiaDelMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+        const ultimoDiaDelMes = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
 
-        const gastosFiltrados = gastosSnapshot.docs
-          .map(doc => ({ id: doc.id, ...doc.data() }))
-          .filter(gasto => {
-            const fecha = gasto.fecha?.seconds ? new Date(gasto.fecha.seconds * 1000) : null;
-            gasto.fecha = fecha;
-            return fecha && fecha >= primerDia && fecha <= ultimoDia;
+        const gastosDelMes = gastosSnapshot.docs
+          .map(doc => {
+            const data = { id: doc.id, ...doc.data() };
+            const fecha = data.fecha?.seconds ? new Date(data.fecha.seconds * 1000) : null;
+            return fecha ? { ...data, fecha } : null;
           })
+          .filter(gasto => gasto && gasto.fecha >= primerDiaDelMes && gasto.fecha <= ultimoDiaDelMes)
           .map(gasto => ({
             ...gasto,
             fechaStr: gasto.fecha.toLocaleDateString('es-AR')
           }));
 
-        setGastos(gastosFiltrados);
+        setGastos(gastosDelMes);
       } catch (error) {
         console.error('Error al obtener gastos:', error);
       }
@@ -141,7 +196,6 @@ const CierreCaja = ({ currentUser }) => {
 
     checkAndResetData();
   }, [currentUser, navigate]);
-
 
   const calcularRankingVendedores = (ventas) => {
     const ranking = {};
@@ -163,6 +217,7 @@ const CierreCaja = ({ currentUser }) => {
     docPDF.setFontSize(10);
     docPDF.text(`Reporte de Cierre de Caja de ${today}`, 40, 30);
 
+    // Tabla de Ventas
     const tableRows = movimientos.map(m => [
       m.id,
       m.clienteId,
@@ -179,11 +234,32 @@ const CierreCaja = ({ currentUser }) => {
       styles: { fontSize: 8 }
     });
 
-    docPDF.text(`Total Recaudado: $${totalRecaudado.toLocaleString('es-AR')}`, 40, docPDF.autoTable.previous.finalY + 20);
+    // Tabla de Cobros (opcional)
+    const cobrosRows = cobros.map(c => [
+      c.id,
+      c.fechaStr,
+      `$${parseFloat(c.monto).toLocaleString('es-AR')}`
+    ]);
+    docPDF.text(`Cobros del Mes:`, 40, docPDF.autoTable.previous.finalY + 20);
+    docPDF.autoTable({
+      head: [["ID", "Fecha", "Monto"]],
+      body: cobrosRows,
+      startY: docPDF.autoTable.previous.finalY + 30,
+      theme: 'grid',
+      styles: { fontSize: 8 }
+    });
+
+    // Mostrar total recaudado (ventas + cobros)
+    const finalY = docPDF.autoTable.previous.finalY;
+    docPDF.text(`Total Recaudado: $${totalRecaudado.toLocaleString('es-AR')}`, 40, finalY + 20);
+
     docPDF.save('cierre_caja.pdf');
 
+    // Reiniciar algunos estados si es necesario
     setMovimientos([]);
-    setTotalRecaudado(0);
+    setVentasTotal(0);
+    setCobros([]);
+    setCobrosTotal(0);
     setShowPDFPrompt(false);
   };
 
@@ -220,7 +296,25 @@ const CierreCaja = ({ currentUser }) => {
       setGastoMonto('');
       setGastoRazon('');
       setOtraRazon('');
-      await fetchGastos();
+      // Vuelve a obtener los gastos actualizados
+      // Nota: Puedes extraer fetchGastos en una función independiente o llamarlo desde aquí.
+      const gastosSnapshot = await getDocs(collection(db, 'gastos'));
+      const hoy = new Date();
+      const primerDia = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+      const ultimoDia = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
+
+      const gastosFiltrados = gastosSnapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }))
+        .filter(gasto => {
+          const fecha = gasto.fecha?.seconds ? new Date(gasto.fecha.seconds * 1000) : null;
+          gasto.fecha = fecha;
+          return fecha && fecha >= primerDia && fecha <= ultimoDia;
+        })
+        .map(gasto => ({
+          ...gasto,
+          fechaStr: gasto.fecha.toLocaleDateString('es-AR')
+        }));
+      setGastos(gastosFiltrados);
     } else {
       alert('Por favor ingrese un monto y una razón válidos.');
     }
@@ -231,6 +325,7 @@ const CierreCaja = ({ currentUser }) => {
       <h2>Cierre de Caja</h2>
       {loading ? <Load /> : (
         <>
+          {/* Tabla de Ventas */}
           <div className="table-responsive">
             <table className="table table-bordered">
               <thead>
@@ -256,11 +351,45 @@ const CierreCaja = ({ currentUser }) => {
             </table>
           </div>
 
+          {/* Tabla de Cobros */}
+          <h2>Cobros del Mes</h2>
+          <div className="table-responsive">
+            <table className="table table-bordered">
+              <thead>
+                <tr>
+                  <th>Cliente</th>
+                  <th>Venta ID</th>
+                  <th>Fecha</th>
+                  <th>Monto</th>
+                  <th>Usuario</th>
+                </tr>
+              </thead>
+              <tbody>
+                {cobros.length > 0 ? (
+                  cobros.map((c, i) => (
+                    <tr key={i}>
+                      <td>{c.clienteId || 'N/A'}</td>
+                      <td>{c.ventaId || 'N/A'}</td>
+                      <td>{c.fechaStr || 'N/A'}</td>
+                      <td>{`$${parseFloat(c.monto).toLocaleString('es-AR')}`}</td>
+                      <td>{c.usuario || '-'}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr><td colSpan="5">No hay cobros registrados este mes.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+
+          {/* Muestra el total recaudado (ventas + cobros) */}
           <h3>Total Recaudado: ${totalRecaudado.toLocaleString('es-AR')}</h3>
           <button onClick={handleGeneratePDF}>Generar PDF</button>
           <button onClick={() => navigate('/resumen')}>Ver Resumen</button>
           <button onClick={() => setShowGastoForm(true)}>Agregar Gasto</button>
 
+          {/* Tabla de Gastos */}
           <h2>Gastos del Mes</h2>
           <div className="table-responsive">
             <table className="table table-bordered">
@@ -289,6 +418,7 @@ const CierreCaja = ({ currentUser }) => {
 
           <h3>Total Gastado: ${gastos.reduce((acc, g) => acc + g.monto, 0).toLocaleString('es-AR')}</h3>
 
+          {/* Ranking de Vendedores (solo a partir de ventas) */}
           <h2>Ranking de Vendedores del Mes</h2>
           <div className="table-responsive">
             <table className="table table-bordered">
@@ -348,7 +478,7 @@ const CierreCaja = ({ currentUser }) => {
                   <option value="Toolo">Toolo</option>
                   <option value="Chicho">Chicho</option>
                   <option value="Mica">Mica</option>
-                  <option value="Combustible">Prestamos</option>
+                  <option value="Prestamos">Prestamos</option>
                   <option value="Rondas">Rondas</option>
                   <option value="Maxi">Maxi</option>
                   <option value="Lucas">Lucas</option>

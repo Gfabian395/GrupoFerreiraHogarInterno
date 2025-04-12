@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import './Login.css';
+import { useNavigate } from 'react-router-dom'; // Importa el hook useNavigate
 
-// Simulamos una base de datos de usuarios
+// Base de datos de usuarios, incluyendo el invitado
 const usuariosDB = [
   { username: 'Gfabian395', password: 'Gfabian395', role: 'jefe', imageUrl: 'https://firebasestorage.googleapis.com/v0/b/ferreirahogar-376dd.firebasestorage.app/o/vendedores%2F9.png?alt=media&token=992ee040-ed59-4b53-9013-115ee7c9fce7' },
   { username: 'Vanesa F', password: '554972', role: 'jefe', imageUrl: 'https://firebasestorage.googleapis.com/v0/b/ferreirahogar-376dd.firebasestorage.app/o/vendedores%2F8.png?alt=media&token=aff23347-93dc-4737-bf1f-25f0430f34fa' },
@@ -16,36 +17,43 @@ const usuariosDB = [
   { username: 'Micaela G', password: 'Galarza24', role: 'vendedor', imageUrl: 'path/to/MicaelaG.jpg' },
   { username: 'Higinio F', password: 'Higinio', role: 'vendedor', imageUrl: 'https://placehold.co/50x50' },
   { username: 'prueba', password: 'prueba', role: 'vendedor', imageUrl: 'https://placehold.co/50x50' },
+  { username: 'catalogo', password: '', role: 'invitado', imageUrl: 'https://placehold.co/100x100?text=Invitado' },
 ];
-
-// Función para verificar los permisos según el rol
-const verificarPermisos = (role, accion, tipo) => {
-  const permisos = {
-    jefe: { categorias: ['agregar', 'editar', 'borrar'], productos: ['agregar', 'editar', 'borrar'], clientes: ['agregar', 'editar', 'borrar'] },
-    encargado: { categorias: ['agregar', 'editar'], productos: ['agregar', 'editar'], clientes: ['agregar', 'editar'] },
-    vendedor: { categorias: [], productos: [], clientes: [] },
-  };
-
-  return permisos[role]?.[tipo]?.includes(accion);
-};
 
 const Login = ({ onLogin }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [alerta, setAlerta] = useState('');
+  const navigate = useNavigate(); // Hook para redirigir a otra ruta
 
+  // Función para manejar el inicio de sesión
   const handleLogin = () => {
     const usuario = usuariosDB.find(user => user.username === username && user.password === password);
 
     if (usuario) {
-      // Guardar la información del usuario en localStorage
       localStorage.setItem('usuario', JSON.stringify(usuario));
       alert(`Bienvenido, ${usuario.role}!`);
       onLogin(usuario);
+
+      // Si el rol es "invitado", redirigimos a Categorías
+      if (usuario.role === 'invitado') {
+        navigate('/categorias');
+      }
     } else {
       setAlerta('Usuario o contraseña incorrectos');
       setTimeout(() => setAlerta(''), 3000);
     }
+  };
+
+  // Función para ingresar como invitado
+  const ingresarComoInvitado = () => {
+    const invitado = usuariosDB.find(user => user.username === 'catalogo');
+    localStorage.setItem('usuario', JSON.stringify(invitado));
+    alert('Ingresaste como invitado. Solo puedes ver el catálogo.');
+    onLogin(invitado);
+    
+    // Redirigir a Categorías al ingresar como invitado
+    navigate('/categorias');
   };
 
   return (
@@ -66,17 +74,15 @@ const Login = ({ onLogin }) => {
           onChange={(e) => setPassword(e.target.value)}
         />
         <button onClick={handleLogin}>Ingresar</button>
+
+        <div style={{ marginTop: '15px' }}>
+          <button onClick={ingresarComoInvitado} className="invitado-btn">
+            Ver catálogo como invitado
+          </button>
+        </div>
       </div>
     </div>
   );
 };
-
-// Ejemplo de uso de la función verificarPermisos
-const ejemploUsoPermisos = () => {
-  const rolUsuario = 'encargado';
-  const puedeEditarCategoria = verificarPermisos(rolUsuario, 'editar', 'categorias');
-};
-
-ejemploUsoPermisos();
 
 export default Login;

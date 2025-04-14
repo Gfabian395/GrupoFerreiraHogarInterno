@@ -4,6 +4,7 @@ import './Carrito.css';
 
 const Carrito = ({ productos, onRemoveFromCart, onClearCart }) => {
   const [hayProductosSinStock, setHayProductosSinStock] = useState(false);
+  const [descuento, setDescuento] = useState(0); // Estado para el % de descuento
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -18,33 +19,24 @@ const Carrito = ({ productos, onRemoveFromCart, onClearCart }) => {
     verificarStock();
   }, [productos]);
 
-  useEffect(() => {
-    // Log para verificar desde qué sucursal se reciben los productos en el carrito
-    productos.forEach(producto => {
-      console.log(
-        `Producto recibido en el carrito: ${producto.nombre}, Sucursal: ${producto.sucursal}`
-      );
-    });
-  }, [productos]);
-
   const subtotal = productos.reduce((acc, producto) => {
     const totalProducto = producto.precio * producto.cantidad || 0;
     return acc + totalProducto;
   }, 0);
 
+  const subtotalConDescuento = subtotal - (subtotal * descuento) / 100;
+
   const handleFinalizarCompra = () => {
-    console.log('Datos enviados al finalizar:', { subtotal, productos });
-  
+    console.log('Datos enviados al finalizar:', { subtotal, descuento, subtotalConDescuento, productos });
+
     if (hayProductosSinStock) {
       alert('No puedes finalizar la compra, hay productos sin stock.');
       return;
     }
-  
-    // Añadiendo sucursal explícitamente al estado enviado
+
     const sucursal = productos.length > 0 ? productos[0].sucursal : '';
-    navigate('/ventas', { state: { subtotal, productos, sucursal } });
+    navigate('/ventas', { state: { subtotal: subtotalConDescuento, productos, sucursal } });
   };
-  
 
   return (
     <div className="carrito">
@@ -84,15 +76,26 @@ const Carrito = ({ productos, onRemoveFromCart, onClearCart }) => {
       </div>
 
       <h3>Resumen del Pedido</h3>
-      <p>
-        <strong>Subtotal:</strong> $
-        {subtotal.toLocaleString('es-AR')}
-      </p>
+      
+      <label htmlFor="descuentoSelect"><strong>Descuento:</strong></label>
+      <select
+        id="descuentoSelect"
+        className="form-select mt-2 mb-3"
+        value={descuento}
+        onChange={(e) => setDescuento(Number(e.target.value))}
+      >
+        <option value={0}>Sin descuento</option>
+        <option value={5}>5%</option>
+        <option value={10}>10%</option>
+        <option value={15}>15%</option>
+        <option value={20}>20%</option>
+      </select>
+
+      <p><strong>Subtotal sin descuento:</strong> ${subtotal.toLocaleString('es-AR')}</p>
+      <p><strong>Subtotal con descuento:</strong> ${subtotalConDescuento.toLocaleString('es-AR')}</p>
 
       <button
-        className={`btn btn-primary mt-4 ${
-          hayProductosSinStock ? 'boton-deshabilitado' : ''
-        }`}
+        className={`btn btn-primary mt-4 ${hayProductosSinStock ? 'boton-deshabilitado' : ''}`}
         onClick={handleFinalizarCompra}
         disabled={hayProductosSinStock}
       >

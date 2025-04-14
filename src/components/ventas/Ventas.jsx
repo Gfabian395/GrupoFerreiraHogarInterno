@@ -46,7 +46,7 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
   const [clientes, setClientes] = useState([]);
   const [selectedCliente, setSelectedCliente] = useState('');
   const [cuotas, setCuotas] = useState([]);
-  const [cuotasSeleccionadas, setCuotasSeleccionadas] = useState(3);
+  const [cuotasSeleccionadas, setCuotasSeleccionadas] = useState(1);
   const [ventaRealizada, setVentaRealizada] = useState(false);
   const [cargarPrimerCuota, setCargarPrimerCuota] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');

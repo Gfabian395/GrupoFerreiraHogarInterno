@@ -393,29 +393,38 @@ const CierreCaja = ({ currentUser }) => {
           {/* Tabla de Gastos */}
           <h2>Gastos del Mes</h2>
           <div className="table-responsive">
-            <table className="table table-bordered">
-              <thead>
-                <tr>
-                  <th>Fecha</th>
-                  <th>Tipo</th>
-                  <th>Monto</th>
-                </tr>
-              </thead>
-              <tbody>
-                {gastos.length > 0 ? (
-                  gastos.map((g, i) => (
-                    <tr key={i}>
-                      <td>{g.fechaStr}</td>
-                      <td>{g.tipo}</td>
-                      <td>{`$${g.monto.toLocaleString('es-AR')}`}</td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr><td colSpan="3">No se registraron gastos este mes.</td></tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+  <table className="table table-bordered">
+    <thead>
+      <tr>
+        <th>Fecha</th>
+        <th>Tipo</th>
+        <th>Monto</th>
+      </tr>
+    </thead>
+    <tbody>
+      {gastos.length > 0 ? (
+        [...gastos]
+          .sort((a, b) => {
+            const [da, ma, ya] = a.fechaStr.split('/').map(Number);
+            const [db, mb, yb] = b.fechaStr.split('/').map(Number);
+            const fechaA = new Date(ya, ma - 1, da);
+            const fechaB = new Date(yb, mb - 1, db);
+            return fechaB - fechaA; // Orden descendente
+          })
+          .map((g, i) => (
+            <tr key={i}>
+              <td>{g.fechaStr}</td>
+              <td>{g.tipo}</td>
+              <td>{`$${g.monto.toLocaleString('es-AR')}`}</td>
+            </tr>
+          ))
+      ) : (
+        <tr><td colSpan="3">No se registraron gastos este mes.</td></tr>
+      )}
+    </tbody>
+  </table>
+</div>
+
 
           <h3>Total Gastado: ${gastos.reduce((acc, g) => acc + g.monto, 0).toLocaleString('es-AR')}</h3>
 

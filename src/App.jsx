@@ -80,7 +80,15 @@ function App() {
           <>
             <Nav cartItemCount={cartItemCount} onLogout={handleLogout} username={usuario.username} role={usuario.role} profileImage={usuario.imageUrl} />
             <Routes>
-              <Route path="/" element={<Home />} />
+              <Route
+                path="/"
+                element={
+                  usuario.role !== 'invitado'
+                    ? <Home />
+                    : <Navigate to="/categorias" />
+                }
+              />
+
               <Route path="/clientes" element={<Clientes currentUser={usuario} />} />
               <Route path="/clientes/:clienteId/detalles" element={<ClienteDetalles currentUser={usuario} />} />
               <Route path="/cuotas" element={<Cuotas monto={100000} />} />

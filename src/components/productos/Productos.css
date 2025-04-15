@@ -1,3 +1,8 @@
+.productos {
+  position: relative;
+  z-index: 0;
+}
+
 .productos h2 {
   color: #5c6ac4;
 }
@@ -15,6 +20,8 @@
   padding: 5px;
   margin: 5px;
   gap: 10px;
+  position: relative;
+  z-index: 0;
 }
 
 .productos li {
@@ -28,9 +35,8 @@
   flex-direction: column;
   align-items: center;
   position: relative;
-  z-index: 1;
   overflow: visible;
-  padding-bottom: 60px; /* espacio para que no se superponga el hover */
+  padding-bottom: 60px;
 }
 
 .productos img {
@@ -258,7 +264,7 @@
   font-weight: bold;
   color: #1a1a1a;
   transition: transform 0.3s ease-in-out;
-  z-index: 3;
+  z-index: 5;
 }
 
 .precio-hover-container:hover {
@@ -277,7 +283,7 @@
   border: 1px solid rgba(200, 200, 200, 0.4);
   border-radius: 16px;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
-  z-index: 9999;
+  z-index: 99999 !important;
   white-space: nowrap;
   font-size: 15px;
   color: #111;
@@ -324,4 +330,10 @@
   border-style: solid;
   border-color: transparent transparent rgba(255, 255, 255, 0.8) transparent;
   filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.15));
+}
+
+/* Modificación para garantizar que las cuotas sean visibles incluso en productos sin stock */
+.producto-sin-stock .detalle-cuotas {
+  opacity: 1;
+  pointer-events: auto;
 }

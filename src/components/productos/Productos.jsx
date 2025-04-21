@@ -313,118 +313,135 @@ const Productos = ({ onAddToCart, currentUser }) => {
             const outOfStock4034 = stock4034 === 0;
             const outOfStock4320 = stock4320 === 0;
             const outOfStockBoth = outOfStock4034 && outOfStock4320;
-
-            return (
-              <li key={producto.id} className={outOfStockBoth ? 'producto-sin-stock' : ''}>
-                <img
-                  src={producto.imagenUrl || 'https://via.placeholder.com/150'}
-                  alt={producto.nombre || 'Sin nombre'}
-                  className="producto-imagen"
-                  loading="lazy"
-                />
-                <div className="detallitos">
-                  <h3>{producto.nombre || 'Sin nombre'}</h3>
-
-                  {/* Precio con tooltip de cuotas */}
-                  <div className="precio-hover-container">
-                    <span className="precio-texto">
-                      ${producto.precio?.toLocaleString('es-AR') || '0.00'}
-                    </span>
-                    <div className="detalle-cuotas">
-                      {mostrarCuotas(producto.precio)}
-                    </div>
-                  </div>
-
-                  {/* Mostrar cuenta regresiva si el precio es temporal */}
-                  {producto.isTemporal && (
-                    <p className="countdown">
-                      Tiempo restante: {producto.countdown ? `${producto.countdown} segundos` : 'Restaurando...'}
+  
+            // Si el usuario es 'invitado', no cambiaremos los estilos de los productos sin stock
+            const productoClass = (currentUser.role === 'invitado' || !outOfStockBoth)
+              ? ''
+              : 'producto-sin-stock'; // No se cambia si es invitado
+  
+              return (
+                <li
+                  key={producto.id}
+                  className={(currentUser.role === 'invitado' || !outOfStockBoth) ? '' : 'producto-sin-stock'}
+                >
+                  <img
+                    src={producto.imagenUrl || 'https://via.placeholder.com/150'}
+                    alt={producto.nombre || 'Sin nombre'}
+                    className="producto-imagen"
+                    loading="lazy"
+                  />
+                  <div className="detallitos">
+                    <h3>{producto.nombre || 'Sin nombre'}</h3>
+                
+                    {/* Precio Ficticio: Precio real + 40% */}
+                    <p className="fictitious-price">
+                      <del> ${((producto.precio || 0) * 1.4).toLocaleString('es-AR')}</del>
                     </p>
-                  )}
-
-                  {/* Stock para Andes 4034 */}
-                  <p>
-                    Stock Los Andes 4034: {stock4034}
-                    {['jefe', 'vendedor', 'encargado'].includes(currentUser.role) && (
-                      <button
-                        onClick={() => handleAddToCart(producto, 'Andes4034')}
-                        disabled={outOfStock4034}
-                        className={`boton-agregar ${outOfStock4034 ? 'boton-sin-stock' : ''}`}
-                      >
-                        +🛒
-                      </button>
-                    )}
-                    {['jefe', 'encargado'].includes(currentUser.role) && (
-                      <button
-                        onClick={() => handleIncrementStock(producto.id, 'cantidadDisponibleAndes4034')}
-                        className="boton-incrementar"
-                      >
-                        +
-                      </button>
-                    )}
-                  </p>
-
-                  {/* Stock para Andes 4320 */}
-                  <p>
-                    Stock Los Andes 4320: {stock4320}
-                    {['jefe', 'vendedor', 'encargado'].includes(currentUser.role) && (
-                      <button
-                        onClick={() => handleAddToCart(producto, 'Andes4320')}
-                        disabled={outOfStock4320}
-                        className={`boton-agregar ${outOfStock4320 ? 'boton-sin-stock' : ''}`}
-                      >
-                        +🛒
-                      </button>
-                    )}
-                    {['jefe', 'encargado'].includes(currentUser.role) && (
-                      <button
-                        onClick={() => handleIncrementStock(producto.id, 'cantidadDisponibleAndes4320')}
-                        className="boton-incrementar"
-                      >
-                        +
-                      </button>
-                    )}
-                  </p>
-
-                  {/* Acciones permitidas solo al jefe o encargado */}
-                  {['jefe', 'encargado'].includes(currentUser.role) && (
-                    <div className="action-buttons">
-                      {/* Botón para editar */}
-                      <button
-                        onClick={() => handleShowFormulario(producto)}
-                        className="boton-editar"
-                      >
-                        Editar
-                      </button>
-
-                      {/* Botón para cambiar precio temporalmente */}
-                      <button
-                        onClick={() => handleTemporalPriceChange(producto)}
-                        className="boton-precio-temporal"
-                        title="Cambiar precio temporalmente"
-                      >
-                        ⏱
-                      </button>
-
-                      {/* Botón para eliminar, permitido solo al jefe */}
-                      {currentUser.role === 'jefe' && (
-                        <button
-                          onClick={() => handleDeleteProduct(producto.id)}
-                          className="boton-borrar"
-                        >
-                          Borrar
-                        </button>
-                      )}
+                
+                    {/* Precio con tooltip de cuotas */}
+                    <div className="precio-hover-container">
+                      <span className="precio-texto">
+                        ${((producto.precio || 0) * 1).toLocaleString('es-AR')}
+                      </span>
+                      <div className="detalle-cuotas">
+                        {mostrarCuotas(producto.precio)}
+                      </div>
                     </div>
-                  )}
-                </div>
-              </li>
-
-            );
+                
+                    {/* Mostrar cuenta regresiva si el precio es temporal */}
+                    {producto.isTemporal && (
+                      <p className="countdown">
+                        Tiempo restante: {producto.countdown ? `${producto.countdown} segundos` : 'Restaurando...'}
+                      </p>
+                    )}
+                
+                    {/* Mostrar stock solo si el usuario no es 'invitado' */}
+                    {currentUser.role !== 'invitado' && (
+                      <>
+                        {/* Stock para Andes 4034 */}
+                        <p>
+                          Stock Los Andes 4034: {stock4034}
+                          {['jefe', 'vendedor', 'encargado'].includes(currentUser.role) && (
+                            <button
+                              onClick={() => handleAddToCart(producto, 'Andes4034')}
+                              disabled={outOfStock4034}
+                              className={`boton-agregar ${outOfStock4034 ? 'boton-sin-stock' : ''}`}
+                            >
+                              +🛒
+                            </button>
+                          )}
+                          {['jefe', 'encargado'].includes(currentUser.role) && (
+                            <button
+                              onClick={() => handleIncrementStock(producto.id, 'cantidadDisponibleAndes4034')}
+                              className="boton-incrementar"
+                            >
+                              +
+                            </button>
+                          )}
+                        </p>
+                
+                        {/* Stock para Andes 4320 */}
+                        <p>
+                          Stock Los Andes 4320: {stock4320}
+                          {['jefe', 'vendedor', 'encargado'].includes(currentUser.role) && (
+                            <button
+                              onClick={() => handleAddToCart(producto, 'Andes4320')}
+                              disabled={outOfStock4320}
+                              className={`boton-agregar ${outOfStock4320 ? 'boton-sin-stock' : ''}`}
+                            >
+                              +🛒
+                            </button>
+                          )}
+                          {['jefe', 'encargado'].includes(currentUser.role) && (
+                            <button
+                              onClick={() => handleIncrementStock(producto.id, 'cantidadDisponibleAndes4320')}
+                              className="boton-incrementar"
+                            >
+                              +
+                            </button>
+                          )}
+                        </p>
+                      </>
+                    )}
+                
+                    {/* Acciones permitidas solo al jefe o encargado */}
+                    {['jefe', 'encargado'].includes(currentUser.role) && (
+                      <div className="action-buttons">
+                        {/* Botón para editar */}
+                        <button
+                          onClick={() => handleShowFormulario(producto)}
+                          className="boton-editar"
+                        >
+                          Editar
+                        </button>
+                
+                        {/* Botón para cambiar precio temporalmente */}
+                        <button
+                          onClick={() => handleTemporalPriceChange(producto)}
+                          className="boton-precio-temporal"
+                          title="Cambiar precio temporalmente"
+                        >
+                          ⏱
+                        </button>
+                
+                        {/* Botón para eliminar, permitido solo al jefe */}
+                        {currentUser.role === 'jefe' && (
+                          <button
+                            onClick={() => handleDeleteProduct(producto.id)}
+                            className="boton-borrar"
+                          >
+                            Borrar
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </li>
+              );
           })}
         </ul>
       </div>
-
+  
       {mostrarFormulario && currentProduct && (
         <div className="blur-background">
           <form
@@ -439,7 +456,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
               &times;
             </span>
             <h2>Editar Producto</h2>
-
+  
             {/* Nombre */}
             <div className="form-group">
               <input
@@ -452,7 +469,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
                 required
               />
             </div>
-
+  
             {/* Precio */}
             <div className="form-group">
               <input
@@ -465,7 +482,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
                 required
               />
             </div>
-
+  
             {/* Stock Andes 4034 */}
             <div className="form-group">
               <input
@@ -478,7 +495,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
                 required
               />
             </div>
-
+  
             {/* Stock Andes 4320 */}
             <div className="form-group">
               <input
@@ -491,7 +508,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
                 required
               />
             </div>
-
+  
             {/* URL de la Imagen */}
             <div className="form-group">
               <input
@@ -504,7 +521,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
                 required
               />
             </div>
-
+  
             {/* Categoría */}
             <div className="form-group">
               <select
@@ -522,7 +539,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
                 ))}
               </select>
             </div>
-
+  
             {/* Botones */}
             <div className="form-group-buttons">
               <button type="submit" className="btn btn-primary">
@@ -541,6 +558,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
       )}
     </>
   );
+  
 }
 
 export default Productos;

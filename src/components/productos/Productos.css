@@ -338,8 +338,8 @@
   pointer-events: auto;
 }
 
-/* Estilo para el precio ficticio */
-.fictitious-price {
-  color: #ff4500; /* Color llamativo */
-  font-weight: bold;
+@media print {
+  body {
+    cursor: none;
+  }
 }

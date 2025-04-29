@@ -4,7 +4,6 @@ import { db } from '../../firebaseConfig';
 import { collection, getDocs, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 import Load from '../load/Load';
 import './Productos.css';
-import Cuotas from '../cuotas/Cuotas'; // Ajustá la ruta si está en otra carpeta
 
 const Productos = ({ onAddToCart, currentUser }) => {
   const { categoriaId } = useParams();
@@ -334,9 +333,9 @@ const Productos = ({ onAddToCart, currentUser }) => {
                     <h3>{producto.nombre || 'Sin nombre'}</h3>
                 
                     {/* Precio Ficticio: Precio real + 40% */}
-                    <p className="fictitious-price">
+                   {/*  <p className="fictitious-price">
                       <del> ${((producto.precio || 0) * 1.4).toLocaleString('es-AR')}</del>
-                    </p>
+                    </p> */}
                 
                     {/* Precio con tooltip de cuotas */}
                     <div className="precio-hover-container">

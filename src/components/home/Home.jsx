@@ -120,7 +120,7 @@ const Home = () => {
 
   return (
     <div className="home">
-      {showRanking && (
+      {/* {showRanking && (
         <>
           <h2 className="ranking-title">Nuestro Mejor Vendedor del Mes</h2>
           <div className="ranking-container">
@@ -137,7 +137,7 @@ const Home = () => {
             })}
           </div>
         </>
-      )}
+      )} */}
       <h2 className="clientes-title">Clientes que deben pagar en los próximos 7 días</h2>
       <div className="clientes-pagos-container">
         {clientesConPagosProximos.length > 0 ? (

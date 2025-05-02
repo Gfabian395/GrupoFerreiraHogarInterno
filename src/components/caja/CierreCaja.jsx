@@ -133,16 +133,16 @@ const CierreCaja = ({ currentUser }) => {
         const hoy = new Date();
         const primerDiaDelMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
         const ultimoDiaDelMes = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
-    
+
         const cobrosDelMes = [];
-    
+
         ventasSnapshot.forEach(doc => {
           const venta = { id: doc.id, ...doc.data() };
-    
+
           if (Array.isArray(venta.pagos)) {
             venta.pagos.forEach(pago => {
               const fechaPago = pago.fecha ? new Date(pago.fecha) : null;
-    
+
               if (fechaPago && fechaPago >= primerDiaDelMes && fechaPago <= ultimoDiaDelMes) {
                 cobrosDelMes.push({
                   clienteId: venta.clienteId || '',
@@ -156,19 +156,25 @@ const CierreCaja = ({ currentUser }) => {
             });
           }
         });
-    
+
         // Ordenar por fecha descendente (más reciente primero)
         cobrosDelMes.sort((a, b) => b.fecha - a.fecha);
-    
+
         setCobros(cobrosDelMes);
-    
+
+        // Asegúrate de que no estés sumando el total de cobros repetidamente
         const totalDelMes = cobrosDelMes.reduce((acc, cobro) => acc + cobro.monto, 0);
-        setTotalRecaudado(prev => prev + totalDelMes);
-    
+
+        // Actualiza el total recaudado con el total calculado de cobros
+        setCobrosTotal(totalDelMes);
+
+        // Esto es solo para mantener el total final correcto
+        setTotalRecaudado(ventasTotal + totalDelMes); // Solo sumando una vez
       } catch (error) {
         console.error('Error al obtener cobros:', error);
       }
-    };    
+    };
+
 
     const fetchGastos = async () => {
       try {
@@ -210,58 +216,96 @@ const CierreCaja = ({ currentUser }) => {
     return Object.values(ranking).sort((a, b) => b.totalIngresado - a.totalIngresado);
   };
 
-  const handleGeneratePDF = () => setShowPDFPrompt(true);
 
   const generatePDF = () => {
     const docPDF = new jsPDF('p', 'pt', 'a4');
-    const today = new Date().toLocaleDateString();
-    docPDF.setFontSize(10);
-    docPDF.text(`Reporte de Cierre de Caja de ${today}`, 40, 30);
 
-    // Tabla de Ventas
-    const tableRows = movimientos.map(m => [
+    // Título fijo con mes y año
+    docPDF.setFontSize(12);
+    docPDF.text("CIERRE DE CAJA - MAYO DE 2025", 40, 30);
+
+    let nextY = 50;
+
+    // 🔻 COBROS
+    docPDF.setFontSize(12);
+    docPDF.text("COBROS", 40, nextY);
+    const cobrosOrdenados = [...cobros].sort((a, b) => new Date(b.fechaStr) - new Date(a.fechaStr));
+    const cobrosRows = cobrosOrdenados.map(c => [
+      c.id,
+      c.fechaStr,
+      `$${parseFloat(c.monto).toLocaleString('es-AR')}`,
+      c.usuario || ''
+    ]);
+    docPDF.autoTable({
+      head: [["ID", "Fecha", "Monto", "Responsable"]],
+      body: cobrosRows,
+      startY: nextY + 10,
+      theme: 'grid',
+      styles: { fontSize: 8 }
+    });
+
+    nextY = docPDF.lastAutoTable.finalY + 30;
+
+    // 🔻 VENTAS
+    docPDF.setFontSize(12);
+    docPDF.text("VENTAS", 40, nextY);
+    const ventasOrdenadas = [...movimientos].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+    const ventasRows = ventasOrdenadas.map(m => [
       m.id,
       m.clienteId,
       m.vendedor,
       m.fecha,
       `$${m.monto.toLocaleString('es-AR')}`
     ]);
-
     docPDF.autoTable({
       head: [["ID", "Cliente", "Vendedor", "Fecha", "Monto"]],
-      body: tableRows,
-      startY: 50,
+      body: ventasRows,
+      startY: nextY + 10,
       theme: 'grid',
       styles: { fontSize: 8 }
     });
 
-    // Tabla de Cobros (opcional)
-    const cobrosRows = cobros.map(c => [
-      c.id,
-      c.fechaStr,
-      `$${parseFloat(c.monto).toLocaleString('es-AR')}`
+    nextY = docPDF.lastAutoTable.finalY + 30;
+
+    // 🔻 GASTOS
+    docPDF.setFontSize(12);
+    docPDF.text("Gastos del Mes", 40, nextY);
+
+    const gastosOrdenados = [...gastos].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+    const gastosRows = gastosOrdenados.map(g => [
+      new Date(g.fecha).toLocaleDateString('es-AR'),
+      g.tipo,
+      `$${parseFloat(g.monto).toLocaleString('es-AR')}`
     ]);
-    docPDF.text(`Cobros del Mes:`, 40, docPDF.autoTable.previous.finalY + 20);
+
     docPDF.autoTable({
-      head: [["ID", "Fecha", "Monto"]],
-      body: cobrosRows,
-      startY: docPDF.autoTable.previous.finalY + 30,
+      head: [["Fecha", "Tipo", "Monto"]],
+      body: gastosRows,
+      startY: nextY + 10,
       theme: 'grid',
-      styles: { fontSize: 8 }
+      styles: { fontSize: 8 },
+      columnStyles: {
+        2: { halign: 'right' } // Monto alineado a la derecha
+      }
     });
 
-    // Mostrar total recaudado (ventas + cobros)
-    const finalY = docPDF.autoTable.previous.finalY;
-    docPDF.text(`Total Recaudado: $${totalRecaudado.toLocaleString('es-AR')}`, 40, finalY + 20);
 
-    docPDF.save('cierre_caja.pdf');
+    // 🔻 RESUMEN FINAL
+    nextY = docPDF.lastAutoTable.finalY + 40;
 
-    // Reiniciar algunos estados si es necesario
-    setMovimientos([]);
-    setVentasTotal(0);
-    setCobros([]);
-    setCobrosTotal(0);
-    setShowPDFPrompt(false);
+    const totalCobrado = cobros.reduce((acc, c) => acc + parseFloat(c.monto), 0);
+    const totalVendido = movimientos.reduce((acc, v) => acc + parseFloat(v.monto), 0);
+    const totalGastado = gastos.reduce((acc, g) => acc + parseFloat(g.monto), 0);
+    const dineroEnMano = totalCobrado + totalVendido - totalGastado;
+
+    docPDF.setFontSize(12);
+    docPDF.text(`RESUMEN`, 40, nextY);
+    docPDF.text(`TOTAL COBRADO: $${totalCobrado.toLocaleString('es-AR')}`, 40, nextY + 15);
+    docPDF.text(`TOTAL VENDIDO: $${totalVendido.toLocaleString('es-AR')}`, 40, nextY + 30);
+    docPDF.text(`TOTAL GASTADO: $${totalGastado.toLocaleString('es-AR')}`, 40, nextY + 45);
+    docPDF.text(`DINERO EN MANO: $${dineroEnMano.toLocaleString('es-AR')}`, 40, nextY + 60);
+
+    docPDF.save("reporte-cierre.pdf");
   };
 
   const handleAddGasto = async () => {
@@ -386,45 +430,55 @@ const CierreCaja = ({ currentUser }) => {
 
           {/* Muestra el total recaudado (ventas + cobros) */}
           <h3>Total Recaudado: ${totalRecaudado.toLocaleString('es-AR')}</h3>
-          <button onClick={handleGeneratePDF}>Generar PDF</button>
+          <button onClick={generatePDF}>Generar PDF</button>
           <button onClick={() => navigate('/resumen')}>Ver Resumen</button>
           <button onClick={() => setShowGastoForm(true)}>Agregar Gasto</button>
+
+          {showPDFPrompt && (
+            <div>
+              <p>¿Estás seguro que quieres generar el PDF?</p>
+              <button onClick={generatePDF}>Sí</button>
+              <button onClick={() => setShowPDFPrompt(false)}>Cancelar</button>
+            </div>
+          )}
+
 
           {/* Tabla de Gastos */}
           <h2>Gastos del Mes</h2>
           <div className="table-responsive">
-  <table className="table table-bordered">
-    <thead>
-      <tr>
-        <th>Fecha</th>
-        <th>Tipo</th>
-        <th>Monto</th>
-      </tr>
-    </thead>
-    <tbody>
-      {gastos.length > 0 ? (
-        [...gastos]
-          .sort((a, b) => {
-            const [da, ma, ya] = a.fechaStr.split('/').map(Number);
-            const [db, mb, yb] = b.fechaStr.split('/').map(Number);
-            const fechaA = new Date(ya, ma - 1, da);
-            const fechaB = new Date(yb, mb - 1, db);
-            return fechaB - fechaA; // Orden descendente
-          })
-          .map((g, i) => (
-            <tr key={i}>
-              <td>{g.fechaStr}</td>
-              <td>{g.tipo}</td>
-              <td>{`$${g.monto.toLocaleString('es-AR')}`}</td>
-            </tr>
-          ))
-      ) : (
-        <tr><td colSpan="3">No se registraron gastos este mes.</td></tr>
-      )}
-    </tbody>
-  </table>
-</div>
-
+            <table className="table table-bordered">
+              <thead>
+                <tr>
+                  <th>ID</th> {/* Nueva columna para mostrar el ID */}
+                  <th>Fecha</th>
+                  <th>Tipo</th>
+                  <th>Monto</th>
+                </tr>
+              </thead>
+              <tbody>
+                {gastos.length > 0 ? (
+                  gastos
+                    .sort((a, b) => {
+                      const [da, ma, ya] = a.fechaStr.split('/').map(Number);
+                      const [db, mb, yb] = b.fechaStr.split('/').map(Number);
+                      const fechaA = new Date(ya, ma - 1, da);
+                      const fechaB = new Date(yb, mb - 1, db);
+                      return fechaB - fechaA;
+                    })
+                    .map((gasto) => (
+                      <tr key={gasto.id}> {/* Usamos el ID como clave */}
+                        <td>{gasto.id}</td> {/* Mostramos el ID */}
+                        <td>{gasto.fechaStr}</td>
+                        <td>{gasto.tipo}</td>
+                        <td>{`$${gasto.monto.toLocaleString('es-AR')}`}</td>
+                      </tr>
+                    ))
+                ) : (
+                  <tr><td colSpan="4">No se registraron gastos este mes.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
 
           <h3>Total Gastado: ${gastos.reduce((acc, g) => acc + g.monto, 0).toLocaleString('es-AR')}</h3>
 

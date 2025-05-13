@@ -147,7 +147,7 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
                   onLoad={handleImageLoad}
                 />
                 <div className="descripcioncita">
-                  <h5>{categoria.nombre}</h5>
+                  <h6>{categoria.nombre}</h6>
                 </div>
               </div>
             </li>

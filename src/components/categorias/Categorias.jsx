@@ -4,6 +4,7 @@ import { db } from '../../firebaseConfig';
 import { collection, getDocs, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import './Categorias.css';
 import Load from '../load/Load';
+import BusquedaGlobal from '../busqueda global/BusquedaGlobal';
 
 const Categorias = ({ onSelectCategoria, currentUser }) => {
   const [categorias, setCategorias] = useState([]);
@@ -18,35 +19,29 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
   const [editCategoria, setEditCategoria] = useState(null);
   const [editNombre, setEditNombre] = useState('');
   const [editImagenUrl, setEditImagenUrl] = useState('');
+
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchCategorias = async () => {
       try {
-        const categoriasCollection = collection(db, 'categorias');
-        const categoriasSnapshot = await getDocs(categoriasCollection);
-        const categoriasList = categoriasSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        categoriasList.sort((a, b) => a.nombre.localeCompare(b.nombre));
-        setCategorias(categoriasList);
-        setLoading(false);
-        setImagesLoading(false);
+        const snapshot = await getDocs(collection(db, 'categorias'));
+        const list = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        list.sort((a, b) => a.nombre.localeCompare(b.nombre));
+        setCategorias(list);
       } catch (error) {
         console.error("Error fetching categorias: ", error);
+      } finally {
         setLoading(false);
+        setImagesLoading(false);
       }
     };
-
     fetchCategorias();
   }, []);
 
-  // Corrección aquí: Convirtiendo NodeList a array
   const handleImageLoad = () => {
-    const allImagesLoaded = Array.from(document.querySelectorAll("img")).every(
-      (img) => img.complete
-    );
-    if (allImagesLoaded) {
-      setImagesLoading(false);
-    }
+    const allImagesLoaded = Array.from(document.querySelectorAll("img")).every(img => img.complete);
+    if (allImagesLoaded) setImagesLoading(false);
   };
 
   const handleDeleteCategoria = async (e) => {
@@ -55,9 +50,7 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
       try {
         await deleteDoc(doc(db, 'categorias', deleteId));
         setAlerta('Categoría eliminada con éxito');
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
+        setTimeout(() => window.location.reload(), 1000);
       } catch (error) {
         console.error("Error deleting categoria: ", error);
       }
@@ -68,7 +61,7 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
   };
 
   const promptDeleteCategoria = (id) => {
-    if (currentUser && currentUser.role === 'jefe') {
+    if (currentUser?.role === 'jefe') {
       setShowPasswordPrompt(true);
       setDeleteId(id);
     } else {
@@ -78,7 +71,7 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
   };
 
   const handleEditCategoria = (categoria) => {
-    if (currentUser && (currentUser.role === 'jefe' || currentUser.role === 'encargado')) {
+    if (['jefe', 'encargado'].includes(currentUser?.role)) {
       setEditCategoria(categoria);
       setEditNombre(categoria.nombre);
       setEditImagenUrl(categoria.imagenUrl);
@@ -92,19 +85,12 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
   const saveEditCategoria = async (e) => {
     e.preventDefault();
     try {
-      const categoriaRef = doc(db, 'categorias', editCategoria.id);
-      await updateDoc(categoriaRef, {
+      await updateDoc(doc(db, 'categorias', editCategoria.id), {
         nombre: editNombre,
         imagenUrl: editImagenUrl
       });
       setAlerta('Categoría actualizada con éxito');
-      setTimeout(() => {
-        setShowEditPrompt(false);
-        setEditCategoria(null);
-        setEditNombre('');
-        setEditImagenUrl('');
-        window.location.reload();
-      }, 1000);
+      setTimeout(() => window.location.reload(), 1000);
     } catch (error) {
       console.error("Error updating categoria: ", error);
     }
@@ -115,101 +101,112 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
     navigate(`/categorias/${id}/productos`);
   };
 
-  const filteredCategorias = categorias.filter(categoria =>
-    categoria.nombre.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredCategorias = categorias.filter(cat =>
+    cat.nombre.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (loading || imagesLoading) {
-    return <Load />;
-  }
+  if (loading || imagesLoading) return <Load />;
 
   return (
-    <div className="categorias">
-      {alerta && <div className="alert alert-danger">{alerta}</div>}
-      <input
+    <>
+      {/* ESTE ES EL BUSCADOR */}
+      {/* <input
         type="text"
         value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
+        onChange={e => setSearchTerm(e.target.value)}
         placeholder="Buscar categorías..."
         className="search-input"
-      />
+      /> */}
+      <BusquedaGlobal />
 
-      <ul>
-        {filteredCategorias.map(categoria => (
-          <li key={categoria.id} onClick={() => handleSelectCategoria(categoria.id)}>
-            <img
-              src={categoria.imagenUrl}
-              alt={categoria.nombre}
-              loading="lazy" // Esta es la clave para lazy loading
-              onLoad={handleImageLoad}
-            />
-            <div className="descripcioncita">
-              <h3>{categoria.nombre}</h3>
-              {currentUser && (
-                <>
-                  {(currentUser.role === 'jefe' || currentUser.role === 'encargado') && (
-                    <button onClick={(e) => { e.stopPropagation(); handleEditCategoria(categoria); }}>Editar</button>
-                  )}
-                  {currentUser.role === 'jefe' && (
-                    <button onClick={(e) => { e.stopPropagation(); promptDeleteCategoria(categoria.id); }}>Eliminar</button>
-                  )}
-                </>
+      <div className="categorias">
+        {alerta && <div className="alert alert-danger">{alerta}</div>}
+
+        <ul>
+          {filteredCategorias.map(categoria => (
+            <li key={categoria.id} className="categoria-card">
+              {['jefe', 'encargado'].includes(currentUser?.role) && (
+                <button className="btn-esquina top-right" onClick={(e) => {
+                  e.stopPropagation();
+                  handleEditCategoria(categoria);
+                }}>✏️</button>
               )}
+
+              {currentUser?.role === 'jefe' && (
+                <button className="btn-esquina bottom-left" onClick={(e) => {
+                  e.stopPropagation();
+                  promptDeleteCategoria(categoria.id);
+                }}>🗑️</button>
+              )}
+
+              <div onClick={() => handleSelectCategoria(categoria.id)}>
+                <img
+                  src={categoria.imagenUrl}
+                  alt={categoria.nombre}
+                  loading="lazy"
+                  onLoad={handleImageLoad}
+                />
+                <div className="descripcioncita">
+                  <h5>{categoria.nombre}</h5>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+
+        {showPasswordPrompt && (
+          <div className="overlay">
+            <div className="form-popup">
+              <h3>Ingrese la Contraseña</h3>
+              <form onSubmit={handleDeleteCategoria}>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Contraseña"
+                  required
+                />
+                <button type="submit" className="btn btn-danger">Confirmar</button>
+                <button type="button" onClick={() => {
+                  setShowPasswordPrompt(false);
+                  setPassword('');
+                }} className="btn btn-secondary">Cancelar</button>
+              </form>
             </div>
-
-          </li>
-        ))}
-      </ul>
-
-      {showPasswordPrompt && (
-        <div className="overlay">
-          <div className="form-popup">
-            <h3>Ingrese la Contraseña</h3>
-            <form onSubmit={handleDeleteCategoria}>
-              <input
-                type="password"
-                className="form-control"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Contraseña"
-                required
-              />
-              <button type="submit" className="btn btn-danger">Confirmar</button>
-              <button onClick={() => { setShowPasswordPrompt(false); setPassword(''); }} className="btn btn-secondary">Cancelar</button>
-            </form>
           </div>
-        </div>
-      )}
+        )}
 
-      {showEditPrompt && (
-        <div className="overlay">
-          <div className="form-popup">
-            <h3>Editar Categoría</h3>
-            <form onSubmit={saveEditCategoria}>
-              <input
-                type="text"
-                className="form-control"
-                value={editNombre}
-                onChange={(e) => setEditNombre(e.target.value)}
-                placeholder="Nombre de la Categoría"
-                required
-              />
-              <input
-                type="text"
-                className="form-control"
-                value={editImagenUrl}
-                onChange={(e) => setEditImagenUrl(e.target.value)}
-                placeholder="URL de la Imagen"
-                required
-              />
-              <button type="submit" className="btn btn-success">Guardar</button>
-              <button onClick={() => { setShowEditPrompt(false); setEditCategoria(null); }} className="btn btn-secondary">Cancelar</button>
-            </form>
+        {showEditPrompt && (
+          <div className="overlay">
+            <div className="form-popup">
+              <h3>Editar Categoría</h3>
+              <form onSubmit={saveEditCategoria}>
+                <input
+                  type="text"
+                  value={editNombre}
+                  onChange={(e) => setEditNombre(e.target.value)}
+                  placeholder="Nombre de la Categoría"
+                  required
+                />
+                <input
+                  type="text"
+                  value={editImagenUrl}
+                  onChange={(e) => setEditImagenUrl(e.target.value)}
+                  placeholder="URL de la Imagen"
+                  required
+                />
+                <button type="submit" className="btn btn-success">Guardar</button>
+                <button type="button" onClick={() => {
+                  setShowEditPrompt(false);
+                  setEditCategoria(null);
+                }} className="btn btn-secondary">Cancelar</button>
+              </form>
+            </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </>
   );
-}
+};
 
 export default Categorias;

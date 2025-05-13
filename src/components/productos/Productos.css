@@ -1,10 +1,13 @@
 .productos {
   position: relative;
   z-index: 0;
+  text-align: center; /* Centra el contenido */
 }
 
 .productos h2 {
   color: #5c6ac4;
+  font-size: 24px;
+  margin-bottom: 15px;
 }
 
 .productos h3 {
@@ -26,22 +29,26 @@
 
 .productos li {
   display: flex;
-  padding: 10px;
+  flex-direction: column;
+  align-items: center;
+  padding: 15px;
   margin: 10px 0;
   background-color: #f4f4f9;
   border: 1px solid #ddd;
   border-radius: 5px;
-  width: 300px;
-  flex-direction: column;
-  align-items: center;
+  width: 185px; /* Tamaño adaptado */
+  height: 410px; /* Ajustado a una altura más cómoda */
   position: relative;
   overflow: visible;
   padding-bottom: 60px;
+  box-sizing: border-box;
+  transition: transform 0.3s ease-in-out;
 }
 
 .productos img {
-  width: 250px;
+  width: 100px; /* Tamaño ajustado */
   height: auto;
+  margin-bottom: 15px;
 }
 
 .boton-agregar {
@@ -50,10 +57,10 @@
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  margin-top: 10px;
-  padding: 5px;
+  padding: 2px 2px;
   position: relative;
   z-index: 2;
+  transition: background-color 0.3s;
 }
 
 .boton-agregar:hover {
@@ -62,44 +69,18 @@
 
 .boton-incrementar {
   background-color: #196F3D;
-  color: white;
-  border: none;
-  padding: 5px 10px;
-  cursor: pointer;
-  font-size: 16px;
-  margin-left: 20px;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 0px 6px;
+    cursor: pointer;
+    font-size: 18px;
+    margin-top: 10px;
+    transition: background-color 0.3s;
 }
 
 .boton-incrementar:hover {
-  background-color: #0056b3;
-}
-
-.boton-editar {
-  background-color: #ffc107;
-  color: white;
-  border: none;
-  padding: 5px 10px;
-  cursor: pointer;
-  font-size: 16px;
-  margin: 5px;
-}
-
-.boton-editar:hover {
-  background-color: #e0a800;
-}
-
-.boton-borrar {
-  background-color: #dc3545;
-  color: white;
-  border: none;
-  padding: 5px 10px;
-  cursor: pointer;
-  font-size: 16px;
-  margin: 5px;
-}
-
-.boton-borrar:hover {
-  background-color: #c82333;
+  background-color: #1D8348;
 }
 
 .boton-sin-stock {
@@ -107,7 +88,6 @@
   color: #fff;
   pointer-events: none;
   filter: grayscale(100%);
-  padding: 5px;
 }
 
 .detallitos {
@@ -128,8 +108,6 @@
   background-color: #007bff;
   color: #fff;
   border: none;
-  border-radius: 5px;
-  cursor: pointer;
 }
 
 .blur-background {
@@ -242,6 +220,7 @@
   0% {
     opacity: 1;
   }
+
   100% {
     opacity: 0.5;
   }
@@ -254,7 +233,33 @@
 }
 
 .boton-precio-temporal {
-  border-radius: 50%;
+  position: absolute;
+  top: -5px;
+  left: -10px;
+  background: transparent;
+}
+
+.boton-borrar {
+  background-color: transparent;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 16px;
+  position: absolute;
+  bottom: 0px;
+  left: 0px;
+}
+
+.boton-editar {
+  background-color: transparent;
+  color: white;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 16px;
+  position: absolute;
+  top: -2px;
+  right: -5px;
 }
 
 .precio-hover-container {
@@ -314,6 +319,7 @@
     opacity: 0;
     transform: translate(-50%, 10px);
   }
+
   to {
     opacity: 1;
     transform: translate(-50%, 0);

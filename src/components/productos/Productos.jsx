@@ -330,7 +330,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
                   loading="lazy"
                 />
                 <div className="detallitos">
-                  <h6>{producto.nombre || 'Sin nombre'}</h6>
+                  <h5>{producto.nombre || 'Sin nombre'}</h5>
                   
                   {/* Precio Ficticio: Precio real + 40% */}
                   {/* <p className="fictitious-price">
@@ -411,7 +411,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
                         onClick={() => handleShowFormulario(producto)}
                         className="boton-editar"
                       >
-                        ✏
+                        ✏️
                       </button>
                   
                       {/* Botón para cambiar precio temporalmente */}
@@ -429,7 +429,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
                           onClick={() => handleDeleteProduct(producto.id)}
                           className="boton-borrar"
                         >
-                          🗑
+                          🗑️
                         </button>
                       )}
                     </div>

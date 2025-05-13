@@ -330,7 +330,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
                   loading="lazy"
                 />
                 <div className="detallitos">
-                  <h5>{producto.nombre || 'Sin nombre'}</h5>
+                  <h6>{producto.nombre || 'Sin nombre'}</h6>
                   
                   {/* Precio Ficticio: Precio real + 40% */}
                   {/* <p className="fictitious-price">

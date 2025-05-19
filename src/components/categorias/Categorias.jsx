@@ -4,7 +4,7 @@ import { db } from '../../firebaseConfig';
 import { collection, getDocs, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import './Categorias.css';
 import Load from '../load/Load';
-import BusquedaGlobal from '../busqueda global/BusquedaGlobal';
+/* import BusquedaGlobal from '../busqueda global/BusquedaGlobal'; */
 
 const Categorias = ({ onSelectCategoria, currentUser }) => {
   const [categorias, setCategorias] = useState([]);
@@ -110,14 +110,14 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
   return (
     <>
       {/* ESTE ES EL BUSCADOR */}
-      {/* <input
+       <input
         type="text"
         value={searchTerm}
         onChange={e => setSearchTerm(e.target.value)}
         placeholder="Buscar categorías..."
         className="search-input"
-      /> */}
-      <BusquedaGlobal />
+      /> 
+      {/* <BusquedaGlobal /> */}
 
       <div className="categorias">
         {alerta && <div className="alert alert-danger">{alerta}</div>}

@@ -12,6 +12,7 @@
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
+<<<<<<< HEAD
     "@mui/material": "^6.4.4",
     "@popperjs/core": "^2.11.8",
     "bootstrap": "^5.3.3",
@@ -24,6 +25,19 @@
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.1.5",
     "recharts": "^2.15.1"
+=======
+    "@mui/material": "^6.4.12",
+    "@popperjs/core": "^2.11.8",
+    "bootstrap": "^5.3.7",
+    "firebase": "^11.9.1",
+    "jquery": "^3.7.1",
+    "jspdf": "^3.0.1",
+    "jspdf-autotable": "^5.0.2",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-router-dom": "^7.6.2",
+    "recharts": "^2.15.4"
+>>>>>>> 80de3ac (version mejorada de la original)
   },
   "devDependencies": {
     "@eslint/js": "^9.19.0",

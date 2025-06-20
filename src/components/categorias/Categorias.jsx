@@ -4,7 +4,10 @@ import { db } from '../../firebaseConfig';
 import { collection, getDocs, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import './Categorias.css';
 import Load from '../load/Load';
+<<<<<<< HEAD
 /* import BusquedaGlobal from '../busqueda global/BusquedaGlobal'; */
+=======
+>>>>>>> 80de3ac (version mejorada de la original)
 
 const Categorias = ({ onSelectCategoria, currentUser }) => {
   const [categorias, setCategorias] = useState([]);
@@ -97,7 +100,11 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
   };
 
   const handleSelectCategoria = (id) => {
+<<<<<<< HEAD
     onSelectCategoria(id);
+=======
+    onSelectCategoria && onSelectCategoria(id);
+>>>>>>> 80de3ac (version mejorada de la original)
     navigate(`/categorias/${id}/productos`);
   };
 
@@ -109,15 +116,23 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
 
   return (
     <>
+<<<<<<< HEAD
       {/* ESTE ES EL BUSCADOR */}
        <input
+=======
+      <input
+>>>>>>> 80de3ac (version mejorada de la original)
         type="text"
         value={searchTerm}
         onChange={e => setSearchTerm(e.target.value)}
         placeholder="Buscar categorías..."
         className="search-input"
+<<<<<<< HEAD
       /> 
       {/* <BusquedaGlobal /> */}
+=======
+      />
+>>>>>>> 80de3ac (version mejorada de la original)
 
       <div className="categorias">
         {alerta && <div className="alert alert-danger">{alerta}</div>}

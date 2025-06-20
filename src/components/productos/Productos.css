@@ -314,6 +314,41 @@
   border-bottom: none;
 }
 
+<<<<<<< HEAD
+=======
+.modal-imagen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  cursor: zoom-out;
+}
+
+.modal-imagen img {
+  max-width: 90%;
+  max-height: 90%;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.cerrar-modal {
+  position: absolute;
+  top: 20px;
+  right: 30px;
+  font-size: 2.5rem;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+
+>>>>>>> 80de3ac (version mejorada de la original)
 @keyframes fadeIn {
   from {
     opacity: 0;

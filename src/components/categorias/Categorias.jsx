@@ -4,10 +4,6 @@ import { db } from '../../firebaseConfig';
 import { collection, getDocs, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import './Categorias.css';
 import Load from '../load/Load';
-<<<<<<< HEAD
-/* import BusquedaGlobal from '../busqueda global/BusquedaGlobal'; */
-=======
->>>>>>> 80de3ac (version mejorada de la original)
 
 const Categorias = ({ onSelectCategoria, currentUser }) => {
   const [categorias, setCategorias] = useState([]);
@@ -34,6 +30,8 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
         setCategorias(list);
       } catch (error) {
         console.error("Error fetching categorias: ", error);
+        setAlerta('Error al cargar categorías');
+        setTimeout(() => setAlerta(''), 3000);
       } finally {
         setLoading(false);
         setImagesLoading(false);
@@ -43,6 +41,7 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
   }, []);
 
   const handleImageLoad = () => {
+    // Check if all images are loaded
     const allImagesLoaded = Array.from(document.querySelectorAll("img")).every(img => img.complete);
     if (allImagesLoaded) setImagesLoading(false);
   };
@@ -56,6 +55,8 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
         setTimeout(() => window.location.reload(), 1000);
       } catch (error) {
         console.error("Error deleting categoria: ", error);
+        setAlerta('Error al eliminar categoría');
+        setTimeout(() => setAlerta(''), 3000);
       }
     } else {
       setAlerta('Contraseña incorrecta');
@@ -96,15 +97,15 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
       setTimeout(() => window.location.reload(), 1000);
     } catch (error) {
       console.error("Error updating categoria: ", error);
+      setAlerta('Error al actualizar categoría');
+      setTimeout(() => setAlerta(''), 3000);
     }
   };
 
   const handleSelectCategoria = (id) => {
-<<<<<<< HEAD
-    onSelectCategoria(id);
-=======
-    onSelectCategoria && onSelectCategoria(id);
->>>>>>> 80de3ac (version mejorada de la original)
+    if (onSelectCategoria) {
+      onSelectCategoria(id);
+    }
     navigate(`/categorias/${id}/productos`);
   };
 
@@ -116,23 +117,13 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
 
   return (
     <>
-<<<<<<< HEAD
-      {/* ESTE ES EL BUSCADOR */}
-       <input
-=======
       <input
->>>>>>> 80de3ac (version mejorada de la original)
         type="text"
         value={searchTerm}
         onChange={e => setSearchTerm(e.target.value)}
         placeholder="Buscar categorías..."
         className="search-input"
-<<<<<<< HEAD
-      /> 
-      {/* <BusquedaGlobal /> */}
-=======
       />
->>>>>>> 80de3ac (version mejorada de la original)
 
       <div className="categorias">
         {alerta && <div className="alert alert-danger">{alerta}</div>}
@@ -141,20 +132,32 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
           {filteredCategorias.map(categoria => (
             <li key={categoria.id} className="categoria-card">
               {['jefe', 'encargado'].includes(currentUser?.role) && (
-                <button className="btn-esquina top-right" onClick={(e) => {
-                  e.stopPropagation();
-                  handleEditCategoria(categoria);
-                }}>✏️</button>
+                <button
+                  className="btn-esquina top-right"
+                  onClick={e => {
+                    e.stopPropagation();
+                    handleEditCategoria(categoria);
+                  }}
+                  title="Editar categoría"
+                >
+                  ✏️
+                </button>
               )}
 
               {currentUser?.role === 'jefe' && (
-                <button className="btn-esquina bottom-left" onClick={(e) => {
-                  e.stopPropagation();
-                  promptDeleteCategoria(categoria.id);
-                }}>🗑️</button>
+                <button
+                  className="btn-esquina bottom-left"
+                  onClick={e => {
+                    e.stopPropagation();
+                    promptDeleteCategoria(categoria.id);
+                  }}
+                  title="Eliminar categoría"
+                >
+                  🗑️
+                </button>
               )}
 
-              <div onClick={() => handleSelectCategoria(categoria.id)}>
+              <div onClick={() => handleSelectCategoria(categoria.id)} style={{ cursor: 'pointer' }}>
                 <img
                   src={categoria.imagenUrl}
                   alt={categoria.nombre}
@@ -177,15 +180,21 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
                 <input
                   type="password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={e => setPassword(e.target.value)}
                   placeholder="Contraseña"
                   required
                 />
                 <button type="submit" className="btn btn-danger">Confirmar</button>
-                <button type="button" onClick={() => {
-                  setShowPasswordPrompt(false);
-                  setPassword('');
-                }} className="btn btn-secondary">Cancelar</button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowPasswordPrompt(false);
+                    setPassword('');
+                  }}
+                  className="btn btn-secondary"
+                >
+                  Cancelar
+                </button>
               </form>
             </div>
           </div>
@@ -199,22 +208,28 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
                 <input
                   type="text"
                   value={editNombre}
-                  onChange={(e) => setEditNombre(e.target.value)}
+                  onChange={e => setEditNombre(e.target.value)}
                   placeholder="Nombre de la Categoría"
                   required
                 />
                 <input
                   type="text"
                   value={editImagenUrl}
-                  onChange={(e) => setEditImagenUrl(e.target.value)}
+                  onChange={e => setEditImagenUrl(e.target.value)}
                   placeholder="URL de la Imagen"
                   required
                 />
                 <button type="submit" className="btn btn-success">Guardar</button>
-                <button type="button" onClick={() => {
-                  setShowEditPrompt(false);
-                  setEditCategoria(null);
-                }} className="btn btn-secondary">Cancelar</button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditPrompt(false);
+                    setEditCategoria(null);
+                  }}
+                  className="btn btn-secondary"
+                >
+                  Cancelar
+                </button>
               </form>
             </div>
           </div>

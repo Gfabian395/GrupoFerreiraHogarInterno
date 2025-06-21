@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { db } from '../../firebaseConfig';
 import { collection, getDocs, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 import Load from '../load/Load';
 import './Productos.css';
+import { getStorage, ref as storageRef, getDownloadURL } from 'firebase/storage';
 
 const Productos = ({ onAddToCart, currentUser }) => {
   const { categoriaId } = useParams();
@@ -16,60 +17,74 @@ const Productos = ({ onAddToCart, currentUser }) => {
   const [currentProduct, setCurrentProduct] = useState(null);
   const [categorias, setCategorias] = useState([]);
   const [imagenAmpliada, setImagenAmpliada] = useState(null);
-  const [refreshFlag, setRefreshFlag] = useState(false); // para refrescar
+  const [refreshFlag, setRefreshFlag] = useState(false); // Para forzar refresco
 
   const formRef = useRef(null);
+  const storage = getStorage();
 
-  // Funciones para obtener datos
+  // Obtener productos y sus URLs
   const fetchProductos = async () => {
     setLoading(true);
     try {
       const productosCollection = collection(db, `categorias/${categoriaId}/productos`);
       const productosSnapshot = await getDocs(productosCollection);
-      const productosList = productosSnapshot.docs.map(doc => ({
-        id: doc.id,
-        categoriaId,
-        ...doc.data(),
-      }));
+
+      const productosList = await Promise.all(
+        productosSnapshot.docs.map(async (docSnap) => {
+          const data = docSnap.data();
+          let imagenUrl = data.imagenUrl || '';
+
+          if (imagenUrl && !imagenUrl.startsWith('http')) {
+            try {
+              const imageRef = storageRef(storage, imagenUrl);
+              imagenUrl = await getDownloadURL(imageRef);
+            } catch {
+              imagenUrl = 'https://via.placeholder.com/150';
+            }
+          }
+
+          return { id: docSnap.id, categoriaId, ...data, imagenUrl };
+        })
+      );
+
       productosList.sort((a, b) => a.nombre.localeCompare(b.nombre));
       setProductos(productosList);
     } catch (error) {
-      console.error("Error fetching productos: ", error);
+      console.error('Error fetching productos:', error);
     } finally {
       setLoading(false);
     }
   };
 
+  // Obtener categorías
   const fetchCategorias = async () => {
     try {
       const categoriasCollection = collection(db, 'categorias');
       const categoriasSnapshot = await getDocs(categoriasCollection);
-      const categoriasList = categoriasSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+      const categoriasList = categoriasSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setCategorias(categoriasList);
     } catch (error) {
-      console.error("Error fetching categorias: ", error);
+      console.error('Error fetching categorias:', error);
     }
   };
 
-  // useEffect para productos (depende de categoriaId y refreshFlag)
+  // Cargar productos cuando cambia categoriaId o refreshFlag
   useEffect(() => {
     if (categoriaId) fetchProductos();
   }, [categoriaId, refreshFlag]);
 
-  // useEffect para categorias (solo al montar)
+  // Cargar categorías solo una vez
   useEffect(() => {
     fetchCategorias();
   }, []);
-  // Actualiza los campos del producto en el formulario
+
+  // Manejo de inputs en formulario
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setCurrentProduct(prev => ({ ...prev, [name]: value }));
   };
 
-  // Actualizar producto (solo roles jefe o encargado)
+  // Actualizar producto (solo roles autorizados)
   const handleUpdateProduct = async (productoId) => {
     if (!['jefe', 'encargado'].includes(currentUser.role)) {
       setAlerta('No tienes permiso para editar productos.');
@@ -82,22 +97,20 @@ const Productos = ({ onAddToCart, currentUser }) => {
       await updateDoc(productoRef, { ...currentProduct });
 
       setProductos(prev =>
-        prev.map(prod =>
-          prod.id === productoId ? { ...currentProduct, id: productoId, categoriaId } : prod
-        )
+        prev.map(prod => (prod.id === productoId ? { ...currentProduct, id: productoId, categoriaId } : prod))
       );
 
       setMostrarFormulario(false);
       setAlerta('Producto actualizado con éxito');
       setTimeout(() => setAlerta(''), 3000);
     } catch (error) {
-      console.error("Error al actualizar el producto:", error);
+      console.error('Error al actualizar el producto:', error);
       setAlerta('Error al actualizar el producto.');
       setTimeout(() => setAlerta(''), 3000);
     }
   };
 
-  // Mostrar formulario para editar producto
+  // Mostrar formulario con datos del producto
   const handleShowFormulario = (producto) => {
     setCurrentProduct(producto);
     setMostrarFormulario(true);
@@ -107,6 +120,8 @@ const Productos = ({ onAddToCart, currentUser }) => {
     setMostrarFormulario(false);
     setCurrentProduct(null);
   };
+
+  // Filtro búsqueda productos
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
   };
@@ -115,7 +130,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
     producto.nombre.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Eliminar producto con permiso solo a jefe y validación con contraseña
+  // Eliminar producto con permiso y validación
   const handleDeleteProduct = async (productoId) => {
     if (currentUser.role !== 'jefe') {
       setAlerta('No tienes permiso para eliminar productos.');
@@ -137,13 +152,13 @@ const Productos = ({ onAddToCart, currentUser }) => {
       setAlerta('Producto eliminado con éxito');
       setTimeout(() => setAlerta(''), 3000);
     } catch (error) {
-      console.error('Error al eliminar el producto: ', error);
+      console.error('Error al eliminar el producto:', error);
       setAlerta('Error al eliminar el producto.');
       setTimeout(() => setAlerta(''), 3000);
     }
   };
 
-  // Incrementar stock solo para roles jefe o encargado
+  // Incrementar stock (roles autorizados)
   const handleIncrementStock = async (productoId, campo) => {
     if (!['jefe', 'encargado'].includes(currentUser.role)) {
       setAlerta('No tienes permiso para actualizar el stock.');
@@ -164,13 +179,14 @@ const Productos = ({ onAddToCart, currentUser }) => {
         setAlerta('Stock actualizado con éxito');
         setTimeout(() => setAlerta(''), 3000);
       } else {
-        console.error('Error: El campo especificado no es un número válido o no existe.');
+        console.error('Campo inválido para actualizar stock.');
       }
     } catch (error) {
-      console.error('Error al actualizar el stock: ', error);
+      console.error('Error al actualizar el stock:', error);
     }
   };
-  // Añadir producto al carrito si hay stock en sucursal
+
+  // Añadir producto al carrito si hay stock
   const handleAddToCart = (producto, sucursal) => {
     const productoStock = parseInt(producto[`cantidadDisponible${sucursal}`]);
     if (!isNaN(productoStock) && productoStock > 0) {
@@ -181,10 +197,10 @@ const Productos = ({ onAddToCart, currentUser }) => {
     }
   };
 
-  // Cambiar precio temporalmente con cuenta regresiva
+  // Cambiar precio temporal con cuenta regresiva
   const handleTemporalPriceChange = async (producto) => {
     const originalPrice = producto.precio;
-    const nuevoPrecio = prompt("Introduce el nuevo precio temporal:", producto.precio);
+    const nuevoPrecio = prompt('Introduce el nuevo precio temporal:', producto.precio);
     const temporalTime = 120; // 2 minutos
     const expirationTime = Date.now() + temporalTime * 1000;
 
@@ -201,13 +217,13 @@ const Productos = ({ onAddToCart, currentUser }) => {
             p.id === producto.id ? { ...p, precio: parseFloat(nuevoPrecio), isTemporal: true, countdown: temporalTime } : p
           )
         );
-        alert("Precio cambiado temporalmente.");
+        alert('Precio cambiado temporalmente.');
       } catch (error) {
-        console.error("Error al cambiar el precio temporalmente:", error);
-        alert("Hubo un error al actualizar el precio.");
+        console.error('Error al cambiar el precio temporalmente:', error);
+        alert('Hubo un error al actualizar el precio.');
       }
     } else {
-      alert("Por favor, introduce un precio válido.");
+      alert('Por favor, introduce un precio válido.');
     }
   };
 
@@ -243,7 +259,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
     });
   };
 
-  // Restaurar precios temporales tras recarga, con sincronización
+  // Restaurar precios temporales tras recarga
   useEffect(() => {
     const syncCountdowns = () => {
       const now = Date.now();
@@ -373,10 +389,10 @@ const Productos = ({ onAddToCart, currentUser }) => {
 
                   {['jefe', 'encargado'].includes(currentUser.role) && (
                     <div className="action-buttons">
-                      <button onClick={() => handleShowFormulario(producto)} className="boton-editar">✏️</button>
+                      <button onClick={() => handleShowFormulario(producto)} className="boton-editar" title="Editar producto">✏️</button>
                       <button onClick={() => handleTemporalPriceChange(producto)} className="boton-precio-temporal" title="Cambiar precio temporalmente">⏱</button>
                       {currentUser.role === 'jefe' && (
-                        <button onClick={() => handleDeleteProduct(producto.id)} className="boton-borrar">🗑️</button>
+                        <button onClick={() => handleDeleteProduct(producto.id)} className="boton-borrar" title="Eliminar producto">🗑️</button>
                       )}
                     </div>
                   )}
@@ -468,7 +484,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
                 onChange={handleInputChange}
                 required
               >
-                {categorias && categorias.length > 0 ? (
+                {categorias.length > 0 ? (
                   categorias.map(cat => (
                     <option key={cat.id} value={cat.id}>
                       {cat.nombre}
@@ -488,5 +504,6 @@ const Productos = ({ onAddToCart, currentUser }) => {
       )}
     </>
   );
-}
+};
+
 export default Productos;

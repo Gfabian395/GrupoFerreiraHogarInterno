@@ -6,7 +6,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import './AgregarProducto.css';
 
 const AgregarProducto = ({ currentUser, onProductoAgregado }) => {
-  const { categoriaId } = useParams(); // Categoria tomada de la URL
+  const { categoriaId } = useParams();
   const [producto, setProducto] = useState({
     nombre: '',
     precio: '',
@@ -33,12 +33,20 @@ const AgregarProducto = ({ currentUser, onProductoAgregado }) => {
     }
 
     try {
-      // Subir imagen a Storage
-      const storageRef = ref(storage, `productos/${archivoImagen.name}`);
-      await uploadBytes(storageRef, archivoImagen);
-      const urlImagen = await getDownloadURL(storageRef);
+      console.log('Archivo a subir:', archivoImagen);
 
-      // Agregar documento a Firestore en la categoría correspondiente
+      // Generar nombre único para la imagen
+      const nombreUnico = `${Date.now()}_${archivoImagen.name}`;
+      const storageRef = ref(storage, `productos/${nombreUnico}`);
+
+      // Subir la imagen a Firebase Storage
+      await uploadBytes(storageRef, archivoImagen);
+
+      // Obtener URL de descarga
+      const urlImagen = await getDownloadURL(storageRef);
+      console.log('URL imagen:', urlImagen);
+
+      // Guardar producto en Firestore
       const productosCollection = collection(db, `categorias/${categoriaId}/productos`);
       await addDoc(productosCollection, {
         ...producto,
@@ -48,7 +56,7 @@ const AgregarProducto = ({ currentUser, onProductoAgregado }) => {
         imagenUrl: urlImagen
       });
 
-      // Limpiar formulario y estados
+      // Resetear formulario y estados
       setProducto({
         nombre: '',
         precio: '',
@@ -69,7 +77,6 @@ const AgregarProducto = ({ currentUser, onProductoAgregado }) => {
     }
   };
 
-  // Solo mostrar para roles autorizados
   if (!['jefe', 'encargado'].includes(currentUser.role)) return null;
 
   return (

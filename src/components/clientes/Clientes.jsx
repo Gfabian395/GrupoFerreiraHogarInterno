@@ -309,6 +309,63 @@ const Clientes = ({ currentUser }) => {
         </div>
       )}
 
+      {mostrarFormulario && (
+        <div className="blur-background">
+          <form onSubmit={handleAddCliente} className="floating-form" ref={formRef}>
+            <div className="form-group">
+              <input type="text" className="form-control" placeholder="DNI"
+                value={newCliente.dni}
+                onChange={(e) => setNewCliente({ ...newCliente, dni: e.target.value })}
+                required />
+            </div>
+            <div className="form-group">
+              <input type="text" className="form-control" placeholder="Nombre Completo"
+                value={newCliente.nombreCompleto}
+                onChange={(e) => setNewCliente({ ...newCliente, nombreCompleto: e.target.value })}
+                required />
+            </div>
+            <div className="form-group">
+              <input type="text" className="form-control" placeholder="Dirección"
+                value={newCliente.direccion}
+                onChange={(e) => setNewCliente({ ...newCliente, direccion: e.target.value })}
+                required />
+            </div>
+            <div className="form-group">
+              <input type="text" className="form-control" placeholder="Entrecalles"
+                value={newCliente.entrecalles}
+                onChange={(e) => setNewCliente({ ...newCliente, entrecalles: e.target.value })}
+                required />
+            </div>
+            <div className="form-group">
+              <input type="tel" className="form-control" placeholder="Teléfono 1"
+                value={newCliente.telefono1}
+                onChange={(e) => setNewCliente({ ...newCliente, telefono1: e.target.value })}
+                required />
+            </div>
+            <div className="form-group">
+              <input type="tel" className="form-control" placeholder="Teléfono 2"
+                value={newCliente.telefono2}
+                onChange={(e) => setNewCliente({ ...newCliente, telefono2: e.target.value })}
+              />
+            </div>
+            <div className="form-group">
+              <label>Subir imagen del cliente:</label>
+              <input type="file" accept="image/*" onChange={handleFileChange} required />
+            </div>
+            {selectedFile && (
+              <div style={{ marginBottom: '10px' }}>
+                <img
+                  src={URL.createObjectURL(selectedFile)}
+                  alt="Preview"
+                  style={{ maxWidth: '150px', maxHeight: '150px', objectFit: 'cover', borderRadius: '4px' }}
+                />
+              </div>
+            )}
+            <button type="submit" className="btn btn-primary">Agregar Cliente</button>
+          </form>
+        </div>
+      )}
+
 
       {mostrarEliminar && (
         <div className="blur-background">

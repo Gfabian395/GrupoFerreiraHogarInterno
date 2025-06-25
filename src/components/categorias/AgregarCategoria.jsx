@@ -1,26 +1,41 @@
 import React, { useState } from 'react';
-import { db } from '../../firebaseConfig';
+import { db, storage } from '../../firebaseConfig';
 import { collection, addDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import './AgregarCategoria.css';
 
 const AgregarCategoria = ({ currentUser }) => {
   const [nombre, setNombre] = useState('');
-  const [imagenUrl, setImagenUrl] = useState('');
+  const [imagenFile, setImagenFile] = useState(null);
   const [alerta, setAlerta] = useState('');
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
+  const [vistaPrevia, setVistaPrevia] = useState(null);
 
   const handleAddCategoria = async (e) => {
     e.preventDefault();
 
+    let imagenUrlFinal = 'https://placehold.co/200x200';
+
     try {
+      if (imagenFile) {
+        const imageRef = ref(storage, `categorias/${Date.now()}_${imagenFile.name}`);
+        await uploadBytes(imageRef, imagenFile);
+        imagenUrlFinal = await getDownloadURL(imageRef);
+      }
+
       const categoriasCollection = collection(db, 'categorias');
-      await addDoc(categoriasCollection, { nombre, imagenUrl });
+      await addDoc(categoriasCollection, {
+        nombre,
+        imagenUrl: imagenUrlFinal,
+      });
+
       setNombre('');
-      setImagenUrl('');
+      setImagenFile(null);
+      setVistaPrevia(null);
       setAlerta('Categoría agregada con éxito');
       setTimeout(() => {
         setAlerta('');
-        window.location.reload(); // Refrescar la página
+        window.location.reload();
       }, 1000);
     } catch (error) {
       console.error("Error al agregar la categoría:", error);
@@ -29,10 +44,24 @@ const AgregarCategoria = ({ currentUser }) => {
     }
   };
 
-  // Validar roles permitidos (jefe o encargado)
-  if (currentUser.role !== 'jefe' && currentUser.role !== 'encargado') {
-    return null; // Si el usuario no es "jefe" ni "encargado", no se muestra nada
+  // Validar roles permitidos con includes
+  if (!currentUser?.role?.includes('jefe') && !currentUser?.role?.includes('encargado')) {
+    return null;
   }
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    setImagenFile(file);
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setVistaPrevia(reader.result);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setVistaPrevia(null);
+    }
+  };
 
   return (
     <div className="agregar-categoria">
@@ -52,23 +81,28 @@ const AgregarCategoria = ({ currentUser }) => {
                   required
                 />
               </div>
+
               <div className="form-group">
                 <input
-                  type="url"
+                  type="file"
                   className="form-control"
-                  placeholder="URL de la Imagen"
-                  value={imagenUrl}
-                  onChange={(e) => setImagenUrl(e.target.value)}
-                  required
+                  accept="image/*"
+                  onChange={handleFileChange}
                 />
               </div>
+
+              {vistaPrevia && (
+                <div className="vista-previa">
+                  <img src={vistaPrevia} alt="Vista previa" style={{ width: '200px', height: 'auto', marginTop: '10px' }} />
+                </div>
+              )}
+
               <button type="submit" className="btn btn-primary">Agregar Categoría</button>
             </form>
             <button onClick={() => setMostrarFormulario(false)} className="btn btn-secondary">Cerrar</button>
           </div>
         </div>
       )}
-      {/* Botón flotante */}
       <button
         onClick={() => setMostrarFormulario(!mostrarFormulario)}
         className="btn-float"
@@ -81,3 +115,4 @@ const AgregarCategoria = ({ currentUser }) => {
 };
 
 export default AgregarCategoria;
+/* FUNCIONA PERFECTO, FALTA SUBIR A STORAGE */

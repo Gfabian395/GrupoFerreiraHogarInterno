@@ -344,6 +344,10 @@
   pointer-events: auto;
 }
 
+.preview-imagen{
+  width: 200px;
+}
+
 @media print {
   body {
     cursor: none;

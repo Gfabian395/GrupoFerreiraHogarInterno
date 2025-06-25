@@ -5,11 +5,32 @@ import { collection, query, where, getDocs, updateDoc, doc } from 'firebase/fire
 import Load from '../load/Load';
 import './ClienteDetalles.css';
 
+// Configuración de intereses por cantidad de cuotas
+const configuracionCuotas = [
+  { cuotas: 1, interes: 0 },
+  { cuotas: 2, interes: 15 },
+  { cuotas: 3, interes: 25 },
+  { cuotas: 4, interes: 40 },
+  { cuotas: 6, interes: 60 },
+  { cuotas: 9, interes: 75 },
+  { cuotas: 12, interes: 100 },
+  { cuotas: 18, interes: 150 },
+  { cuotas: 24, interes: 180 }
+];
+
+// Función auxiliar para calcular valor de cuota
+const calcularCuotaConInteres = (monto, cuotas) => {
+  const config = configuracionCuotas.find(c => c.cuotas === cuotas);
+  const interes = config ? config.interes : 0;
+  const montoConInteres = monto * (1 + interes / 100);
+  const cuotaFinal = Math.round(montoConInteres / cuotas / 1000) * 1000;
+  return cuotaFinal;
+};
+
 const ClienteDetalles = ({ currentUser }) => {
   const { clienteId } = useParams();
   const [ventas, setVentas] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [pagos, setPagos] = useState([]);
   const fechaRef = useRef(null);
   const montoRef = useRef(null);
 
@@ -32,25 +53,45 @@ const ClienteDetalles = ({ currentUser }) => {
     fetchVentas();
   }, [clienteId]);
 
-  useEffect(() => {
-    console.log("Ventas updated:", ventas);
-  }, [ventas]);
+  const handleCuotasChange = async (ventaId, nuevasCuotas) => {
+    if (nuevasCuotas < 1) {
+      alert("La cantidad de cuotas debe ser al menos 1");
+      return;
+    }
+    const password = prompt('Ingrese la contraseña para modificar las cuotas:');
+    if (password !== '031285') {
+      alert('Contraseña incorrecta. No se actualizó la cantidad de cuotas.');
+      return;
+    }
+    try {
+      const ventaRef = doc(db, 'ventas', ventaId);
+      await updateDoc(ventaRef, { cuotas: nuevasCuotas });
+
+      setVentas((prevVentas) =>
+        prevVentas.map((v) =>
+          v.id === ventaId ? { ...v, cuotas: nuevasCuotas } : v
+        )
+      );
+      alert('Cantidad de cuotas actualizada correctamente.');
+    } catch (error) {
+      console.error('Error actualizando cuotas:', error);
+      alert('No se pudo actualizar la cantidad de cuotas');
+    }
+  };
 
   const handleCuotaPagada = async (ventaId, fecha, monto, usuario) => {
     const nuevaVenta = ventas.find((venta) => venta.id === ventaId);
-    const newPagos = [...nuevaVenta.pagos, { fecha, monto: Math.round(monto / 1000) * 1000, usuario }];
+    const newPagos = [...(nuevaVenta.pagos || []), { fecha, monto: Math.round(monto / 1000) * 1000, usuario }];
     try {
       const ventaRef = doc(db, 'ventas', ventaId);
       await updateDoc(ventaRef, {
         pagos: newPagos
       });
-      setPagos(newPagos);
-      alert('Pago registrado con éxito');
       const updatedVentas = ventas.map(venta =>
         venta.id === ventaId ? { ...venta, pagos: newPagos } : venta
       );
       setVentas(updatedVentas);
-      // Limpiar los campos de entrada después de un pago exitoso
+      alert('Pago registrado con éxito');
     } catch (error) {
       console.error("Error actualizando pago: ", error);
     }
@@ -59,25 +100,22 @@ const ClienteDetalles = ({ currentUser }) => {
   const agregarPago = (ventaId, e) => {
     e.preventDefault();
     const fecha = e.target.fecha.value;
-    let monto = e.target.monto.value;
+    let monto = Number(e.target.monto.value);
 
     const venta = ventas.find(venta => venta.id === ventaId);
-    const saldo = Math.round((venta.totalCredito || 0) / 1000) * 1000 - venta.pagos.reduce((acc, pago) => acc + Math.round(Number(pago.monto / 1000)) * 1000, 0);
+    const saldo = Math.round((venta.totalCredito || 0) / 1000) * 1000 - (venta.pagos ? venta.pagos.reduce((acc, pago) => acc + Math.round(Number(pago.monto / 1000)) * 1000, 0) : 0);
 
     if (monto > saldo) {
       monto = saldo;
     }
 
-    // Limpiar los campos de entrada antes de llamar a handleCuotaPagada
     fechaRef.current.value = '';
     montoRef.current.value = '';
 
     handleCuotaPagada(ventaId, fecha, monto, currentUser.username);
   };
 
-  if (loading) {
-    return <Load />;
-  }
+  if (loading) return <Load />;
 
   return (
     <div className="cliente-detalles container">
@@ -90,15 +128,48 @@ const ClienteDetalles = ({ currentUser }) => {
         const isComplete = saldo <= 0;
         let saldoRestante = totalCredito;
 
+        const productoPrincipal = venta.productos[0];
+        const precioUnitario = Math.round(productoPrincipal.precio / 1000) * 1000;
+        const cantidadProducto = productoPrincipal.cantidad || 1;
+        const montoBaseCuotas = precioUnitario * cantidadProducto;
+
+        const cuotasDisponibles = configuracionCuotas.map(({ cuotas }) => ({
+          cuotas,
+          valorCuota: calcularCuotaConInteres(montoBaseCuotas, cuotas)
+        }));
+
         return (
           <div key={venta.id} className={`venta-detalle ${isComplete ? 'completo' : ''}`}>
             <h3>Venta {venta.id}</h3>
             <p><strong>Nombre:</strong> {clienteId}</p>
-            <p><strong>Total Crédito $:</strong> {totalCredito.toLocaleString('es-AR')}</p>
-            <p><strong>Cuotas de:</strong> ${(Math.round(totalCredito / cuotas / 1000) * 1000).toLocaleString('es-AR')}</p>
+            <p><strong>Su Compra:</strong> {venta.productos.map(p =>
+              `${p.nombre} (Cant: ${p.cantidad}, Precio unitario: $${(Math.round(p.precio / 1000) * 1000).toLocaleString('es-AR')})`
+            ).join(", ")}</p>
+
+            <p><strong>Total:</strong> ${totalCredito.toLocaleString('es-AR')}</p>
+
+            <p>
+              <strong>Cuotas:</strong>{' '}
+              <select
+                value={cuotas}
+                onChange={(e) => handleCuotasChange(venta.id, parseInt(e.target.value))}
+                disabled={isComplete}
+                className="form-select"
+              >
+                {cuotasDisponibles.map(op => (
+                  <option key={op.cuotas} value={op.cuotas}>
+                    {op.cuotas} cuota{op.cuotas > 1 ? 's' : ''} - ${op.valorCuota.toLocaleString('es-AR')}
+                  </option>
+                ))}
+              </select>
+            </p>
+
+            <p>
+              <strong>Valor por cuota:</strong>{' '}
+              ${calcularCuotaConInteres(montoBaseCuotas, cuotas).toLocaleString('es-AR')}
+            </p>
+
             <p><strong>Fecha de Venta:</strong> {new Date(venta.fecha.seconds * 1000).toLocaleString()}</p>
-            <p><strong>Su Compra:</strong> {venta.productos.map(producto => `${producto.nombre} (Cant: ${producto.cantidad}, Precio: $${(Math.round(producto.precio / 1000) * 1000).toLocaleString('es-AR')})`).join(", ")}</p>
-            <p><strong>Total:</strong> ${totalCredito.toLocaleString('es-AR')} - {cuotas} cuotas de ${(Math.round(totalCredito / cuotas / 1000) * 1000).toLocaleString('es-AR')}</p>
 
             <h4>Pagos</h4>
             <div className="table-responsive">
@@ -114,10 +185,10 @@ const ClienteDetalles = ({ currentUser }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {venta.pagos && venta.pagos.map((pago, index) => {
+                  {venta.pagos && venta.pagos.map((pago, i) => {
                     saldoRestante -= pago.monto;
                     return (
-                      <tr key={index}>
+                      <tr key={i}>
                         <td>{new Date(pago.fecha).getDate()}</td>
                         <td>{new Date(pago.fecha).getMonth() + 1}</td>
                         <td>{new Date(pago.fecha).getFullYear()}</td>
@@ -130,7 +201,7 @@ const ClienteDetalles = ({ currentUser }) => {
                 </tbody>
               </table>
             </div>
-            
+
             {!isComplete && (
               <>
                 <h4>Agregar Pago</h4>
@@ -155,3 +226,4 @@ const ClienteDetalles = ({ currentUser }) => {
 };
 
 export default ClienteDetalles;
+/* FUNCIONA PERFECTO, FALTA SUBIR A STORAGE */

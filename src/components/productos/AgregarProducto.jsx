@@ -1,71 +1,82 @@
-import React, { useState, useEffect } from 'react';
-import { db } from '../../firebaseConfig';
-import { collection, addDoc, getDocs } from 'firebase/firestore';
+import React, { useState } from 'react';
+import { useParams } from 'react-router-dom'; // 👈 para extraer categoriaId de la URL
+import { db, storage } from '../../firebaseConfig';
+import { collection, addDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import './AgregarProducto.css';
 
 const AgregarProducto = ({ currentUser }) => {
+  const { categoriaId } = useParams(); // 👈 obtenemos el ID desde la URL
+
   const [producto, setProducto] = useState({
     nombre: '',
     precio: '',
     cantidadDisponibleAndes4034: '',
     cantidadDisponibleAndes4320: '',
-    imagenUrl: '',
     descripcion: ''
   });
-  const [categorias, setCategorias] = useState([]);
-  const [selectedCategoria, setSelectedCategoria] = useState('');
+
+  const [archivoImagen, setArchivoImagen] = useState(null);
   const [alerta, setAlerta] = useState('');
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const fetchCategorias = async () => {
-      try {
-        const categoriasCollection = collection(db, 'categorias');
-        const categoriasSnapshot = await getDocs(categoriasCollection);
-        const categoriasList = categoriasSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setCategorias(categoriasList);
-      } catch (error) {
-        console.error("Error al cargar categorías: ", error);
-      }
-    };
+  // ✅ Validar rol correctamente
+  if (!Array.isArray(currentUser.role) || (!currentUser.role.includes('jefe') && !currentUser.role.includes('encargado'))) {
+    return null;
+  }
 
-    fetchCategorias();
-  }, []);
+  const handleArchivoChange = (e) => {
+    setArchivoImagen(e.target.files[0] || null);
+  };
 
   const handleAddProducto = async (e) => {
     e.preventDefault();
 
-    if (!selectedCategoria) {
-      setAlerta('Por favor, selecciona una categoría.');
+    if (!categoriaId) {
+      setAlerta('No se detectó la categoría.');
       setTimeout(() => setAlerta(''), 3000);
       return;
     }
 
+    setLoading(true);
+
     try {
-      const productosCollection = collection(db, `categorias/${selectedCategoria}/productos`);
-      await addDoc(productosCollection, producto);
+      let imagenUrl = 'https://placehold.co/200x200';
+
+      if (archivoImagen) {
+        const storageRef = ref(storage, `productos/${Date.now()}_${archivoImagen.name}`);
+        await uploadBytes(storageRef, archivoImagen);
+        imagenUrl = await getDownloadURL(storageRef);
+      }
+
+      const productosCollection = collection(db, `categorias/${categoriaId}/productos`);
+      await addDoc(productosCollection, {
+        ...producto,
+        imagenUrl,
+      });
+
       setProducto({
         nombre: '',
         precio: '',
         cantidadDisponibleAndes4034: '',
         cantidadDisponibleAndes4320: '',
-        imagenUrl: '',
         descripcion: ''
       });
+
+      setArchivoImagen(null);
       setAlerta('Producto agregado con éxito');
       setTimeout(() => setAlerta(''), 3000);
-      setMostrarFormulario(false); // Cerrar el formulario al terminar
+      setMostrarFormulario(false);
+
     } catch (error) {
       console.error("Error al agregar producto: ", error);
       setAlerta('Hubo un problema al agregar el producto.');
       setTimeout(() => setAlerta(''), 3000);
     }
-  };
 
-  // Validar roles para mostrar el formulario
-  if (!['jefe', 'encargado'].includes(currentUser.role)) {
-    return null; // Oculta el componente para roles no autorizados
-  }
+    setLoading(false);
+  };
 
   return (
     <div className="agregar-producto">
@@ -75,24 +86,6 @@ const AgregarProducto = ({ currentUser }) => {
             <h2>Agregar Producto</h2>
             {alerta && <div className="alert alert-success">{alerta}</div>}
             <form onSubmit={handleAddProducto}>
-              {/* Selección de Categoría */}
-              <div className="form-group">
-                <label htmlFor="categoriaSelect">Seleccionar Categoría</label>
-                <select
-                  id="categoriaSelect"
-                  className="form-control"
-                  value={selectedCategoria}
-                  onChange={(e) => setSelectedCategoria(e.target.value)}
-                  required
-                >
-                  <option value="">-- Selecciona una Categoría --</option>
-                  {categorias.map((categoria) => (
-                    <option key={categoria.id} value={categoria.id}>{categoria.nombre}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Datos del Producto */}
               <div className="form-group">
                 <input
                   type="text"
@@ -103,6 +96,7 @@ const AgregarProducto = ({ currentUser }) => {
                   required
                 />
               </div>
+
               <div className="form-group">
                 <input
                   type="number"
@@ -113,6 +107,7 @@ const AgregarProducto = ({ currentUser }) => {
                   required
                 />
               </div>
+
               <div className="form-group">
                 <input
                   type="number"
@@ -123,6 +118,7 @@ const AgregarProducto = ({ currentUser }) => {
                   required
                 />
               </div>
+
               <div className="form-group">
                 <input
                   type="number"
@@ -133,16 +129,17 @@ const AgregarProducto = ({ currentUser }) => {
                   required
                 />
               </div>
+
               <div className="form-group">
+                <label>Imagen (opcional)</label>
                 <input
-                  type="url"
+                  type="file"
+                  accept="image/*"
                   className="form-control"
-                  placeholder="URL de la Imagen"
-                  value={producto.imagenUrl}
-                  onChange={(e) => setProducto({ ...producto, imagenUrl: e.target.value })}
-                  required
+                  onChange={handleArchivoChange}
                 />
               </div>
+
               <div className="form-group">
                 <textarea
                   className="form-control"
@@ -152,15 +149,15 @@ const AgregarProducto = ({ currentUser }) => {
                 />
               </div>
 
-              {/* Botones del Formulario */}
-              <button type="submit" className="btn btn-primary">Agregar Producto</button>
+              <button type="submit" className="btn btn-primary" disabled={loading}>
+                {loading ? 'Subiendo...' : 'Agregar Producto'}
+              </button>
             </form>
             <button onClick={() => setMostrarFormulario(false)} className="btn btn-secondary">Cerrar</button>
           </div>
         </div>
       )}
 
-      {/* Botón flotante */}
       <button
         onClick={() => setMostrarFormulario(!mostrarFormulario)}
         className="btn-float"
@@ -173,3 +170,4 @@ const AgregarProducto = ({ currentUser }) => {
 };
 
 export default AgregarProducto;
+/* FUNCIONA PERFECTO, FALTA SUBIR A STORAGE */

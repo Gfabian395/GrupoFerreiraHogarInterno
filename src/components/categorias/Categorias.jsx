@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { db } from '../../firebaseConfig';
+import { db, storage } from '../../firebaseConfig';
 import { collection, getDocs, deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import './Categorias.css';
 import Load from '../load/Load';
-/* import BusquedaGlobal from '../busqueda global/BusquedaGlobal'; */
 
 const Categorias = ({ onSelectCategoria, currentUser }) => {
   const [categorias, setCategorias] = useState([]);
@@ -19,6 +19,8 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
   const [editCategoria, setEditCategoria] = useState(null);
   const [editNombre, setEditNombre] = useState('');
   const [editImagenUrl, setEditImagenUrl] = useState('');
+  const [editImagenFile, setEditImagenFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
   const navigate = useNavigate();
 
@@ -61,7 +63,7 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
   };
 
   const promptDeleteCategoria = (id) => {
-    if (currentUser?.role === 'jefe') {
+    if (currentUser?.role?.includes('jefe')) {
       setShowPasswordPrompt(true);
       setDeleteId(id);
     } else {
@@ -71,10 +73,11 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
   };
 
   const handleEditCategoria = (categoria) => {
-    if (['jefe', 'encargado'].includes(currentUser?.role)) {
+    if (['jefe', 'encargado'].some(r => currentUser?.role?.includes(r))) {
       setEditCategoria(categoria);
       setEditNombre(categoria.nombre);
       setEditImagenUrl(categoria.imagenUrl);
+      setEditImagenFile(null);
       setShowEditPrompt(true);
     } else {
       setAlerta('No tiene permiso para editar esta categoría.');
@@ -82,17 +85,42 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
     }
   };
 
+  const handleEditFileChange = (e) => {
+    const file = e.target.files[0];
+    setEditImagenFile(file);
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setEditImagenUrl(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const saveEditCategoria = async (e) => {
     e.preventDefault();
     try {
+      let nuevaImagenUrl = editImagenUrl;
+
+      if (editImagenFile) {
+        setUploading(true);
+        const imageRef = ref(storage, `categorias/${Date.now()}_${editImagenFile.name}`);
+        await uploadBytes(imageRef, editImagenFile);
+        nuevaImagenUrl = await getDownloadURL(imageRef);
+        setUploading(false);
+      }
+
       await updateDoc(doc(db, 'categorias', editCategoria.id), {
         nombre: editNombre,
-        imagenUrl: editImagenUrl
+        imagenUrl: nuevaImagenUrl,
       });
       setAlerta('Categoría actualizada con éxito');
       setTimeout(() => window.location.reload(), 1000);
     } catch (error) {
       console.error("Error updating categoria: ", error);
+      setAlerta('Error al actualizar categoría');
+      setTimeout(() => setAlerta(''), 3000);
+      setUploading(false);
     }
   };
 
@@ -109,15 +137,13 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
 
   return (
     <>
-      {/* ESTE ES EL BUSCADOR */}
-       <input
+      <input
         type="text"
         value={searchTerm}
         onChange={e => setSearchTerm(e.target.value)}
         placeholder="Buscar categorías..."
         className="search-input"
-      /> 
-      {/* <BusquedaGlobal /> */}
+      />
 
       <div className="categorias">
         {alerta && <div className="alert alert-danger">{alerta}</div>}
@@ -125,18 +151,28 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
         <ul>
           {filteredCategorias.map(categoria => (
             <li key={categoria.id} className="categoria-card">
-              {['jefe', 'encargado'].includes(currentUser?.role) && (
-                <button className="btn-esquina top-right" onClick={(e) => {
-                  e.stopPropagation();
-                  handleEditCategoria(categoria);
-                }}>✏️</button>
+              {['jefe', 'encargado'].some(r => currentUser?.role?.includes(r)) && (
+                <button
+                  className="btn-esquina top-right"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEditCategoria(categoria);
+                  }}
+                >
+                  ✏️
+                </button>
               )}
 
-              {currentUser?.role === 'jefe' && (
-                <button className="btn-esquina bottom-left" onClick={(e) => {
-                  e.stopPropagation();
-                  promptDeleteCategoria(categoria.id);
-                }}>🗑️</button>
+              {currentUser?.role?.includes('jefe') && (
+                <button
+                  className="btn-esquina bottom-left"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    promptDeleteCategoria(categoria.id);
+                  }}
+                >
+                  🗑️
+                </button>
               )}
 
               <div onClick={() => handleSelectCategoria(categoria.id)}>
@@ -167,10 +203,16 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
                   required
                 />
                 <button type="submit" className="btn btn-danger">Confirmar</button>
-                <button type="button" onClick={() => {
-                  setShowPasswordPrompt(false);
-                  setPassword('');
-                }} className="btn btn-secondary">Cancelar</button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowPasswordPrompt(false);
+                    setPassword('');
+                  }}
+                  className="btn btn-secondary"
+                >
+                  Cancelar
+                </button>
               </form>
             </div>
           </div>
@@ -189,17 +231,30 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
                   required
                 />
                 <input
-                  type="text"
-                  value={editImagenUrl}
-                  onChange={(e) => setEditImagenUrl(e.target.value)}
-                  placeholder="URL de la Imagen"
-                  required
+                  type="file"
+                  accept="image/*"
+                  onChange={handleEditFileChange}
                 />
-                <button type="submit" className="btn btn-success">Guardar</button>
-                <button type="button" onClick={() => {
-                  setShowEditPrompt(false);
-                  setEditCategoria(null);
-                }} className="btn btn-secondary">Cancelar</button>
+                {editImagenUrl && (
+                  <img
+                    src={editImagenUrl}
+                    alt="Vista previa"
+                    style={{ width: '200px', marginTop: '10px' }}
+                  />
+                )}
+                <button type="submit" className="btn btn-success" disabled={uploading}>
+                  {uploading ? 'Subiendo...' : 'Guardar'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditPrompt(false);
+                    setEditCategoria(null);
+                  }}
+                  className="btn btn-secondary"
+                >
+                  Cancelar
+                </button>
               </form>
             </div>
           </div>

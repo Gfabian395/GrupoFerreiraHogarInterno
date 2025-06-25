@@ -1,0 +1,13 @@
+[
+  {
+    "origin": [
+      "http://localhost:5174",
+      "http://localhost:5173",
+      "http://localhost",
+      "https://grupo-ferreira-hogar-interno.vercel.app"
+    ],
+    "method": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    "responseHeader": ["Content-Type", "Authorization"],
+    "maxAgeSeconds": 3600
+  }
+]

@@ -64,15 +64,29 @@ const ClienteDetalles = ({ currentUser }) => {
       return;
     }
     try {
+      const venta = ventas.find(v => v.id === ventaId);
+      // Calcular monto base sin interés sumando productos
+      const montoBase = venta.productos.reduce((acc, p) => acc + p.precio * (p.cantidad || 1), 0);
+
+      // Calcular valor cuota con interés
+      const valorCuota = calcularCuotaConInteres(montoBase, nuevasCuotas);
+
+      // Calcular total con interés (cuota * cantidad)
+      const totalConInteres = valorCuota * nuevasCuotas;
+
       const ventaRef = doc(db, 'ventas', ventaId);
-      await updateDoc(ventaRef, { cuotas: nuevasCuotas });
+      await updateDoc(ventaRef, {
+        cuotas: nuevasCuotas,
+        totalCredito: totalConInteres,
+      });
 
       setVentas((prevVentas) =>
         prevVentas.map((v) =>
-          v.id === ventaId ? { ...v, cuotas: nuevasCuotas } : v
+          v.id === ventaId ? { ...v, cuotas: nuevasCuotas, totalCredito: totalConInteres } : v
         )
       );
-      alert('Cantidad de cuotas actualizada correctamente.');
+
+      alert('Cantidad de cuotas y total actualizado correctamente.');
     } catch (error) {
       console.error('Error actualizando cuotas:', error);
       alert('No se pudo actualizar la cantidad de cuotas');
@@ -226,4 +240,3 @@ const ClienteDetalles = ({ currentUser }) => {
 };
 
 export default ClienteDetalles;
-/* FUNCIONA PERFECTO, FALTA SUBIR A STORAGE */

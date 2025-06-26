@@ -1,13 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { db, storage } from '../../firebaseConfig'; // storage agregado
-import {
-  collection,
-  getDocs,
-  updateDoc,
-  deleteDoc,
-  doc,
-} from 'firebase/firestore';
+import { collection, getDocs, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import Load from '../load/Load';
 import './Productos.css';
@@ -29,6 +23,39 @@ const Productos = ({ onAddToCart, currentUser }) => {
   const roles = Array.isArray(currentUser.role)
     ? currentUser.role
     : [currentUser.role];
+
+  // Configuración cuotas e intereses
+  const configuracionCuotas = [
+    { cuotas: 2, interes: 15 },
+    { cuotas: 3, interes: 25 },
+    { cuotas: 4, interes: 40 },
+    { cuotas: 6, interes: 60 },
+    { cuotas: 9, interes: 75 },
+    { cuotas: 12, interes: 100 },
+    { cuotas: 18, interes: 150 },
+    { cuotas: 24, interes: 180 }
+  ];
+
+  // Función para calcular cuotas según monto
+  const calcularCuotasHover = (precio) => {
+    if (isNaN(precio) || precio <= 0) return [];
+
+    const cuotasFiltradas = configuracionCuotas.filter((opcion) => {
+      if (precio < 30000) return opcion.cuotas <= 2;
+      if (precio >= 30000 && precio < 80000) return opcion.cuotas <= 3;
+      if (precio >= 80000 && precio < 150000) return opcion.cuotas <= 6;
+      if (precio >= 150000 && precio < 250000) return opcion.cuotas <= 9;
+      if (precio >= 250000 && precio < 350000) return opcion.cuotas <= 12;
+      if (precio >= 350000 && precio < 500000) return opcion.cuotas <= 18;
+      return true;
+    });
+
+    return cuotasFiltradas.map(({ cuotas, interes }) => {
+      const montoConInteres = precio * (1 + interes / 100);
+      const montoCuota = Math.round(montoConInteres / cuotas / 1000) * 1000;
+      return { cuotas, montoCuota: montoCuota.toLocaleString('es-AR') };
+    });
+  };
 
   useEffect(() => {
     const fetchProductos = async () => {
@@ -78,9 +105,8 @@ const Productos = ({ onAddToCart, currentUser }) => {
     }));
   };
 
-  // Actualizar producto en Firebase, si se pasa updatedFields se usa eso, sino currentProduct completo
+  // Actualizar producto en Firebase
   const handleUpdateProduct = async (productoId, updatedFields = null) => {
-    // Solo 'jefe' o 'encargado' pueden editar TODO, 'fotografo' solo imagen (controlado en formulario)
     if (
       !roles.includes('jefe') &&
       !roles.includes('encargado') &&
@@ -252,6 +278,11 @@ const Productos = ({ onAddToCart, currentUser }) => {
                     <span className="precio-texto">
                       ${((producto.precio || 0) * 1).toLocaleString('es-AR')}
                     </span>
+                    <div className="detalle-cuotas">
+                      {calcularCuotasHover(producto.precio || 0).map((c, idx) => (
+                        <p key={idx}>En {c.cuotas} cuotas de ${c.montoCuota}</p>
+                      ))}
+                    </div>
                   </div>
 
                   {!roles.includes('invitado') && (

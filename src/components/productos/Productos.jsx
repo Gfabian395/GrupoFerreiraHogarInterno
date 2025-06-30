@@ -173,10 +173,20 @@ const Productos = ({ onAddToCart, currentUser }) => {
     producto.nombre.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleDeleteProduct = async (productoId) => {
+  // Esta función ahora se define FUERA y SEPARADA
+  const confirmarYEliminar = async (productoId) => {
     if (!roles.includes('jefe')) {
       setAlerta('No tienes permiso para eliminar productos.');
       setTimeout(() => setAlerta(''), 3000);
+      return;
+    }
+
+    const clave = prompt('Para eliminar este producto, ingresá la contraseña de seguridad:');
+    if (clave !== '031285') {
+      if (clave !== null) {
+        setAlerta('Contraseña incorrecta. Operación cancelada.');
+        setTimeout(() => setAlerta(''), 3000);
+      }
       return;
     }
 
@@ -188,8 +198,11 @@ const Productos = ({ onAddToCart, currentUser }) => {
       setTimeout(() => setAlerta(''), 3000);
     } catch (error) {
       console.error('Error al eliminar el producto: ', error);
+      setAlerta('Error al eliminar el producto');
+      setTimeout(() => setAlerta(''), 3000);
     }
   };
+
 
   const handleIncrementStock = async (productoId, campo) => {
     if (!roles.includes('jefe') && !roles.includes('encargado')) {
@@ -346,7 +359,13 @@ const Productos = ({ onAddToCart, currentUser }) => {
                   <>
                     <button className="boton-editar" onClick={() => handleShowFormulario(producto)}>✏️</button>
                     {roles.includes('jefe') && (
-                      <button className="boton-borrar" onClick={() => handleDeleteProduct(producto.id)}>🗑️</button>
+                      <button
+                        className="boton-borrar"
+                        onClick={() => confirmarYEliminar(producto.id)}
+                      >
+                        🗑️
+                      </button>
+
                     )}
                   </>
                 )}
@@ -364,27 +383,27 @@ const Productos = ({ onAddToCart, currentUser }) => {
             onSubmit={async (e) => {
               e.preventDefault();
 
-              if (!selectedFile) {
-                alert('Por favor, suba una imagen antes de guardar.');
-                return;
+              let imagenUrlFinal = currentProduct.imagenUrl;
+
+              if (selectedFile) {
+                try {
+                  setAlerta('Subiendo imagen...');
+                  const imageRef = ref(storage, `productos/${Date.now()}_${selectedFile.name}`);
+                  await uploadBytes(imageRef, selectedFile);
+                  imagenUrlFinal = await getDownloadURL(imageRef);
+                } catch (error) {
+                  console.error('Error subiendo imagen:', error);
+                  setAlerta('Error al subir la imagen');
+                  return;
+                }
               }
 
-              try {
-                setAlerta('Subiendo imagen...');
-                const imageRef = ref(storage, `productos/${Date.now()}_${selectedFile.name}`);
-                await uploadBytes(imageRef, selectedFile);
-                const url = await getDownloadURL(imageRef);
+              const dataToUpdate = {
+                ...currentProduct,
+                imagenUrl: imagenUrlFinal,
+              };
 
-                const dataToUpdate = {
-                  ...currentProduct,
-                  imagenUrl: url, // Reemplazamos la URL manual por la nueva subida
-                };
-
-                await handleUpdateProduct(currentProduct.id, dataToUpdate);
-              } catch (error) {
-                console.error('Error subiendo imagen:', error);
-                setAlerta('Error al subir la imagen');
-              }
+              await handleUpdateProduct(currentProduct.id, dataToUpdate);
             }}
           >
             <span className="close" onClick={handleCloseFormulario}>
@@ -399,11 +418,14 @@ const Productos = ({ onAddToCart, currentUser }) => {
                 id="imagenFile"
                 accept="image/*"
                 onChange={handleFileChange}
-                required
               />
-              {uploadedImageUrl && (
-                <img src={uploadedImageUrl} alt="Preview" className="preview-imagen" />
-              )}
+              <div className="preview-imagen-wrapper">
+                {uploadedImageUrl ? (
+                  <img src={uploadedImageUrl} alt="Preview" className="preview-imagen" />
+                ) : currentProduct.imagenUrl ? (
+                  <img src={currentProduct.imagenUrl} alt="Imagen actual" className="preview-imagen" />
+                ) : null}
+              </div>
             </div>
 
             {!(roles.includes('fotografo') && !roles.includes('jefe') && !roles.includes('encargado')) && (
@@ -490,6 +512,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
           </form>
         </div>
       )}
+
       {imagenModal && (
         <div className="modal-imagen" onClick={handleCloseImage}>
           <span className="cerrar-modal" onClick={handleCloseImage}>❌</span>

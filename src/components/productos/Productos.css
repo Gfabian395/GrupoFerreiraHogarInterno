@@ -18,6 +18,10 @@
   animation: fadeInCard 0.5s ease-in-out;
 }
 
+.preview-imagen {
+  width: 200px;
+}
+
 @keyframes fadeInCard {
   from {
     transform: scale(0.95);
@@ -35,8 +39,8 @@
 }
 
 .producto-imagen {
-  width: 100%;
-  height: 180px;
+  width: 200px;
+  height: 200px;
   object-fit: contain;
   border-radius: 12px;
   margin-bottom: 12px;
@@ -110,13 +114,13 @@
 
 .boton-editar {
   top: 10px;
-  right: 40px;
+  right: 85%;
   color: #ffa000;
 }
 
 .boton-borrar {
   top: 10px;
-  right: 10px;
+  right: -3%;
   color: #d32f2f;
 }
 

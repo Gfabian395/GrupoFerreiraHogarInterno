@@ -340,13 +340,6 @@ const Productos = ({ onAddToCart, currentUser }) => {
                       </p>
                     </>
                   )}
-
-                  <button
-                    className="boton-detalles"
-                    onClick={() => alert(`Ver detalles del producto: ${producto.nombre}`)}
-                  >
-                    Ver Detalles
-                  </button>
                 </div>
 
                 {(roles.includes('jefe') || roles.includes('encargado') || roles.includes('fotografo')) && (

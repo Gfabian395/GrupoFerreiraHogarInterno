@@ -267,7 +267,7 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
       </div>
 
       {/* Venta de otro usuario (solo para roles jefe o encargado) */}
-      {['jefe', 'encargado'].includes(currentUser.role) && (
+      {currentUser.role?.some(r => ['jefe', 'encargado'].includes(r)) && (
         <div className="form-group">
           <label>
             <input

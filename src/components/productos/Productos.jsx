@@ -18,6 +18,16 @@ const Productos = ({ onAddToCart, currentUser }) => {
   const formRef = useRef(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploadedImageUrl, setUploadedImageUrl] = useState(null);
+  const [imagenModal, setImagenModal] = useState(null);
+
+
+  const handleOpenImage = (url) => {
+    setImagenModal(url);
+  };
+
+  const handleCloseImage = () => {
+    setImagenModal(null);
+  };
 
   // Asegurar que currentUser.role sea un arreglo para usar includes
   const roles = Array.isArray(currentUser.role)
@@ -264,107 +274,89 @@ const Productos = ({ onAddToCart, currentUser }) => {
               (roles.includes('invitado') || !outOfStockBoth) ? '' : 'producto-sin-stock';
 
             return (
-              <li key={producto.id} className={productoClass}>
+              <li key={producto.id} className={`card-producto ${productoClass} categoria-${producto.categoriaId}`}>
+                {outOfStockBoth && <span className="badge-stock">SIN STOCK</span>}
+
                 <img
                   src={producto.imagenUrl || 'https://via.placeholder.com/150'}
                   alt={producto.nombre || 'Sin nombre'}
                   className="producto-imagen"
                   loading="lazy"
+                  onClick={() => handleOpenImage(producto.imagenUrl)}
+                  style={{ cursor: 'zoom-in' }}
                 />
+
                 <div className="detallitos">
                   <h6>{producto.nombre || 'Sin nombre'}</h6>
 
-                  <div className="precio-hover-container">
-                    <span className="precio-texto">
-                      ${((producto.precio || 0) * 1).toLocaleString('es-AR')}
-                    </span>
-                    <div className="detalle-cuotas">
-                      {calcularCuotasHover(producto.precio || 0).map((c, idx) => (
-                        <p key={idx}>En {c.cuotas} cuotas de ${c.montoCuota}</p>
-                      ))}
-                    </div>
+                  <span className="precio-texto">
+                    ${((producto.precio || 0) * 1).toLocaleString('es-AR')}
+                  </span>
+
+                  <div className="detalle-cuotas">
+                    {calcularCuotasHover(producto.precio || 0).map((c, idx) => (
+                      <p key={idx}>En {c.cuotas} cuotas de ${c.montoCuota}</p>
+                    ))}
                   </div>
 
-                  {!roles.includes('invitado') && (
+                  {['jefe', 'vendedor', 'encargado', 'fotografo'].some((r) => roles.includes(r)) && (
                     <>
                       <p>
-                        Los Andes 4034: {stock4034}
-                        {['jefe', 'vendedor', 'encargado', 'fotografo'].some((r) =>
-                          roles.includes(r)
-                        ) && (
-                            <button
-                              onClick={() => handleAddToCart(producto, 'Andes4034')}
-                              disabled={outOfStock4034}
-                              className={`boton-agregar ${outOfStock4034 ? 'boton-sin-stock' : ''
-                                }`}
-                            >
-                              +🛒
-                            </button>
-                          )}
-                        {['jefe', 'encargado'].some((r) => roles.includes(r)) && (
+                        Andes 4034: {stock4034}
+                        <button
+                          onClick={() => handleAddToCart(producto, 'Andes4034')}
+                          disabled={outOfStock4034}
+                          className="boton-agregar"
+                        >
+                          +🛒
+                        </button>
+                        {roles.includes('jefe') || roles.includes('encargado') ? (
                           <button
-                            onClick={() =>
-                              handleIncrementStock(producto.id, 'cantidadDisponibleAndes4034')
-                            }
+                            onClick={() => handleIncrementStock(producto.id, 'cantidadDisponibleAndes4034')}
                             className="boton-incrementar"
                           >
                             +
                           </button>
-                        )}
+                        ) : null}
                       </p>
 
                       <p>
-                        Los Andes 4320: {stock4320}
-                        {['jefe', 'vendedor', 'encargado', 'fotografo'].some((r) =>
-                          roles.includes(r)
-                        ) && (
-                            <button
-                              onClick={() => handleAddToCart(producto, 'Andes4320')}
-                              disabled={outOfStock4320}
-                              className={`boton-agregar ${outOfStock4320 ? 'boton-sin-stock' : ''
-                                }`}
-                            >
-                              +🛒
-                            </button>
-                          )}
-                        {['jefe', 'encargado'].some((r) => roles.includes(r)) && (
+                        Andes 4320: {stock4320}
+                        <button
+                          onClick={() => handleAddToCart(producto, 'Andes4320')}
+                          disabled={outOfStock4320}
+                          className="boton-agregar"
+                        >
+                          +🛒
+                        </button>
+                        {roles.includes('jefe') || roles.includes('encargado') ? (
                           <button
-                            onClick={() =>
-                              handleIncrementStock(producto.id, 'cantidadDisponibleAndes4320')
-                            }
+                            onClick={() => handleIncrementStock(producto.id, 'cantidadDisponibleAndes4320')}
                             className="boton-incrementar"
                           >
                             +
                           </button>
-                        )}
+                        ) : null}
                       </p>
                     </>
                   )}
 
-                  {['jefe', 'encargado', 'fotografo'].some((r) => roles.includes(r)) && (
-                    <div className="action-buttons">
-                      <button
-                        onClick={() => handleShowFormulario(producto)}
-                        className="boton-editar"
-                      >
-                        ✏️
-                      </button>
-
-                      {['jefe', 'encargado'].some((r) => roles.includes(r)) && (
-                        <>
-                          {roles.includes('jefe') && (
-                            <button
-                              onClick={() => handleDeleteProduct(producto.id)}
-                              className="boton-borrar"
-                            >
-                              🗑️
-                            </button>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  )}
+                  <button
+                    className="boton-detalles"
+                    onClick={() => alert(`Ver detalles del producto: ${producto.nombre}`)}
+                  >
+                    Ver Detalles
+                  </button>
                 </div>
+
+                {(roles.includes('jefe') || roles.includes('encargado') || roles.includes('fotografo')) && (
+                  <>
+                    <button className="boton-editar" onClick={() => handleShowFormulario(producto)}>✏️</button>
+                    {roles.includes('jefe') && (
+                      <button className="boton-borrar" onClick={() => handleDeleteProduct(producto.id)}>🗑️</button>
+                    )}
+                  </>
+                )}
               </li>
             );
           })}
@@ -503,6 +495,12 @@ const Productos = ({ onAddToCart, currentUser }) => {
               </button>
             </div>
           </form>
+        </div>
+      )}
+      {imagenModal && (
+        <div className="modal-imagen" onClick={handleCloseImage}>
+          <span className="cerrar-modal" onClick={handleCloseImage}>❌</span>
+          <img src={imagenModal} alt="Imagen ampliada" className="imagen-modal-grande" />
         </div>
       )}
     </>

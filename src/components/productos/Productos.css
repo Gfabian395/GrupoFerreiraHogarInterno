@@ -173,8 +173,7 @@
 }
 
 .imagen-modal-grande {
-  width: 370px;
-  height: 370px;
+  width: 90%;
   border-radius: 12px;
   box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
   animation: aparecer 0.3s ease-in-out;

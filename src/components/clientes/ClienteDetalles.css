@@ -1,92 +1,151 @@
+/* Contenedor principal */
 .cliente-detalles {
-  max-width: 800px;
-  margin: auto;
+  max-width: 1000px;
+  margin: 40px auto;
+  padding: 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #fefefe;
 }
 
+/* Tarjeta de venta */
 .venta-detalle {
-  padding: 3px;
-  margin-bottom: 10px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  background-color: #f9f9f9;
-  width: 100%;
+  background-color: #f5f7fa;
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+  border-left: 6px solid #007bff;
+  transition: transform 0.2s;
+}
+
+.venta-detalle:hover {
+  transform: translateY(-2px);
 }
 
 .venta-detalle.completo {
-  background-color: #d4edda; /* Verde claro */
+  background-color: #e6f5ea;
+  border-left-color: #28a745;
 }
 
-.venta-detalle.completo .btn {
-  display: none; /* Ocultar botón de agregar pago */
+/* Títulos */
+.venta-detalle h3 {
+  margin-top: 0;
+  color: #333;
+  font-size: 1.4rem;
 }
 
-.table-container {
-  width: 100%;
+/* Textos */
+.venta-detalle p {
+  margin: 8px 0;
+  color: #444;
+}
+
+/* Tabla de pagos */
+.table-responsive {
   overflow-x: auto;
 }
 
 .table {
   width: 100%;
-  margin-bottom: 20px;
   border-collapse: collapse;
+  margin-top: 15px;
+  font-size: 0.95rem;
 }
 
 .table th,
 .table td {
-  border: 1px solid #dee2e6;
-  padding: 8px;
+  padding: 10px;
+  border: 1px solid #ddd;
   text-align: center;
 }
 
 .table th {
-  background-color: #f8f9fa;
+  background-color: #f0f0f0;
+  color: #555;
+}
+
+.table td {
+  background-color: #fff;
+}
+
+/* Formulario de pago */
+form {
+  margin-top: 20px;
 }
 
 .form-group {
   margin-bottom: 15px;
 }
 
-.alert {
-  padding: 10px;
-  margin-bottom: 20px;
-  border: 1px solid transparent;
-  border-radius: 4px;
+label {
+  font-weight: 600;
+  margin-bottom: 5px;
+  display: block;
+  color: #333;
 }
 
-.alert-success {
-  color: #155724;
-  background-color: #d4edda;
-  border-color: #c3e6cb;
-}
-
-.btn {
-  display: inline-block;
-  font-weight: 400;
-  color: #fff;
-  text-align: center;
-  vertical-align: middle;
-  cursor: pointer;
-  background-color: #007bff;
-  border: 1px solid #007bff;
-  padding: 0.375rem 0.75rem;
+input[type="date"],
+input[type="number"],
+select {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
   font-size: 1rem;
-  line-height: 1.5;
-  border-radius: 0.25rem;
+  background-color: #fff;
+  color: #333;
+  transition: border-color 0.3s ease;
+}
+
+input:focus,
+select:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+/* Botones */
+.btn {
+  padding: 10px 18px;
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
 }
 
 .btn-primary {
   background-color: #007bff;
-  border-color: #007bff;
+  color: #fff;
 }
 
 .btn-primary:hover {
   background-color: #0056b3;
-  border-color: #004085;
 }
 
-.btn-primary:disabled {
-  background-color: #007bff;
-  border-color: #007bff;
-  opacity: 0.65;
+.btn:disabled {
+  opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* Cuotas select */
+.form-select {
+  margin-top: 5px;
+  width: 100%;
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+
+/* Sección Agregar Pago */
+h4 {
+  margin-top: 20px;
+  color: #007bff;
+  font-size: 1.2rem;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 4px;
+}
+
+.venta-detalle.completo .btn,
+.venta-detalle.completo form {
+  display: none;
 }

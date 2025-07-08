@@ -174,7 +174,6 @@
 
 /* 📦 Contenido de la tarjeta */
 .card-body {
-  background: #1b1b2c;
   color: #f1f1f1;
   padding: 20px;
   display: flex;
@@ -186,10 +185,6 @@
   transition: background 0.3s ease-in-out;
 }
 
-.card-body:hover {
-  background: #21213b;
-  color: #f1f1f1;
-}
 
 /* 📝 Nombre */
 .card-title {

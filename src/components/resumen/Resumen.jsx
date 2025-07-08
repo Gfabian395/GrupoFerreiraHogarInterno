@@ -1,146 +1,112 @@
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs, updateDoc, doc, increment, setDoc } from 'firebase/firestore'; // Importa updateDoc, setDoc e increment
+import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../../firebaseConfig';
-import './Resumen.css';
 import Load from '../load/Load';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer
+} from 'recharts';
 
 const Resumen = () => {
-  const [resumenMensual, setResumenMensual] = useState(0);
-  const [resumenAnual, setResumenAnual] = useState(0);
-  const [gastosMensual, setGastosMensual] = useState(0);
-  const [gastosAnual, setGastosAnual] = useState(0);
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState([]);
-  const [annualData, setAnnualData] = useState([]);
-  const [monthlyBalances, setMonthlyBalances] = useState([]);
-  const [balance, setBalance] = useState({
-    mensual: { status: '', monto: 0 },
-    anual: { status: '', monto: 0 }
+  const [totales, setTotales] = useState({
+    mensualVentas: 0,
+    anualVentas: 0,
+    mensualGastos: 0,
+    anualGastos: 0
   });
+  const [balance, setBalance] = useState({ mensual: {}, anual: {} });
 
   useEffect(() => {
     const fetchMovimientos = async () => {
-      const ventasCollection = collection(db, 'ventas');
-      const gastosCollection = collection(db, 'gastos');
-      const annualCollection = collection(db, 'balancesAnuales');
-      const ventasSnapshot = await getDocs(ventasCollection);
-      const gastosSnapshot = await getDocs(gastosCollection);
-      const annualSnapshot = await getDocs(annualCollection);
-      const ventasList = ventasSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      const gastosList = gastosSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      const annualList = annualSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
       const now = new Date();
-      let totalCobrosMensual = 0;
-      let totalCobrosAnual = 0;
-      let totalGastosMensual = 0;
-      let totalGastosAnual = 0;
 
-      for (const venta of ventasList) {
+      const [ventasSnapshot, gastosSnapshot] = await Promise.all([
+        getDocs(collection(db, 'ventas')),
+        getDocs(collection(db, 'gastos'))
+      ]);
+
+      const ventas = ventasSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const gastos = gastosSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+      // Función para obtener key YYYY-MM
+      const formatYearMonth = (date) => {
+        const d = new Date(date);
+        const month = (d.getMonth() + 1).toString().padStart(2, '0');
+        return `${d.getFullYear()}-${month}`;
+      };
+
+      // Crear mapa para ventas y gastos por mes
+      const ventasPorMes = {};
+      const gastosPorMes = {};
+
+      // Fechas de corte
+      const oneMonthAgo = new Date(now);
+      oneMonthAgo.setMonth(now.getMonth() - 1);
+
+      const oneYearAgo = new Date(now);
+      oneYearAgo.setFullYear(now.getFullYear() - 1);
+
+      let mensualVentas = 0, anualVentas = 0;
+      let mensualGastos = 0, anualGastos = 0;
+
+      // Procesar ventas
+      for (const venta of ventas) {
+        if (!venta.pagos) continue;
         for (const pago of venta.pagos) {
-          const pagoDate = new Date(pago.fecha);
+          const fechaPago = new Date(pago.fecha);
+          const key = formatYearMonth(fechaPago);
+          ventasPorMes[key] = (ventasPorMes[key] || 0) + pago.monto;
 
-          const oneMonthAgo = new Date(now);
-          oneMonthAgo.setMonth(now.getMonth() - 1);
-          if (pagoDate >= oneMonthAgo) {
-            totalCobrosMensual += pago.monto;
-          }
-
-          const oneYearAgo = new Date(now);
-          oneYearAgo.setFullYear(now.getFullYear() - 1);
-          if (pagoDate >= oneYearAgo) {
-            totalCobrosAnual += pago.monto;
-          }
-
-          // Actualiza los balances anuales
-          const mes = pagoDate.toLocaleString('es-AR', { month: 'long' });
-          const yearMonth = `${pagoDate.getFullYear()}-${pagoDate.getMonth() + 1}`;
-          const docRef = doc(db, 'balancesAnuales', yearMonth);
-          await setDoc(docRef, {
-            mes,
-            ventasTotales: increment(pago.monto), // Solo incluye el monto de la cuota pagada
-            gastosTotales: increment(0)
-          }, { merge: true });
+          if (fechaPago >= oneMonthAgo) mensualVentas += pago.monto;
+          if (fechaPago >= oneYearAgo) anualVentas += pago.monto;
         }
       }
 
-      for (const gasto of gastosList) {
-        const gastoDate = new Date(gasto.fecha.seconds * 1000);
+      // Procesar gastos
+      for (const gasto of gastos) {
+        const fechaGasto = gasto.fecha?.seconds
+          ? new Date(gasto.fecha.seconds * 1000)
+          : new Date(gasto.fecha);
 
-        const oneMonthAgo = new Date(now);
-        oneMonthAgo.setMonth(now.getMonth() - 1);
-        if (gastoDate >= oneMonthAgo) {
-          totalGastosMensual += gasto.monto;
-        }
+        const key = formatYearMonth(fechaGasto);
+        gastosPorMes[key] = (gastosPorMes[key] || 0) + gasto.monto;
 
-        const oneYearAgo = new Date(now);
-        oneYearAgo.setFullYear(now.getFullYear() - 1);
-        if (gastoDate >= oneYearAgo) {
-          totalGastosAnual += gasto.monto;
-        }
-
-        // Actualiza los balances anuales
-        const mes = gastoDate.toLocaleString('es-AR', { month: 'long' });
-        const yearMonth = `${gastoDate.getFullYear()}-${gastoDate.getMonth() + 1}`;
-        const docRef = doc(db, 'balancesAnuales', yearMonth);
-        await setDoc(docRef, {
-          mes,
-          ventasTotales: increment(0),
-          gastosTotales: increment(gasto.monto)
-        }, { merge: true });
+        if (fechaGasto >= oneMonthAgo) mensualGastos += gasto.monto;
+        if (fechaGasto >= oneYearAgo) anualGastos += gasto.monto;
       }
 
-      setResumenMensual(totalCobrosMensual);
-      setResumenAnual(totalCobrosAnual);
-      setGastosMensual(totalGastosMensual);
-      setGastosAnual(totalGastosAnual);
+      // Generar array con los últimos 12 meses en orden ascendente
+      const meses = [];
+      for(let i=11; i>=0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const key = formatYearMonth(d);
+        meses.push({
+          name: d.toLocaleString('es-AR', { month: 'short', year: '2-digit' }),
+          Ventas: ventasPorMes[key] || 0,
+          Gastos: gastosPorMes[key] || 0
+        });
+      }
 
-      const resumenData = [
-        { name: 'Mensual', Ventas: totalCobrosMensual, Gastos: totalGastosMensual },
-        { name: 'Anual', Ventas: totalCobrosAnual, Gastos: totalGastosAnual }
-      ];
-      setData(resumenData);
-
-      const balanceMensual = totalCobrosMensual - totalGastosMensual;
-      const balanceAnual = totalCobrosAnual - totalGastosAnual;
-
+      setData(meses);
+      setTotales({ mensualVentas, anualVentas, mensualGastos, anualGastos });
       setBalance({
-        mensual: { status: balanceMensual >= 0 ? 'Vas ganando' : 'Vas perdiendo', monto: balanceMensual },
-        anual: { status: balanceAnual >= 0 ? 'Vas ganando' : 'Vas perdiendo', monto: balanceAnual }
+        mensual: {
+          status: mensualVentas - mensualGastos >= 0 ? 'Vas ganando' : 'Vas perdiendo',
+          monto: mensualVentas - mensualGastos
+        },
+        anual: {
+          status: anualVentas - anualGastos >= 0 ? 'Vas ganando' : 'Vas perdiendo',
+          monto: anualVentas - anualGastos
+        }
       });
-
-      setAnnualData(annualList.map(item => ({
-        name: item.mes,
-        Ventas: item.ventasTotales,
-        Gastos: item.gastosTotales
-      })));
-
-      // Calcular balances mensuales
-      const balancesMensuales = annualList.map(item => ({
-        mes: item.mes,
-        ventas: item.ventasTotales,
-        gastos: item.gastosTotales,
-        balance: item.ventasTotales - item.gastosTotales
-      }));
-
-      setMonthlyBalances(balancesMensuales);
-
-      // Guardar el balance del mes anterior y restablecer valores a cero cada 1 del mes
-      if (now.getDate() === 1) {
-        const previousMonth = new Date(now);
-        previousMonth.setMonth(now.getMonth() - 1);
-        const prevYearMonth = `${previousMonth.getFullYear()}-${previousMonth.getMonth() + 1}`;
-        const prevBalanceRef = doc(db, 'balancesAnuales', prevYearMonth);
-        await setDoc(prevBalanceRef, {
-          mes: previousMonth.toLocaleString('es-AR', { month: 'long' }),
-          ventasTotales: totalCobrosMensual,
-          gastosTotales: totalGastosMensual
-        }, { merge: true });
-
-        setResumenMensual(0);
-        setGastosMensual(0);
-      }
 
       setLoading(false);
     };
@@ -148,40 +114,40 @@ const Resumen = () => {
     fetchMovimientos();
   }, []);
 
-  if (loading) {
-    return <Load />;
-  }
+  if (loading) return <Load />;
+
   return (
     <div className="resumen">
-      <h2>Resumen de Ventas y Gastos</h2>
-      <p>A continuación se muestra un resumen de las ventas y gastos realizados en diferentes períodos de tiempo. Los montos están expresados en pesos argentinos ($ ARS).</p>
+      <h2>Resumen de Ventas y Gastos - Últimos 12 Meses</h2>
       <ResponsiveContainer width="100%" height={400}>
         <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="name" />
-          <YAxis tickFormatter={(value) => `$${value.toLocaleString('es-AR')}`} />
-          <Tooltip formatter={(value) => `$${value.toLocaleString('es-AR')}`} />
+          <YAxis tickFormatter={v => `$${v.toLocaleString('es-AR')}`} />
+          <Tooltip formatter={v => `$${v.toLocaleString('es-AR')}`} />
           <Legend />
-          <Bar dataKey="Ventas" fill="#4CAF50" /> {/* Color verde */}
-          <Bar dataKey="Gastos" fill="#F44336" /> {/* Color rojo */}
+          <Bar dataKey="Ventas" fill="#4CAF50" />
+          <Bar dataKey="Gastos" fill="#F44336" />
         </BarChart>
       </ResponsiveContainer>
-      <div className="totales">
-        <div className="gastos">
+
+      <div className="totales" style={{ display: 'flex', justifyContent: 'space-around', marginTop: 30 }}>
+        <div>
           <h3>Gastos Totales</h3>
-          <p>Gastos Mensual: <span>${gastosMensual.toLocaleString('es-AR')}</span></p>
-          <p>Gastos Anual: <span>${gastosAnual.toLocaleString('es-AR')}</span></p>
+          <p>Mensual: <strong>${totales.mensualGastos.toLocaleString('es-AR')}</strong></p>
+          <p>Anual: <strong>${totales.anualGastos.toLocaleString('es-AR')}</strong></p>
         </div>
-        <div className="ventas">
+        <div>
           <h3>Ventas Totales</h3>
-          <p>Ventas Mensual: <span>${resumenMensual.toLocaleString('es-AR')}</span></p>
-          <p>Ventas Anual: <span>${resumenAnual.toLocaleString('es-AR')}</span></p>
+          <p>Mensual: <strong>${totales.mensualVentas.toLocaleString('es-AR')}</strong></p>
+          <p>Anual: <strong>${totales.anualVentas.toLocaleString('es-AR')}</strong></p>
         </div>
       </div>
-      <div className="balance">
+
+      <div className="balance" style={{ marginTop: 40, textAlign: 'center' }}>
         <h3>Balance Total</h3>
-        <p>Balance Mensual: {balance.mensual.status}: <span>${balance.mensual.monto.toLocaleString('es-AR')}</span></p>
-        <p>Balance Anual: {balance.anual.status}: <span>${balance.anual.monto.toLocaleString('es-AR')}</span></p>
+        <p>Mensual: {balance.mensual.status} — <strong>${balance.mensual.monto.toLocaleString('es-AR')}</strong></p>
+        <p>Anual: {balance.anual.status} — <strong>${balance.anual.monto.toLocaleString('es-AR')}</strong></p>
       </div>
     </div>
   );

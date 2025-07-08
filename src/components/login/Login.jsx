@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import './Login.css';
-import { useNavigate } from 'react-router-dom'; // Importa el hook useNavigate
+import { useNavigate } from 'react-router-dom';
 
-// Base de datos de usuarios, incluyendo el invitado
 const usuariosDB = [
   { username: 'Gfabian395', password: 'Gfabian395', role: ['jefe'], imageUrl: 'https://firebasestorage.googleapis.com/v0/b/ferreirahogar-376dd.firebasestorage.app/o/vendedores%2F9.png?alt=media&token=992ee040-ed59-4b53-9013-115ee7c9fce7' },
   { username: 'Vanesa F', password: '554972', role: ['jefe'], imageUrl: 'https://firebasestorage.googleapis.com/v0/b/ferreirahogar-376dd.firebasestorage.app/o/vendedores%2F8.png?alt=media&token=aff23347-93dc-4737-bf1f-25f0430f34fa' },
@@ -19,24 +18,26 @@ const usuariosDB = [
   { username: 'catalogo', password: '', role: ['invitado'], imageUrl: 'https://placehold.co/100x100?text=Invitado' },
 ];
 
-
 const Login = ({ onLogin }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [alerta, setAlerta] = useState('');
-  const navigate = useNavigate(); // Hook para redirigir a otra ruta
+  const navigate = useNavigate();
 
-  // Función para manejar el inicio de sesión
   const handleLogin = () => {
     const usuario = usuariosDB.find(user => user.username === username && user.password === password);
 
     if (usuario) {
-      localStorage.setItem('usuario', JSON.stringify(usuario));
-      alert(`Bienvenido, ${usuario.role}!`);
-      onLogin(usuario);
+      const userWithRoleArray = {
+        ...usuario,
+        role: Array.isArray(usuario.role) ? usuario.role : [usuario.role]
+      };
 
-      // Si el rol es "invitado", redirigimos a Categorías
-      if (usuario.role === 'invitado') {
+      localStorage.setItem('usuario', JSON.stringify(userWithRoleArray));
+      alert(`Bienvenido, ${userWithRoleArray.username}!`);
+      onLogin(userWithRoleArray);
+
+      if (userWithRoleArray.role.includes('invitado')) {
         navigate('/categorias');
       }
     } else {
@@ -45,14 +46,17 @@ const Login = ({ onLogin }) => {
     }
   };
 
-  // Función para ingresar como invitado
   const ingresarComoInvitado = () => {
     const invitado = usuariosDB.find(user => user.username === 'catalogo');
-    localStorage.setItem('usuario', JSON.stringify(invitado));
+
+    const userWithRoleArray = {
+      ...invitado,
+      role: Array.isArray(invitado.role) ? invitado.role : [invitado.role]
+    };
+
+    localStorage.setItem('usuario', JSON.stringify(userWithRoleArray));
     alert('Ingresaste como invitado. Solo puedes ver el catálogo.');
-    onLogin(invitado);
-    
-    // Redirigir a Categorías al ingresar como invitado
+    onLogin(userWithRoleArray);
     navigate('/categorias');
   };
 
@@ -86,4 +90,3 @@ const Login = ({ onLogin }) => {
 };
 
 export default Login;
-/* FUNCIONA PERFECTO, FALTA SUBIR A STORAGE */

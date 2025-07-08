@@ -93,35 +93,7 @@
   color: white;
 }
 
-.card-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-}
-
-.card {
-  width: 200px;
-  border: 1px solid #ced4da;
-  border-radius: 8px;
-  overflow: hidden;
-  cursor: pointer;
-}
-
-.card-img-top {
-  width: 100%;
-  height: 150px;
-  object-fit: cover;
-}
-
-.card-body {
-  padding: 10px;
-  text-align: center;
-}
-
-.card-title {
-  font-size: 18px;
-  margin-bottom: 10px;
-}
+/* Buscador */
 
 .search-bar {
   width: 100%;
@@ -157,4 +129,128 @@
   align-items: center;
   width: 100%;
   margin-top: 20px; /* Espacio superior para ajustarlo */
+}
+
+/* Card del cliente */
+
+/* 🔲 Contenedor de tarjetas */
+.card-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  justify-content: center;
+  margin-top: 40px;
+  padding: 0 16px;
+}
+
+/* 🧱 Tarjeta principal */
+.card {
+  width: 240px;
+  background: linear-gradient(145deg, #1f1f2e, #2a2a40);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #2e2e40;
+}
+
+.card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.5);
+}
+
+/* 🖼️ Imagen superior */
+.card-img-top {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  border-bottom: 1px solid #3a3a55;
+}
+
+/* 📦 Contenido de la tarjeta */
+.card-body {
+  background: #1b1b2c;
+  color: #f1f1f1;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
+  transition: background 0.3s ease-in-out;
+}
+
+.card-body:hover {
+  background: #21213b;
+  color: #f1f1f1;
+}
+
+/* 📝 Nombre */
+.card-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  text-align: center;
+  color: #00ffe7;
+  letter-spacing: 0.5px;
+}
+
+/* 🔘 Botones dentro de la tarjeta */
+.card-body .btn {
+  width: 100%;
+  padding: 10px 0;
+  font-size: 0.95rem;
+  font-weight: 500;
+  border-radius: 8px;
+  transition: background 0.3s ease;
+  text-align: center;
+}
+
+/* WhatsApp */
+.card-body .btn-success {
+  background: linear-gradient(to right, #25d366, #128c7e);
+  color: white;
+  border: none;
+}
+
+.card-body .btn-success:hover {
+  background: linear-gradient(to right, #1bdc6c, #0f7b6a);
+}
+
+/* Editar */
+.card-body .btn-warning {
+  background: linear-gradient(135deg, #ffcc00, #ffaa00);
+  color: #222;
+  border: none;
+}
+
+.card-body .btn-warning:hover {
+  background: linear-gradient(135deg, #ffdd33, #ff9900);
+}
+
+/* Eliminar */
+.card-body .btn-danger {
+  background: linear-gradient(to right, #ff5f6d, #ffc371);
+  color: white;
+  border: none;
+}
+
+.card-body .btn-danger:hover {
+  background: linear-gradient(to right, #ff3c4e, #fcb045);
+}
+
+/* 🔧 Responsive */
+@media (max-width: 500px) {
+  .card {
+    width: 100%;
+  }
+
+  .card-body .btn {
+    font-size: 0.9rem;
+  }
 }

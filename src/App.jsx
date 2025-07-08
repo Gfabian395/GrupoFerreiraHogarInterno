@@ -14,17 +14,24 @@ import AddCompra from './components/compras/AddCompra';
 import Login from './components/login/Login';
 import CierreCaja from './components/caja/CierreCaja';
 import Home from './components/home/Home';
-import Resumen from './components/resumen/Resumen';  // Importa el nuevo componente
+import Resumen from './components/resumen/Resumen';
 
 function App() {
   const [carrito, setCarrito] = useState([]);
   const [selectedCategoria, setSelectedCategoria] = useState(null);
-  const [usuario, setUsuario] = useState(JSON.parse(localStorage.getItem('usuario')) || null);
+  const [usuario, setUsuario] = useState(null);
 
   useEffect(() => {
     const savedUser = localStorage.getItem('usuario');
     if (savedUser) {
-      setUsuario(JSON.parse(savedUser));
+      let parsedUser = JSON.parse(savedUser);
+
+      // Asegura que "role" sea un array
+      if (typeof parsedUser.role === 'string') {
+        parsedUser.role = [parsedUser.role];
+      }
+
+      setUsuario(parsedUser);
     }
   }, []);
 
@@ -50,19 +57,12 @@ function App() {
 
   const cartItemCount = carrito.reduce((total, product) => total + product.cantidad, 0);
 
-  const handleAddCategoria = () => {
-    console.log("Agregar nueva categoría");
-  };
-
-  const handleEditCategoria = () => {
-    console.log("Editar categoría");
-  };
-
-  const handleDeleteCategoria = () => {
-    console.log("Eliminar categoría");
-  };
-
   const handleLogin = (user) => {
+    // Asegura que el role sea un array antes de guardar
+    if (typeof user.role === 'string') {
+      user.role = [user.role];
+    }
+    localStorage.setItem('usuario', JSON.stringify(user));
     setUsuario(user);
   };
 
@@ -78,12 +78,19 @@ function App() {
           <Login onLogin={handleLogin} />
         ) : (
           <>
-            <Nav cartItemCount={cartItemCount} onLogout={handleLogout} username={usuario.username} role={usuario.role} profileImage={usuario.imageUrl} />
+            <Nav
+              cartItemCount={cartItemCount}
+              onLogout={handleLogout}
+              username={usuario.username}
+              role={usuario.role}
+              profileImage={usuario.imageUrl}
+            />
+
             <Routes>
               <Route
                 path="/"
                 element={
-                  usuario.role !== 'invitado'
+                  usuario.role && !usuario.role.includes('invitado')
                     ? <Home />
                     : <Navigate to="/categorias" />
                 }
@@ -92,26 +99,54 @@ function App() {
               <Route path="/clientes" element={<Clientes currentUser={usuario} />} />
               <Route path="/clientes/:clienteId/detalles" element={<ClienteDetalles currentUser={usuario} />} />
               <Route path="/cuotas" element={<Cuotas monto={100000} />} />
+
               <Route path="/categorias" element={
                 <>
                   <AgregarCategoria currentUser={usuario} />
                   <Categorias onSelectCategoria={(id) => setSelectedCategoria(id)} currentUser={usuario} />
                 </>
               } />
+
               <Route path="/categorias/:categoriaId/productos" element={
                 <>
                   <AgregarProducto currentUser={usuario} />
                   <Productos onAddToCart={handleAddToCart} currentUser={usuario} />
                 </>
               } />
-              <Route path="/carrito" element={<Carrito productos={carrito} onRemoveFromCart={handleRemoveFromCart} onClearCart={handleClearCart} />} />
+
+              <Route path="/carrito" element={
+                <Carrito
+                  productos={carrito}
+                  onRemoveFromCart={handleRemoveFromCart}
+                  onClearCart={handleClearCart}
+                />
+              } />
+
               <Route path="/ventas" element={<Ventas carrito={carrito} onClearCart={handleClearCart} currentUser={usuario} />} />
-              <Route path="/ventas/:ventaId/detalles" element={<ClienteDetalles currentUser={usuario} />} /> {/* Nueva ruta para los detalles de la venta */}
-              <Route path="/add-compra" element={<AddCompra />} /> {/* Nueva ruta para agregar compras */}
-              <Route path="/cierre-caja" element={usuario.role === 'jefe' ? <CierreCaja currentUser={usuario} /> : <Navigate to="/" />} /> {/* Ruta para cierre de caja solo para jefes */}
-              <Route path="/resumen" element={usuario.role === 'jefe' ? <Resumen /> : <Navigate to="/" />} /> {/* Ruta para el resumen solo para jefes */}
+              <Route path="/ventas/:ventaId/detalles" element={<ClienteDetalles currentUser={usuario} />} />
+              <Route path="/add-compra" element={<AddCompra />} />
+
+              {/* Solo el jefe puede ver el cierre de caja */}
+              <Route
+                path="/cierre-caja"
+                element={
+                  usuario.role.includes('jefe')
+                    ? <CierreCaja currentUser={usuario} />
+                    : <Navigate to="/" />
+                }
+              />
+
+              {/* Solo el jefe puede ver el resumen */}
+              <Route
+                path="/resumen"
+                element={
+                  usuario.role.includes('jefe')
+                    ? <Resumen />
+                    : <Navigate to="/" />
+                }
+              />
             </Routes>
-          </>
+          </> 
         )}
       </div>
     </Router>

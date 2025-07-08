@@ -1,26 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { collection, getDocs, addDoc, doc, getDoc, setDoc } from 'firebase/firestore';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
 import { db } from '../../firebaseConfig';
 import './CierreCaja.css';
 import Load from '../load/Load';
 
 const usuariosDB = [
-  { username: 'Gfabian395', password: 'Gfabian395', role: 'jefe', imageUrl: 'https://firebasestorage.googleapis.com/v0/b/ferreirahogar-376dd.firebasestorage.app/o/vendedores%2F9.png?alt=media&token=992ee040-ed59-4b53-9013-115ee7c9fce7' },
-  { username: 'Vanesa F', password: '554972', role: 'jefe', imageUrl: 'https://firebasestorage.googleapis.com/v0/b/ferreirahogar-376dd.firebasestorage.app/o/vendedores%2F8.png?alt=media&token=aff23347-93dc-4737-bf1f-25f0430f34fa' },
-  { username: 'Ronaldo F', password: 'jose1946', role: 'vendedor', imageUrl: 'https://firebasestorage.googleapis.com/v0/b/ferreirahogar-376dd.firebasestorage.app/o/vendedores%2F6.png?alt=media&token=4b570b8c-4926-4520-bb00-69e19db6560b' },
-  { username: 'Franco A', password: 'Grupof2025', role: 'vendedor', imageUrl: 'https://firebasestorage.googleapis.com/v0/b/ferreirahogar-376dd.firebasestorage.app/o/vendedores%2F2.png?alt=media&token=38f9c73b-1442-4025-b729-615395077651' },
-  { username: 'Carmen G', password: 'Gordis2024', role: 'vendedor', imageUrl: 'https://firebasestorage.googleapis.com/v0/b/ferreirahogar-376dd.firebasestorage.app/o/vendedores%2F5.png?alt=media&token=9530608a-7cc2-4807-bd6f-d2ce55c29c0a' },
-  { username: 'Carol F', password: 'Tokyoghoul', role: 'vendedor', imageUrl: 'https://firebasestorage.googleapis.com/v0/b/ferreirahogar-376dd.firebasestorage.app/o/vendedores%2F11.png?alt=media&token=b83cafcc-a9bb-4ae0-9609-2e8f65c95d10' },
-  { username: 'Tamara G', password: 'Tamara07', role: 'vendedor', imageUrl: 'https://firebasestorage.googleapis.com/v0/b/ferreirahogar-376dd.firebasestorage.app/o/vendedores%2F3.png?alt=media&token=6a2d2262-604a-41c3-baab-051b0cd2e32a' },
-  { username: 'Yulisa G', password: '244962', role: 'encargado', imageUrl: 'https://firebasestorage.googleapis.com/v0/b/ferreirahogar-376dd.firebasestorage.app/o/vendedores%2F1.png?alt=media&token=53e5fde2-f246-47d4-b329-436d866ac66c' },
-  { username: 'Gustavo F', password: '36520975', role: 'vendedor', imageUrl: 'https://firebasestorage.googleapis.com/v0/b/ferreirahogar-376dd.firebasestorage.app/o/vendedores%2F10.png?alt=media&token=44148120-0d0c-41ee-99aa-f4dfc4e50f7e' },
-  { username: 'Elias G', password: 'Elemento', role: 'vendedor', imageUrl: 'path/to/EliasG.jpg' },
-  { username: 'Micaela G', password: 'Galarza24', role: 'vendedor', imageUrl: 'path/to/MicaelaG.jpg' },
-  { username: 'Higinio F', password: 'Higinio', role: 'vendedor', imageUrl: 'https://placehold.co/50x50' },
-  { username: 'prueba', password: 'prueba', role: 'vendedor', imageUrl: 'https://placehold.co/50x50' },
+  { username: 'Gfabian395', password: 'Gfabian395', role: ['jefe'], imageUrl: 'https://firebasestorage.googleapis.com/v0/b/ferreirahogar-376dd.firebasestorage.app/o/vendedores%2F9.png?alt=media&token=992ee040-ed59-4b53-9013-115ee7c9fce7' },
+  { username: 'Vanesa F', password: '554972', role: ['jefe'], imageUrl: 'https://firebasestorage.googleapis.com/v0/b/ferreirahogar-376dd.firebasestorage.app/o/vendedores%2F8.png?alt=media&token=aff23347-93dc-4737-bf1f-25f0430f34fa' },
+  { username: 'Franco A', password: 'Grupof2025', role: ['fotografo', 'vendedor'], imageUrl: 'https://firebasestorage.googleapis.com/v0/b/ferreirahogar-376dd.firebasestorage.app/o/vendedores%2F2.png?alt=media&token=38f9c73b-1442-4025-b729-615395077651' },
+  { username: 'Carmen G', password: 'Gordis2024', role: ['vendedor'], imageUrl: 'https://firebasestorage.googleapis.com/v0/b/ferreirahogar-376dd.firebasestorage.app/o/vendedores%2F5.png?alt=media&token=9530608a-7cc2-4807-bd6f-d2ce55c29c0a' },
+  { username: 'Carol F', password: 'Tokyoghoul', role: ['vendedor'], imageUrl: 'https://firebasestorage.googleapis.com/v0/b/ferreirahogar-376dd.firebasestorage.app/o/vendedores%2F11.png?alt=media&token=b83cafcc-a9bb-4ae0-9609-2e8f65c95d10' },
+  { username: 'Tamara G', password: 'Tamara07', role: ['vendedor'], imageUrl: 'https://firebasestorage.googleapis.com/v0/b/ferreirahogar-376dd.firebasestorage.app/o/vendedores%2F3.png?alt=media&token=6a2d2262-604a-41c3-baab-051b0cd2e32a' },
+  { username: 'Yulisa G', password: '244962', role: ['encargado'], imageUrl: 'https://firebasestorage.googleapis.com/v0/b/ferreirahogar-376dd.firebasestorage.app/o/vendedores%2F1.png?alt=media&token=53e5fde2-f246-47d4-b329-436d866ac66c' },
+  { username: 'Gustavo F', password: '36520975', role: ['vendedor'], imageUrl: 'https://firebasestorage.googleapis.com/v0/b/ferreirahogar-376dd.firebasestorage.app/o/vendedores%2F10.png?alt=media&token=44148120-0d0c-41ee-99aa-f4dfc4e50f7e' },
+  { username: 'Elias G', password: 'Elemento', role: ['vendedor'], imageUrl: 'path/to/EliasG.jpg' },
+  { username: 'Micaela G', password: 'Galarza24', role: ['vendedor'], imageUrl: 'path/to/MicaelaG.jpg' },
+  { username: 'Higinio F', password: 'Higinio', role: ['vendedor'], imageUrl: 'https://placehold.co/50x50' },
+  { username: 'prueba', password: 'prueba', role: ['vendedor'], imageUrl: 'https://placehold.co/50x50' },
+  { username: 'catalogo', password: '', role: ['invitado'], imageUrl: 'https://placehold.co/100x100?text=Invitado' },
 ];
 
 const CierreCaja = ({ currentUser }) => {
@@ -31,7 +29,6 @@ const CierreCaja = ({ currentUser }) => {
   const [cobrosTotal, setCobrosTotal] = useState(0);
   const [totalRecaudado, setTotalRecaudado] = useState(0);
   const [rankingVendedores, setRankingVendedores] = useState([]);
-  const [showPDFPrompt, setShowPDFPrompt] = useState(false);
   const [showGastoForm, setShowGastoForm] = useState(false);
   const [gastos, setGastos] = useState([]);
   const [gastoMonto, setGastoMonto] = useState('');
@@ -47,7 +44,7 @@ const CierreCaja = ({ currentUser }) => {
   }, [ventasTotal, cobrosTotal]);
 
   useEffect(() => {
-    if (currentUser.role !== 'jefe') {
+    if (!Array.isArray(currentUser.role) || !currentUser.role.includes('jefe')) {
       alert('No tienes permiso para acceder a esta página.');
       navigate('/');
       return;
@@ -216,98 +213,6 @@ const CierreCaja = ({ currentUser }) => {
     return Object.values(ranking).sort((a, b) => b.totalIngresado - a.totalIngresado);
   };
 
-
-  const generatePDF = () => {
-    const docPDF = new jsPDF('p', 'pt', 'a4');
-
-    // Título fijo con mes y año
-    docPDF.setFontSize(12);
-    docPDF.text("CIERRE DE CAJA - MAYO DE 2025", 40, 30);
-
-    let nextY = 50;
-
-    // 🔻 COBROS
-    docPDF.setFontSize(12);
-    docPDF.text("COBROS", 40, nextY);
-    const cobrosOrdenados = [...cobros].sort((a, b) => new Date(b.fechaStr) - new Date(a.fechaStr));
-    const cobrosRows = cobrosOrdenados.map(c => [
-      c.id,
-      c.fechaStr,
-      `$${parseFloat(c.monto).toLocaleString('es-AR')}`,
-      c.usuario || ''
-    ]);
-    docPDF.autoTable({
-      head: [["ID", "Fecha", "Monto", "Responsable"]],
-      body: cobrosRows,
-      startY: nextY + 10,
-      theme: 'grid',
-      styles: { fontSize: 8 }
-    });
-
-    nextY = docPDF.lastAutoTable.finalY + 30;
-
-    // 🔻 VENTAS
-    docPDF.setFontSize(12);
-    docPDF.text("VENTAS", 40, nextY);
-    const ventasOrdenadas = [...movimientos].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
-    const ventasRows = ventasOrdenadas.map(m => [
-      m.id,
-      m.clienteId,
-      m.vendedor,
-      m.fecha,
-      `$${m.monto.toLocaleString('es-AR')}`
-    ]);
-    docPDF.autoTable({
-      head: [["ID", "Cliente", "Vendedor", "Fecha", "Monto"]],
-      body: ventasRows,
-      startY: nextY + 10,
-      theme: 'grid',
-      styles: { fontSize: 8 }
-    });
-
-    nextY = docPDF.lastAutoTable.finalY + 30;
-
-    // 🔻 GASTOS
-    docPDF.setFontSize(12);
-    docPDF.text("Gastos del Mes", 40, nextY);
-
-    const gastosOrdenados = [...gastos].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
-    const gastosRows = gastosOrdenados.map(g => [
-      new Date(g.fecha).toLocaleDateString('es-AR'),
-      g.tipo,
-      `$${parseFloat(g.monto).toLocaleString('es-AR')}`
-    ]);
-
-    docPDF.autoTable({
-      head: [["Fecha", "Tipo", "Monto"]],
-      body: gastosRows,
-      startY: nextY + 10,
-      theme: 'grid',
-      styles: { fontSize: 8 },
-      columnStyles: {
-        2: { halign: 'right' } // Monto alineado a la derecha
-      }
-    });
-
-
-    // 🔻 RESUMEN FINAL
-    nextY = docPDF.lastAutoTable.finalY + 40;
-
-    const totalCobrado = cobros.reduce((acc, c) => acc + parseFloat(c.monto), 0);
-    const totalVendido = movimientos.reduce((acc, v) => acc + parseFloat(v.monto), 0);
-    const totalGastado = gastos.reduce((acc, g) => acc + parseFloat(g.monto), 0);
-    const dineroEnMano = totalCobrado + totalVendido - totalGastado;
-
-    docPDF.setFontSize(12);
-    docPDF.text(`RESUMEN`, 40, nextY);
-    docPDF.text(`TOTAL COBRADO: $${totalCobrado.toLocaleString('es-AR')}`, 40, nextY + 15);
-    docPDF.text(`TOTAL VENDIDO: $${totalVendido.toLocaleString('es-AR')}`, 40, nextY + 30);
-    docPDF.text(`TOTAL GASTADO: $${totalGastado.toLocaleString('es-AR')}`, 40, nextY + 45);
-    docPDF.text(`DINERO EN MANO: $${dineroEnMano.toLocaleString('es-AR')}`, 40, nextY + 60);
-
-    docPDF.save("reporte-cierre.pdf");
-  };
-
   const handleAddGasto = async () => {
     const monto = parseFloat(gastoMonto);
     let razon = '';
@@ -368,7 +273,9 @@ const CierreCaja = ({ currentUser }) => {
   return (
     <div className="cierre-caja">
       <h2>Cierre de Caja</h2>
-      {loading ? <Load /> : (
+      {loading ? (
+        <Load />
+      ) : (
         <>
           {/* Tabla de Ventas */}
           <div className="table-responsive">
@@ -385,11 +292,7 @@ const CierreCaja = ({ currentUser }) => {
               <tbody>
                 {movimientos.map((m, i) => (
                   <tr key={i}>
-                    <td>{m.id || 'N/A'}</td>
-                    <td>{m.clienteId || 'N/A'}</td>
-                    <td>{m.vendedor || 'N/A'}</td>
-                    <td>{m.fecha || 'N/A'}</td>
-                    <td>{`$${m.monto.toLocaleString('es-AR')}`}</td>
+                    <td>{m.id || 'N/A'}</td><td>{m.clienteId || 'N/A'}</td><td>{m.vendedor || 'N/A'}</td><td>{m.fecha || 'N/A'}</td><td>{`$${m.monto.toLocaleString('es-AR')}`}</td>
                   </tr>
                 ))}
               </tbody>
@@ -413,11 +316,7 @@ const CierreCaja = ({ currentUser }) => {
                 {cobros.length > 0 ? (
                   cobros.map((c, i) => (
                     <tr key={i}>
-                      <td>{c.clienteId || 'N/A'}</td>
-                      <td>{c.ventaId || 'N/A'}</td>
-                      <td>{c.fechaStr || 'N/A'}</td>
-                      <td>{`$${parseFloat(c.monto).toLocaleString('es-AR')}`}</td>
-                      <td>{c.usuario || '-'}</td>
+                      <td>{c.clienteId || 'N/A'}</td><td>{c.ventaId || 'N/A'}</td><td>{c.fechaStr || 'N/A'}</td><td>{`$${parseFloat(c.monto).toLocaleString('es-AR')}`}</td><td>{c.usuario || '-'}</td>
                     </tr>
                   ))
                 ) : (
@@ -427,21 +326,12 @@ const CierreCaja = ({ currentUser }) => {
             </table>
           </div>
 
-
           {/* Muestra el total recaudado (ventas + cobros) */}
           <h3>Total Recaudado: ${totalRecaudado.toLocaleString('es-AR')}</h3>
-          <button onClick={generatePDF}>Generar PDF</button>
           <button onClick={() => navigate('/resumen')}>Ver Resumen</button>
           <button onClick={() => setShowGastoForm(true)}>Agregar Gasto</button>
 
-          {showPDFPrompt && (
-            <div>
-              <p>¿Estás seguro que quieres generar el PDF?</p>
-              <button onClick={generatePDF}>Sí</button>
-              <button onClick={() => setShowPDFPrompt(false)}>Cancelar</button>
-            </div>
-          )}
-
+          
 
           {/* Tabla de Gastos */}
           <h2>Gastos del Mes</h2>
@@ -449,7 +339,7 @@ const CierreCaja = ({ currentUser }) => {
             <table className="table table-bordered">
               <thead>
                 <tr>
-                  <th>ID</th> {/* Nueva columna para mostrar el ID */}
+                  <th>ID</th>{/* Nueva columna para mostrar el ID */}
                   <th>Fecha</th>
                   <th>Tipo</th>
                   <th>Monto</th>
@@ -466,8 +356,8 @@ const CierreCaja = ({ currentUser }) => {
                       return fechaB - fechaA;
                     })
                     .map((gasto) => (
-                      <tr key={gasto.id}> {/* Usamos el ID como clave */}
-                        <td>{gasto.id}</td> {/* Mostramos el ID */}
+                      <tr key={gasto.id}>
+                        <td>{gasto.id}</td>{/* Mostramos el ID */}
                         <td>{gasto.fechaStr}</td>
                         <td>{gasto.tipo}</td>
                         <td>{`$${gasto.monto.toLocaleString('es-AR')}`}</td>
@@ -496,9 +386,7 @@ const CierreCaja = ({ currentUser }) => {
               <tbody>
                 {rankingVendedores.length > 0 ? rankingVendedores.map((v, i) => (
                   <tr key={i}>
-                    <td>{v.vendedor}</td>
-                    <td>{v.cantVentas}</td>
-                    <td>{`$${v.totalIngresado.toLocaleString('es-AR')}`}</td>
+                    <td>{v.vendedor}</td><td>{v.cantVentas}</td><td>{`$${v.totalIngresado.toLocaleString('es-AR')}`}</td>
                   </tr>
                 )) : (
                   <tr><td colSpan="3">Aún no hay datos para el ranking de este mes.</td></tr>
@@ -507,17 +395,20 @@ const CierreCaja = ({ currentUser }) => {
             </table>
           </div>
 
-          <div className="resumen-final" style={{
-            marginTop: '20px',
-            padding: '20px',
-            border: '2px solid #28a745',
-            borderRadius: '10px',
-            backgroundColor: '#e9fbe5',
-            textAlign: 'center',
-            fontWeight: 'bold',
-            fontSize: '1.5rem',
-            color: '#155724'
-          }}>
+          <div
+            className="resumen-final"
+            style={{
+              marginTop: '20px',
+              padding: '20px',
+              border: '2px solid #28a745',
+              borderRadius: '10px',
+              backgroundColor: '#e9fbe5',
+              textAlign: 'center',
+              fontWeight: 'bold',
+              fontSize: '1.5rem',
+              color: '#155724',
+            }}
+          >
             Dinero en Mano: ${(totalRecaudado - totalGastado).toLocaleString('es-AR')}
           </div>
 
@@ -527,7 +418,7 @@ const CierreCaja = ({ currentUser }) => {
                 <h3>Agregar Gasto</h3>
 
                 <label>Razón del Gasto:</label>
-                <select value={gastoRazon} onChange={e => setGastoRazon(e.target.value)}>
+                <select value={gastoRazon} onChange={(e) => setGastoRazon(e.target.value)}>
                   <option value="">Seleccione una opción</option>
                   <option value="Sueldos">Sueldos</option>
                   <option value="Anticipos">Anticipos</option>
@@ -557,11 +448,16 @@ const CierreCaja = ({ currentUser }) => {
                   <select value={vendedorSeleccionado} onChange={(e) => setVendedorSeleccionado(e.target.value)}>
                     <option value="">Seleccioná un vendedor</option>
                     {usuariosDB
-                      .filter(user =>
-                        user.role === 'vendedor' || user.role === 'jefe' || user.role === 'encargado'
+                      .filter(
+                        (user) =>
+                          user.role === 'vendedor' ||
+                          user.role === 'jefe' ||
+                          user.role === 'encargado'
                       )
                       .map((user, index) => (
-                        <option key={index} value={user.username}>{user.username}</option>
+                        <option key={index} value={user.username}>
+                          {user.username}
+                        </option>
                       ))}
                   </select>
                 )}
@@ -569,20 +465,12 @@ const CierreCaja = ({ currentUser }) => {
                 {gastoRazon === 'Otros' && (
                   <>
                     <label>Especifique otra razón:</label>
-                    <input
-                      type="text"
-                      value={otraRazon}
-                      onChange={e => setOtraRazon(e.target.value)}
-                    />
+                    <input type="text" value={otraRazon} onChange={(e) => setOtraRazon(e.target.value)} />
                   </>
                 )}
 
                 <label>Monto:</label>
-                <input
-                  type="number"
-                  value={gastoMonto}
-                  onChange={e => setGastoMonto(e.target.value)}
-                />
+                <input type="number" value={gastoMonto} onChange={(e) => setGastoMonto(e.target.value)} />
 
                 <button onClick={handleAddGasto}>Guardar Gasto</button>
                 <button onClick={() => setShowGastoForm(false)}>Cancelar</button>

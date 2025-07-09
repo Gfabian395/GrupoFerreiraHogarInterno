@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import { db, storage } from '../../firebaseConfig'; // storage agregado
 import { collection, getDocs, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -8,6 +8,9 @@ import './Productos.css';
 
 const Productos = ({ onAddToCart, currentUser }) => {
   const { categoriaId } = useParams();
+  const location = useLocation();
+  const { resaltadoId } = location.state || {};
+
   const [productos, setProductos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [alerta, setAlerta] = useState('');
@@ -20,6 +23,9 @@ const Productos = ({ onAddToCart, currentUser }) => {
   const [uploadedImageUrl, setUploadedImageUrl] = useState(null);
   const [imagenModal, setImagenModal] = useState(null);
 
+  // Estado para resaltar producto y refs para hacer scroll
+  const [highlightId, setHighlightId] = useState(null);
+  const refsProductos = useRef({});
 
   const handleOpenImage = (url) => {
     setImagenModal(url);
@@ -29,12 +35,12 @@ const Productos = ({ onAddToCart, currentUser }) => {
     setImagenModal(null);
   };
 
-  // Asegurar que currentUser.role sea un arreglo para usar includes
+  // Roles
   const roles = Array.isArray(currentUser.role)
     ? currentUser.role
     : [currentUser.role];
 
-  // Configuración cuotas e intereses
+  // Config cuotas e intereses
   const configuracionCuotas = [
     { cuotas: 2, interes: 15 },
     { cuotas: 3, interes: 25 },
@@ -46,7 +52,6 @@ const Productos = ({ onAddToCart, currentUser }) => {
     { cuotas: 24, interes: 180 }
   ];
 
-  // Función para calcular cuotas según monto
   const calcularCuotasHover = (precio) => {
     if (isNaN(precio) || precio <= 0) return [];
 
@@ -107,6 +112,18 @@ const Productos = ({ onAddToCart, currentUser }) => {
     fetchCategorias();
   }, [categoriaId]);
 
+  // EFECTO PARA SCROLL Y RESALTAR PRODUCTO SI VIENE resaltadoId
+  useEffect(() => {
+    if (resaltadoId && refsProductos.current[resaltadoId]) {
+      refsProductos.current[resaltadoId].scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setHighlightId(resaltadoId);
+
+      // Quitar el highlight luego de 3 segundos
+      const timer = setTimeout(() => setHighlightId(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [resaltadoId, productos]); // productos para asegurar que se haya cargado el listado
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setCurrentProduct((prevProduct) => ({
@@ -115,7 +132,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
     }));
   };
 
-  // Actualizar producto en Firebase
+  // Actualizar producto
   const handleUpdateProduct = async (productoId, updatedFields = null) => {
     if (
       !roles.includes('jefe') &&
@@ -173,7 +190,6 @@ const Productos = ({ onAddToCart, currentUser }) => {
     producto.nombre.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Esta función ahora se define FUERA y SEPARADA
   const confirmarYEliminar = async (productoId) => {
     if (!roles.includes('jefe')) {
       setAlerta('No tienes permiso para eliminar productos.');
@@ -202,7 +218,6 @@ const Productos = ({ onAddToCart, currentUser }) => {
       setTimeout(() => setAlerta(''), 3000);
     }
   };
-
 
   const handleIncrementStock = async (productoId, campo) => {
     if (!roles.includes('jefe') && !roles.includes('encargado')) {
@@ -287,7 +302,17 @@ const Productos = ({ onAddToCart, currentUser }) => {
               (roles.includes('invitado') || !outOfStockBoth) ? '' : 'producto-sin-stock';
 
             return (
-              <li key={producto.id} className={`card-producto ${productoClass} categoria-${producto.categoriaId}`}>
+              <li
+                key={producto.id}
+                ref={(el) => (refsProductos.current[producto.id] = el)}
+                className={`card-producto ${productoClass} categoria-${producto.categoriaId}`}
+                style={{
+                  border: highlightId === producto.id ? '3px solid #f39c12' : undefined,
+                  boxShadow: highlightId === producto.id ? '0 0 15px #f39c12' : undefined,
+                  backgroundColor: highlightId === producto.id ? '#fff8e1' : undefined,
+                  transition: 'box-shadow 0.5s ease, border 0.5s ease, background-color 0.5s ease'
+                }}
+              >
                 {outOfStockBoth && <span className="badge-stock">SIN STOCK</span>}
 
                 <img
@@ -365,7 +390,6 @@ const Productos = ({ onAddToCart, currentUser }) => {
                       >
                         🗑️
                       </button>
-
                     )}
                   </>
                 )}

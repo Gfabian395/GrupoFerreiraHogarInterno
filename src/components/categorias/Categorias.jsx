@@ -5,6 +5,7 @@ import { collection, getDocs, deleteDoc, doc, updateDoc } from 'firebase/firesto
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import './Categorias.css';
 import Load from '../load/Load';
+import BusquedaGlobal from '../busqueda global/BusquedaGlobal';
 
 const Categorias = ({ onSelectCategoria, currentUser }) => {
   const [categorias, setCategorias] = useState([]);
@@ -14,7 +15,10 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
   const [deleteId, setDeleteId] = useState(null);
   const [password, setPassword] = useState('');
   const [alerta, setAlerta] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
+  
+  // Estado para el buscador global
+  const [query, setQuery] = useState('');
+
   const [showEditPrompt, setShowEditPrompt] = useState(false);
   const [editCategoria, setEditCategoria] = useState(null);
   const [editNombre, setEditNombre] = useState('');
@@ -129,27 +133,29 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
     navigate(`/categorias/${id}/productos`);
   };
 
-  const filteredCategorias = categorias.filter(cat =>
-    cat.nombre.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   if (loading || imagesLoading) return <Load />;
 
   return (
     <>
+      {/* Input del buscador global */}
       <input
         type="text"
-        value={searchTerm}
-        onChange={e => setSearchTerm(e.target.value)}
-        placeholder="Buscar categorías..."
+        value={query}
+        onChange={e => setQuery(e.target.value)}
+        placeholder="Buscar productos..."
         className="search-input"
+        style={{ marginBottom: '1rem', padding: '0.5rem', width: '100%' }}
       />
 
-      <div className="categorias">
+      {/* Renderizamos solo el buscador global */}
+      <BusquedaGlobal query={query} />
+
+      {/* Seguimos mostrando las categorías sin filtro */}
+      <div className="categorias" style={{ marginTop: '2rem' }}>
         {alerta && <div className="alert alert-danger">{alerta}</div>}
 
         <ul>
-          {filteredCategorias.map(categoria => (
+          {categorias.map(categoria => (
             <li key={categoria.id} className="categoria-card">
               {['jefe', 'encargado'].some(r => currentUser?.role?.includes(r)) && (
                 <button

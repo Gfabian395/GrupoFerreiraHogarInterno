@@ -26,7 +26,6 @@ function App() {
     if (savedUser) {
       let parsedUser = JSON.parse(savedUser);
 
-      // Asegura que "role" sea un array
       if (typeof parsedUser.role === 'string') {
         parsedUser.role = [parsedUser.role];
       }
@@ -58,7 +57,6 @@ function App() {
   const cartItemCount = carrito.reduce((total, product) => total + product.cantidad, 0);
 
   const handleLogin = (user) => {
-    // Asegura que el role sea un array antes de guardar
     if (typeof user.role === 'string') {
       user.role = [user.role];
     }
@@ -98,6 +96,8 @@ function App() {
 
               <Route path="/clientes" element={<Clientes currentUser={usuario} />} />
               <Route path="/clientes/:clienteId/detalles" element={<ClienteDetalles currentUser={usuario} />} />
+              <Route path="/cliente/:clienteId" element={<ClienteDetalles currentUser={usuario} />} /> {/* ✅ Agregada */}
+
               <Route path="/cuotas" element={<Cuotas monto={100000} />} />
 
               <Route path="/categorias" element={
@@ -126,7 +126,6 @@ function App() {
               <Route path="/ventas/:ventaId/detalles" element={<ClienteDetalles currentUser={usuario} />} />
               <Route path="/add-compra" element={<AddCompra />} />
 
-              {/* Solo el jefe puede ver el cierre de caja */}
               <Route
                 path="/cierre-caja"
                 element={
@@ -136,7 +135,6 @@ function App() {
                 }
               />
 
-              {/* Solo el jefe puede ver el resumen */}
               <Route
                 path="/resumen"
                 element={
@@ -146,7 +144,7 @@ function App() {
                 }
               />
             </Routes>
-          </> 
+          </>
         )}
       </div>
     </Router>

@@ -1,20 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import { db } from '../../firebaseConfig';
 import { collection, query, where, getDocs, updateDoc, doc } from 'firebase/firestore';
 import Load from '../load/Load';
 import './ClienteDetalles.css';
 
 const configuracionCuotas = [
-  { cuotas: 1, interes: 0 },
-  { cuotas: 2, interes: 15 },
-  { cuotas: 3, interes: 25 },
-  { cuotas: 4, interes: 40 },
-  { cuotas: 6, interes: 60 },
-  { cuotas: 9, interes: 75 },
-  { cuotas: 12, interes: 100 },
-  { cuotas: 18, interes: 150 },
-  { cuotas: 24, interes: 180 }
+  { cuotas: 1, interes: 0 }, { cuotas: 2, interes: 15 }, { cuotas: 3, interes: 25 },
+  { cuotas: 4, interes: 40 }, { cuotas: 6, interes: 60 }, { cuotas: 9, interes: 75 },
+  { cuotas: 12, interes: 100 }, { cuotas: 18, interes: 150 }, { cuotas: 24, interes: 180 }
 ];
 
 const calcularCuotaConInteres = (monto, cuotas) => {
@@ -37,20 +31,21 @@ const formatearFechaArg = (fechaStr) => {
 
 const ClienteDetalles = ({ currentUser }) => {
   const { clienteId } = useParams();
+  const location = useLocation();
+  const initialSelectedVentaId = location.state?.ventaId || null;
+
   const [ventas, setVentas] = useState([]);
   const [loading, setLoading] = useState(true);
-  const fechaRef = useRef(null);
-  const montoRef = useRef(null);
+  const [ventaSeleccionadaId, setVentaSeleccionadaId] = useState(null);
+
+  const ventaRefs = useRef({});
 
   useEffect(() => {
     const fetchVentas = async () => {
       try {
         const ventasQuery = query(collection(db, 'ventas'), where('clienteId', '==', clienteId));
         const ventasSnapshot = await getDocs(ventasQuery);
-        const ventasList = ventasSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
+        const ventasList = ventasSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setVentas(ventasList);
       } catch (error) {
         console.error("Error fetching ventas:", error);
@@ -61,78 +56,33 @@ const ClienteDetalles = ({ currentUser }) => {
     fetchVentas();
   }, [clienteId]);
 
-  const handleCuotasChange = async (ventaId, nuevasCuotas) => {
-    if (nuevasCuotas < 1) {
-      alert("La cantidad de cuotas debe ser al menos 1");
-      return;
-    }
-    const password = prompt('Ingrese la contraseña para modificar las cuotas:');
-    if (password !== '031285') {
-      alert('Contraseña incorrecta.');
-      return;
-    }
-    try {
-      const venta = ventas.find(v => v.id === ventaId);
-      const montoBase = venta.productos.reduce((acc, p) => acc + p.precio * (p.cantidad || 1), 0);
-      const valorCuota = calcularCuotaConInteres(montoBase, nuevasCuotas);
-      const totalConInteres = valorCuota * nuevasCuotas;
+  // Cuando se carga ventas, setea la venta seleccionada inicial si existe
+  useEffect(() => {
+    if (initialSelectedVentaId && ventaRefs.current[initialSelectedVentaId]) {
+      setVentaSeleccionadaId(initialSelectedVentaId);
+      ventaRefs.current[initialSelectedVentaId].scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-      await updateDoc(doc(db, 'ventas', ventaId), {
-        cuotas: nuevasCuotas,
-        totalCredito: totalConInteres,
-      });
+      // Remover el resaltado después de 5 segundos
+      const timer = setTimeout(() => {
+        setVentaSeleccionadaId(null);
+      }, 3500);
 
-      setVentas(prev =>
-        prev.map(v =>
-          v.id === ventaId ? { ...v, cuotas: nuevasCuotas, totalCredito: totalConInteres } : v
-        )
-      );
-
-      alert('Cuotas actualizadas correctamente.');
-    } catch (error) {
-      console.error('Error actualizando cuotas:', error);
-      alert('Error al actualizar cuotas.');
+      return () => clearTimeout(timer);
     }
+  }, [ventas, initialSelectedVentaId]);
+
+  // Función para seleccionar venta manualmente (si querés usar click)
+  const seleccionarVenta = (id) => {
+    setVentaSeleccionadaId(id);
+    if (ventaRefs.current[id]) {
+      ventaRefs.current[id].scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    setTimeout(() => {
+      setVentaSeleccionadaId(null);
+    }, 5000);
   };
 
-  const handleCuotaPagada = async (ventaId, fecha, monto, usuario) => {
-    const nuevaVenta = ventas.find(v => v.id === ventaId);
-    const newPagos = [...(nuevaVenta.pagos || []), {
-      fecha, // se guarda como string plano: "2025-07-05"
-      monto: Math.round(monto / 1000) * 1000,
-      usuario
-    }];
-
-    try {
-      await updateDoc(doc(db, 'ventas', ventaId), { pagos: newPagos });
-
-      setVentas(prev =>
-        prev.map(v => (v.id === ventaId ? { ...v, pagos: newPagos } : v))
-      );
-
-      alert('Pago registrado con éxito');
-    } catch (error) {
-      console.error("Error actualizando pago:", error);
-    }
-  };
-
-  const agregarPago = (ventaId, e) => {
-    e.preventDefault();
-    const fecha = e.target.fecha.value;
-    let monto = Number(e.target.monto.value);
-
-    const venta = ventas.find(v => v.id === ventaId);
-    const totalCredito = Math.round((venta.totalCredito || 0) / 1000) * 1000;
-    const totalPagos = venta.pagos ? venta.pagos.reduce((acc, pago) => acc + Math.round(Number(pago.monto / 1000)) * 1000, 0) : 0;
-    const saldo = totalCredito - totalPagos;
-
-    if (monto > saldo) monto = saldo;
-
-    fechaRef.current.value = '';
-    montoRef.current.value = '';
-
-    handleCuotaPagada(ventaId, fecha, monto, currentUser.username);
-  };
+  // (Resto del código igual, solo muestro la parte donde se agrega la clase)
 
   if (loading) return <Load />;
 
@@ -161,7 +111,12 @@ const ClienteDetalles = ({ currentUser }) => {
         const fechaVentaStr = `${fechaVenta.getDate().toString().padStart(2, '0')}/${(fechaVenta.getMonth() + 1).toString().padStart(2, '0')}/${fechaVenta.getFullYear()}`;
 
         return (
-          <div key={venta.id} className={`venta-detalle ${isComplete ? 'completo' : ''}`}>
+          <div
+            key={venta.id}
+            ref={el => ventaRefs.current[venta.id] = el}
+            className={`venta-detalle ${isComplete ? 'completo' : ''} ${venta.id === ventaSeleccionadaId ? 'venta-seleccionada' : ''}`}
+            onClick={() => seleccionarVenta(venta.id)} // opcional para seleccionar con click
+          >
             <h3>Venta {venta.id}</h3>
             <p><strong>Nombre:</strong> {clienteId}</p>
             <p><strong>Su Compra:</strong> {venta.productos.map(p =>
@@ -187,7 +142,6 @@ const ClienteDetalles = ({ currentUser }) => {
             </p>
 
             <p><strong>Valor por cuota:</strong> ${calcularCuotaConInteres(montoBaseCuotas, cuotas).toLocaleString('es-AR')}</p>
-
             <p><strong>Fecha de Venta:</strong> {fechaVentaStr}</p>
 
             <h4>Pagos</h4>
@@ -223,11 +177,11 @@ const ClienteDetalles = ({ currentUser }) => {
                 <form onSubmit={(e) => agregarPago(venta.id, e)}>
                   <div className="form-group">
                     <label htmlFor="fecha">Fecha:</label>
-                    <input type="date" className="form-control" id="fecha" name="fecha" required ref={fechaRef} />
+                    <input type="date" className="form-control" id="fecha" name="fecha" required />
                   </div>
                   <div className="form-group">
                     <label htmlFor="monto">Monto:</label>
-                    <input type="number" className="form-control" id="monto" name="monto" required ref={montoRef} />
+                    <input type="number" className="form-control" id="monto" name="monto" required />
                     <button type="submit" className="btn btn-primary mt-2">Agregar Pago</button>
                   </div>
                 </form>

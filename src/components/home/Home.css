@@ -1,141 +1,131 @@
 .home {
-  padding: 5px;
+  padding: 2rem;
   text-align: center;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #f9fbfd;
+  min-height: 100vh;
 }
 
 .home h2 {
-  margin-bottom: 20px;
+  margin-bottom: 1.5rem;
+  font-size: 1.8rem;
+  color: #2c3e50;
 }
 
+/* 🏅 Ranking de vendedores */
 .ranking-container {
   display: flex;
   justify-content: center;
-  align-items: center;
-  gap: 10px;
+  align-items: stretch;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
 }
 
 .ranking-item {
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  padding: 1rem;
+  width: 150px;
+  transition: transform 0.3s ease;
   position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 7px;
-  border: 2px solid #ccc;
-  border-radius: 10px;
-  width: 120px;
-  animation: bounce 2s infinite;
+}
+
+.ranking-item:hover {
+  transform: translateY(-5px);
 }
 
 .ranking-1 {
-  background-color: gold;
+  border-top: 4px solid gold;
 }
-
 .ranking-2 {
-  background-color: silver;
+  border-top: 4px solid silver;
 }
-
 .ranking-3 {
-  background-color: #cd7f32; /* Bronce */
+  border-top: 4px solid #cd7f32;
 }
 
 .medal {
-  font-size: 30px;
-  margin-bottom: 10px;
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
 }
 
 .vendedor-image {
-  width: 100px;
-  height: 100px;
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
-  margin-bottom: 10px;
+  object-fit: cover;
+  margin-bottom: 0.5rem;
+  border: 2px solid #eee;
 }
 
 .vendedor-name {
-  font-size: 18px;
-  font-weight: bold;
+  font-weight: 600;
+  font-size: 1rem;
+  color: #333;
 }
 
-.vendedor-sales {
-  font-size: 16px;
-  margin-top: 5px;
+.ranking-title {
+  font-size: 1.6rem;
+  margin-bottom: 1rem;
+  color: #34495e;
 }
 
-.ranking-item::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 50%;
-  width: 5px;
-  height: 5px;
-  background-color: #ff0;
-  border-radius: 50%;
-  animation: confetti 2s infinite;
-}
-
-.ranking-1::before {
-  background-color: #ffd700; /* Gold */
-}
-
-.ranking-2::before {
-  background-color: #c0c0c0; /* Silver */
-}
-
-.ranking-3::before {
-  background-color: #cd7f32; /* Bronze */
-}
-
-/* Tabla de clientes y pagos */
+/* 🧾 Clientes próximos a pagar */
 .clientes-pagos-container {
-  margin-top: 30px;
-  text-align: center;
+  background: #fff;
+  padding: 1rem;
+  border-radius: 1rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  max-width: 1000px;
+  margin: auto;
 }
 
 .clientes-title {
-  font-size: 22px;
-  margin-bottom: 20px;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
   text-transform: uppercase;
+  color: #2c3e50;
 }
 
 .clientes-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 10px;
+  margin-top: 0.5rem;
+  font-size: 0.95rem;
 }
 
 .clientes-table th,
 .clientes-table td {
-  border: 1px solid #ccc;
-  padding: 3px;
+  border: 1px solid #e0e0e0;
+  padding: 10px;
   text-align: center;
 }
 
 .clientes-table th {
-  background-color: #f4f4f4;
-  font-weight: bold;
+  background-color: #f0f4f8;
+  color: #2c3e50;
   text-transform: uppercase;
+  font-weight: bold;
 }
 
 .clientes-table tr:nth-child(even) {
-  background-color: #f9f9f9;
-}
-
-.cliente-item-row {
-  transition: background-color 0.2s ease;
+  background-color: #fafafa;
 }
 
 .cliente-item-row:hover {
-  background-color: #eef;
-}
-
-.cliente-nombre,
-.cliente-dni,
-.cliente-cuota,
-.cliente-vendedor,
-.cliente-fecha {
-  text-transform: capitalize;
+  background-color: #f1faff;
 }
 
 .cliente-atrasado {
-  background-color: #ffcccc; /* Color rojo suave */
-  color: #ff0000; /* Texto rojo */
+  background-color: #ffe5e5 !important;
+  color: #c0392b;
+  font-weight: bold;
+}
+
+.no-clientes {
+  margin-top: 1rem;
+  font-style: italic;
+  color: #888;
 }

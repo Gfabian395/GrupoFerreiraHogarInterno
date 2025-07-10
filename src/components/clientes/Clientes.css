@@ -239,6 +239,10 @@
   background: linear-gradient(to right, #ff3c4e, #fcb045);
 }
 
+.preview-image{
+  width: 200px;
+}
+
 /* 🔧 Responsive */
 @media (max-width: 500px) {
   .card {

@@ -17,11 +17,19 @@ const configuracionCuotas = [
   { cuotas: 24, interes: 180 }
 ];
 
+// Función corregida que devuelve cuota redondeada y monto total con interés sin redondear para evitar errores
 const calcularCuotaConInteres = (monto, cuotas) => {
   const config = configuracionCuotas.find(c => c.cuotas === cuotas);
   const interes = config ? config.interes : 0;
   const montoConInteres = monto * (1 + interes / 100);
-  return Math.round(montoConInteres / cuotas / 1000) * 1000;
+
+  // Cuota sin redondear
+  const cuotaSinRedondeo = montoConInteres / cuotas;
+
+  // Cuota redondeada a múltiplos de 1000 para mostrar
+  const cuotaRedondeada = Math.round(cuotaSinRedondeo / 1000) * 1000;
+
+  return { cuotaRedondeada, montoConInteres };
 };
 
 const ClienteDetalles = ({ currentUser }) => {
@@ -74,8 +82,10 @@ const ClienteDetalles = ({ currentUser }) => {
     try {
       const venta = ventas.find(v => v.id === ventaId);
       const montoBase = venta.productos.reduce((acc, p) => acc + p.precio * (p.cantidad || 1), 0);
-      const valorCuota = calcularCuotaConInteres(montoBase, nuevasCuotas);
-      const totalConInteres = valorCuota * nuevasCuotas;
+      const { cuotaRedondeada, montoConInteres } = calcularCuotaConInteres(montoBase, nuevasCuotas);
+
+      // Guardar total real redondeado (no multiplicar cuota redondeada)
+      const totalConInteres = Math.round(montoConInteres / 1000) * 1000;
 
       const ventaRef = doc(db, 'ventas', ventaId);
       await updateDoc(ventaRef, { cuotas: nuevasCuotas, totalCredito: totalConInteres });
@@ -138,15 +148,23 @@ const ClienteDetalles = ({ currentUser }) => {
         const isComplete = saldo <= 0;
         let saldoRestante = totalCredito;
 
-        const productoPrincipal = venta.productos[0];
-        const precioUnitario = Math.round(productoPrincipal.precio / 1000) * 1000;
-        const cantidadProducto = productoPrincipal.cantidad || 1;
-        const montoBaseCuotas = precioUnitario * cantidadProducto;
+        // Sumamos todos los productos redondeados a miles
+        const montoBaseCuotas = venta.productos.reduce((acc, p) => {
+          const precioRedondeado = Math.round(p.precio / 1000) * 1000;
+          const cantidad = p.cantidad || 1;
+          return acc + (precioRedondeado * cantidad);
+        }, 0);
 
-        const cuotasDisponibles = configuracionCuotas.map(({ cuotas }) => ({
-          cuotas,
-          valorCuota: calcularCuotaConInteres(montoBaseCuotas, cuotas)
-        }));
+        // Calculamos cuota y total con la función corregida
+        const { cuotaRedondeada } = calcularCuotaConInteres(montoBaseCuotas, cuotas);
+
+        const cuotasDisponibles = configuracionCuotas.map(({ cuotas }) => {
+          const { cuotaRedondeada } = calcularCuotaConInteres(montoBaseCuotas, cuotas);
+          return {
+            cuotas,
+            valorCuota: cuotaRedondeada
+          };
+        });
 
         return (
           <div
@@ -157,7 +175,7 @@ const ClienteDetalles = ({ currentUser }) => {
             <h3>Venta {venta.id}</h3>
             <p><strong>Nombre:</strong> {clienteId}</p>
             <p><strong>Total Crédito $:</strong> {totalCredito.toLocaleString('es-AR')}</p>
-            <p><strong>Cuotas de:</strong> ${(Math.round(totalCredito / cuotas / 1000) * 1000).toLocaleString('es-AR')}</p>
+            <p><strong>Cuotas de:</strong> {(Math.round(totalCredito / cuotas / 1000) * 1000).toLocaleString('es-AR')}</p>
             <p><strong>Su Compra:</strong> {venta.productos.map(p =>
               `${p.nombre} (Cant: ${p.cantidad}, Precio unitario: $${(Math.round(p.precio / 1000) * 1000).toLocaleString('es-AR')})`
             ).join(", ")}</p>
@@ -177,7 +195,7 @@ const ClienteDetalles = ({ currentUser }) => {
               </select>
             </p>
             <p><strong>Valor por cuota:</strong>{' '}
-              ${calcularCuotaConInteres(montoBaseCuotas, cuotas).toLocaleString('es-AR')}
+              ${cuotaRedondeada.toLocaleString('es-AR')}
             </p>
             <p><strong>Fecha de Venta:</strong> {new Date(venta.fecha.seconds * 1000).toLocaleString()}</p>
 

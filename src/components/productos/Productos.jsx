@@ -22,6 +22,27 @@ const Productos = ({ onAddToCart, currentUser }) => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploadedImageUrl, setUploadedImageUrl] = useState(null);
   const [imagenModal, setImagenModal] = useState(null);
+  const [productoSeleccionado, setProductoSeleccionado] = useState(null);
+  const [cuotaSeleccionada, setCuotaSeleccionada] = useState('');
+  const [pasoFormulario, setPasoFormulario] = useState(1);
+
+  const [retiroOEnvio, setRetiroOEnvio] = useState(''); // 'retiro' o 'envio'
+
+  const [sucursalSeleccionada, setSucursalSeleccionada] = useState(''); // 'Andes4034' o 'Andes4320'
+
+  const [direccionEnvio, setDireccionEnvio] = useState({
+    calle: '',
+    numero: '',
+    entreCalles: '',
+    localidad: '',
+  });
+
+  const [datosCliente, setDatosCliente] = useState({
+    nombre: '',
+    dni: '',
+    telefono1: '',
+    telefono2: '',
+  });
 
   // Estado para resaltar producto y refs para hacer scroll
   const [highlightId, setHighlightId] = useState(null);
@@ -275,6 +296,56 @@ const Productos = ({ onAddToCart, currentUser }) => {
     reader.readAsDataURL(file);
   };
 
+  const limpiarYCerrar = () => {
+    setProductoSeleccionado(null);
+    setCuotaSeleccionada('');
+    setPasoFormulario(1);
+    setRetiroOEnvio('');
+    setSucursalSeleccionada('');
+    setDireccionEnvio({ altura: '', entreCalles: '', localidad: '' });
+    setDatosCliente({ nombre: '', dni: '', telefono1: '', telefono2: '' });
+  };
+
+  // Armás la dirección con los datos de direcciónEnvio que el cliente completó
+  const direccion = `${direccionEnvio.calle} ${direccionEnvio.numero}, ${direccionEnvio.localidad}, entre calles ${direccionEnvio.entreCalles}`;
+
+  // Generás el link para Google Maps con la dirección codificada
+  const linkMaps = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(direccion)}`;
+
+
+  const enviarPedidoWhatsapp = () => {
+    const cuota = calcularCuotasHover(productoSeleccionado.precio || 0)
+      .find(c => c.cuotas === parseInt(cuotaSeleccionada, 10));
+
+    let mensaje = `Hola, quiero pedir este producto:\n\n` +
+      `📦 *${productoSeleccionado.nombre}*\n` +
+      `💰 Precio: $${(productoSeleccionado.precio || 0).toLocaleString('es-AR')}\n` +
+      `📋 Cuotas elegidas: ${cuotaSeleccionada} cuotas de $${cuota.montoCuota}\n\n`;
+
+    if (retiroOEnvio === 'retiro') {
+      mensaje += `🚩 Retiro en sucursal: ${sucursalSeleccionada}\n\n`;
+    } else if (retiroOEnvio === 'envio') {
+      mensaje +=
+        `🏠 Envío a domicilio:\n` +
+        `Calle: ${direccionEnvio.calle}\n` +
+        `Número: ${direccionEnvio.numero}\n` +
+        `Entre calles: ${direccionEnvio.entreCalles}\n` +
+        `Localidad: ${direccionEnvio.localidad}\n\n` +
+        `📍 Ver en Google Maps: ${linkMaps}\n\n`;
+    }
+
+    mensaje += `Datos del cliente:\n` +
+      `Nombre completo: ${datosCliente.nombre}\n` +
+      `DNI: ${datosCliente.dni}\n` +
+      `Teléfono 1: ${datosCliente.telefono1}\n` +
+      `Teléfono 2: ${datosCliente.telefono2 || '-'}\n`;
+
+    const urlWhatsapp = `https://wa.me/5491159781434?text=${encodeURIComponent(mensaje)}`;
+    window.open(urlWhatsapp, '_blank', 'noopener,noreferrer');
+
+    limpiarYCerrar();
+  };
+
   if (loading) return <Load />;
 
   return (
@@ -335,6 +406,30 @@ const Productos = ({ onAddToCart, currentUser }) => {
                     {calcularCuotasHover(producto.precio || 0).map((c, idx) => (
                       <p key={idx}>En {c.cuotas} cuotas de ${c.montoCuota}</p>
                     ))}
+
+                    {roles.includes('invitado') && (
+                      <button
+                        className="boton-whatsapp"
+                        onClick={() => {
+                          setProductoSeleccionado(producto);
+                          setCuotaSeleccionada(''); // Reiniciar selección
+                        }}
+                        style={{
+                          marginTop: '10px',
+                          display: 'inline-block',
+                          backgroundColor: '#25D366',
+                          color: 'white',
+                          padding: '8px 12px',
+                          borderRadius: '8px',
+                          textDecoration: 'none',
+                          fontWeight: 'bold',
+                          cursor: 'pointer',
+                          border: 'none',
+                        }}
+                      >
+                        Pedir por WhatsApp
+                      </button>
+                    )}
                   </div>
 
                   {['jefe', 'vendedor', 'encargado', 'fotografo'].some((r) => roles.includes(r)) && (
@@ -541,6 +636,251 @@ const Productos = ({ onAddToCart, currentUser }) => {
         <div className="modal-imagen" onClick={handleCloseImage}>
           <span className="cerrar-modal" onClick={handleCloseImage}>❌</span>
           <img src={imagenModal} alt="Imagen ampliada" className="imagen-modal-grande" />
+        </div>
+      )}
+
+      {productoSeleccionado && (
+        <div className="modal-cuotas">
+          <div className="modal-cuotas-content">
+            {pasoFormulario === 1 && (
+              <>
+                <h3>Elegí la cantidad de cuotas para:</h3>
+                <p><strong>{productoSeleccionado.nombre}</strong></p>
+
+                <select
+                  value={cuotaSeleccionada}
+                  onChange={(e) => setCuotaSeleccionada(e.target.value)}
+                >
+                  <option value="">-- Seleccioná cuotas --</option>
+                  {calcularCuotasHover(productoSeleccionado.precio || 0).map((c) => (
+                    <option key={c.cuotas} value={c.cuotas}>
+                      {c.cuotas} cuotas de ${c.montoCuota}
+                    </option>
+                  ))}
+                </select>
+
+                <div style={{ marginTop: '15px' }}>
+                  <button
+                    disabled={!cuotaSeleccionada}
+                    onClick={() => setPasoFormulario(2)}
+                    style={{ marginRight: '10px' }}
+                  >
+                    Siguiente
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      limpiarYCerrar();
+                    }}
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </>
+            )}
+
+            {pasoFormulario === 2 && (
+              <>
+                <h3>¿Retirás en sucursal o enviamos a domicilio?</h3>
+
+                <label>
+                  <input
+                    type="radio"
+                    name="retiroOEnvio"
+                    value="retiro"
+                    checked={retiroOEnvio === 'retiro'}
+                    onChange={(e) => setRetiroOEnvio(e.target.value)}
+                  />
+                  Retiro en sucursal
+                </label>
+
+                <label style={{ marginLeft: '15px' }}>
+                  <input
+                    type="radio"
+                    name="retiroOEnvio"
+                    value="envio"
+                    checked={retiroOEnvio === 'envio'}
+                    onChange={(e) => setRetiroOEnvio(e.target.value)}
+                  />
+                  Envío a domicilio
+                </label>
+
+                {retiroOEnvio === 'retiro' && (
+                  <div style={{ marginTop: '10px' }}>
+                    <label>
+                      Sucursal:
+                      <select
+                        value={sucursalSeleccionada}
+                        onChange={(e) => setSucursalSeleccionada(e.target.value)}
+                      >
+                        <option value="">-- Seleccioná sucursal --</option>
+                        <option value="Andes4034">Andes 4034</option>
+                        <option value="Andes4320">Andes 4320</option>
+                      </select>
+                    </label>
+                  </div>
+                )}
+
+                {retiroOEnvio === 'envio' && (
+                  <div style={{ marginTop: '10px' }}>
+                    <label>
+                      Calle:
+                      <input
+                        type="text"
+                        value={direccionEnvio.calle}
+                        onChange={(e) =>
+                          setDireccionEnvio((prev) => ({ ...prev, calle: e.target.value }))
+                        }
+                      />
+                    </label>
+
+                    <label>
+                      Número:
+                      <input
+                        type="text"
+                        value={direccionEnvio.numero}
+                        onChange={(e) =>
+                          setDireccionEnvio((prev) => ({ ...prev, numero: e.target.value }))
+                        }
+                      />
+                    </label>
+
+                    <label>
+                      Entre calles:
+                      <input
+                        type="text"
+                        value={direccionEnvio.entreCalles}
+                        onChange={(e) =>
+                          setDireccionEnvio((prev) => ({ ...prev, entreCalles: e.target.value }))
+                        }
+                      />
+                    </label>
+
+                    <label>
+                      Localidad:
+                      <input
+                        type="text"
+                        value={direccionEnvio.localidad}
+                        onChange={(e) =>
+                          setDireccionEnvio((prev) => ({ ...prev, localidad: e.target.value }))
+                        }
+                      />
+                    </label>
+                  </div>
+                )}
+
+                <div style={{ marginTop: '15px' }}>
+                  <button
+                    disabled={
+                      retiroOEnvio === '' ||
+                      (retiroOEnvio === 'retiro' && sucursalSeleccionada === '') ||
+                      (retiroOEnvio === 'envio' &&
+                        (
+                          !direccionEnvio.calle ||
+                          !direccionEnvio.numero ||
+                          !direccionEnvio.entreCalles ||
+                          !direccionEnvio.localidad
+                        ))
+                    }
+                    onClick={() => setPasoFormulario(3)}
+                    style={{ marginRight: '10px' }}
+                  >
+                    Siguiente
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      limpiarYCerrar();
+                    }}
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </>
+            )}
+
+            {pasoFormulario === 3 && (
+              <>
+                <h3>Por último, ingresá tus datos:</h3>
+
+                <label>
+                  Nombre completo:
+                  <input
+                    type="text"
+                    value={datosCliente.nombre}
+                    onChange={(e) =>
+                      setDatosCliente((prev) => ({ ...prev, nombre: e.target.value }))
+                    }
+                  />
+                </label>
+
+                <label>
+                  DNI:
+                  <input
+                    type="text"
+                    value={datosCliente.dni}
+                    onChange={(e) =>
+                      setDatosCliente((prev) => ({ ...prev, dni: e.target.value }))
+                    }
+                  />
+                </label>
+
+                <label>
+                  Teléfono 1:
+                  <input
+                    type="text"
+                    value={datosCliente.telefono1}
+                    onChange={(e) =>
+                      setDatosCliente((prev) => ({ ...prev, telefono1: e.target.value }))
+                    }
+                  />
+                </label>
+
+                <label>
+                  Teléfono 2:
+                  <input
+                    type="text"
+                    value={datosCliente.telefono2}
+                    onChange={(e) =>
+                      setDatosCliente((prev) => ({ ...prev, telefono2: e.target.value }))
+                    }
+                  />
+                </label>
+
+                <div style={{ marginTop: '15px' }}>
+                  <button
+                    disabled={
+                      !datosCliente.nombre ||
+                      !datosCliente.dni ||
+                      !datosCliente.telefono1
+                    }
+                    onClick={() => {
+                      enviarPedidoWhatsapp();
+                    }}
+                    style={{ marginRight: '10px' }}
+                  >
+                    Confirmar pedido
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      limpiarYCerrar();
+                    }}
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+
+          <div
+            className="modal-cuotas-backdrop"
+            onClick={() => {
+              setProductoSeleccionado(null);
+              setCuotaSeleccionada('');
+            }}
+          ></div>
         </div>
       )}
     </>

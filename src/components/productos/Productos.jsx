@@ -714,8 +714,8 @@ const Productos = ({ onAddToCart, currentUser }) => {
                         onChange={(e) => setSucursalSeleccionada(e.target.value)}
                       >
                         <option value="">-- Seleccioná sucursal --</option>
-                        <option value="Andes4034">Andes 4034</option>
-                        <option value="Andes4320">Andes 4320</option>
+                        <option value="Andes4034">Los Andes 4034</option>
+                        <option value="Andes4320">Los Andes 4320</option>
                       </select>
                     </label>
                   </div>

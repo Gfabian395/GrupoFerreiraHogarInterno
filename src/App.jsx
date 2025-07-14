@@ -119,7 +119,9 @@ function App() {
                   productos={carrito}
                   onRemoveFromCart={handleRemoveFromCart}
                   onClearCart={handleClearCart}
+                  currentUser={usuario} // <-- PASÁ EL OBJETO DEL USUARIO ACTUAL ACÁ
                 />
+
               } />
 
               <Route path="/ventas" element={<Ventas carrito={carrito} onClearCart={handleClearCart} currentUser={usuario} />} />

@@ -25,13 +25,10 @@ const Nav = ({ cartItemCount, onLogout, username, role, profileImage }) => {
       <Link to="/" className="navbar-brand"><b>Grupo Ferreira Hogar</b></Link>
 
       <div className="cart-container">
-        {/* Solo mostrar carrito si no es invitado */}
-        {role && !role.includes('invitado') && (
-          <Link to="/carrito" className="nav-item nav-link cart-link">
-            🛒
-            <span className="cart-badge">{cartItemCount}</span>
-          </Link>
-        )}
+        <Link to="/carrito" className="nav-item nav-link cart-link">
+          🛒
+          <span className="cart-badge">{cartItemCount}</span>
+        </Link>
       </div>
 
       <button type="button" className="navbar-toggler" data-toggle="collapse" data-target="#navbarCollapse">

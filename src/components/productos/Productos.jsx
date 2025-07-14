@@ -402,7 +402,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
                     ${((producto.precio || 0) * 1).toLocaleString('es-AR')}
                   </span>
 
-                  <div className="detalle-cuotas">
+                  {/* <div className="detalle-cuotas">
                     {calcularCuotasHover(producto.precio || 0).map((c, idx) => (
                       <p key={idx}>En {c.cuotas} cuotas de ${c.montoCuota}</p>
                     ))}
@@ -430,9 +430,29 @@ const Productos = ({ onAddToCart, currentUser }) => {
                         Pedir por WhatsApp
                       </button>
                     )}
-                  </div>
+                  </div> */}
 
-                  {['jefe', 'vendedor', 'encargado', 'fotografo'].some((r) => roles.includes(r)) && (
+                  {roles.includes('invitado') && (
+                    <button
+                      onClick={() =>
+                        handleAddToCart(
+                          producto,
+                          stock4034 > 0
+                            ? 'Andes4034'
+                            : stock4320 > 0
+                              ? 'Andes4320'
+                              : ''
+                        )
+                      }
+                      disabled={outOfStockBoth}
+                      className="boton-agregar-invitado"
+                      title="Agregar al carrito"
+                    >
+                      🛒 Agregar al carrito
+                    </button>
+                  )}
+
+                  {/* {(['jefe', 'vendedor', 'encargado', 'fotografo', 'invitado'].some((r) => roles.includes(r))) && (
                     <>
                       <p>
                         Andes 4034: {stock4034}
@@ -472,7 +492,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
                         ) : null}
                       </p>
                     </>
-                  )}
+                  )} */}
                 </div>
 
                 {(roles.includes('jefe') || roles.includes('encargado') || roles.includes('fotografo')) && (

@@ -452,7 +452,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
                     </button>
                   )}
 
-                  {/* {(['jefe', 'vendedor', 'encargado', 'fotografo', 'invitado'].some((r) => roles.includes(r))) && (
+                   {(['jefe', 'vendedor', 'encargado', 'fotografo', ].some((r) => roles.includes(r))) && (
                     <>
                       <p>
                         Andes 4034: {stock4034}
@@ -492,7 +492,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
                         ) : null}
                       </p>
                     </>
-                  )} */}
+                  )} 
                 </div>
 
                 {(roles.includes('jefe') || roles.includes('encargado') || roles.includes('fotografo')) && (

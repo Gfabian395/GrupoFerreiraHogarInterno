@@ -35,7 +35,7 @@ const ClienteDetalles = ({ currentUser }) => {
   const ventaRefs = useRef({});
   const fechaRef = useRef(null);
   const montoRef = useRef(null);
-  
+
 
   const [clienteBloqueado, setClienteBloqueado] = useState(false);
 
@@ -135,7 +135,8 @@ const ClienteDetalles = ({ currentUser }) => {
 
   const agregarPago = async (ventaId, e) => {
     e.preventDefault();
-    const fecha = new Date(e.target.fecha.value + "T12:00:00"); // hora neutra para evitar desfase
+    /* const fecha = new Date(e.target.fecha.value + "T12:00:00"); // hora neutra para evitar desfase */
+    const fecha = new Date(e.target.fecha.value); // ✅ Corrección
     let monto = Number(e.target.monto.value);
 
     const venta = ventas.find(v => v.id === ventaId);

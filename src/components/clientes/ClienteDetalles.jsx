@@ -35,6 +35,7 @@ const ClienteDetalles = ({ currentUser }) => {
   const ventaRefs = useRef({});
   const fechaRef = useRef(null);
   const montoRef = useRef(null);
+  
 
   const [clienteBloqueado, setClienteBloqueado] = useState(false);
 
@@ -134,7 +135,7 @@ const ClienteDetalles = ({ currentUser }) => {
 
   const agregarPago = async (ventaId, e) => {
     e.preventDefault();
-    const fecha = e.target.fecha.value;
+    const fecha = new Date(e.target.fecha.value + "T12:00:00"); // hora neutra para evitar desfase
     let monto = Number(e.target.monto.value);
 
     const venta = ventas.find(v => v.id === ventaId);
@@ -170,7 +171,7 @@ const ClienteDetalles = ({ currentUser }) => {
 
   return (
     <div className={`cliente-detalles container ${clienteBloqueado ? 'cliente-bloqueado' : ''}`}>
-      
+
       {/* Alerta roja si el cliente está bloqueado */}
       {clienteBloqueado && (
         <div className="alerta-bloqueado">
@@ -244,7 +245,7 @@ const ClienteDetalles = ({ currentUser }) => {
             <p><strong>Valor por cuota:</strong>{' '}
               ${cuotaRedondeada.toLocaleString('es-AR')}
             </p>
-            <p><strong>Fecha de Venta:</strong> {new Date(venta.fecha.seconds * 1000).toLocaleString()}</p>
+            <p><strong>Fecha de Venta:</strong> {new Date(venta.fecha.seconds * 1000 + 12 * 60 * 60 * 1000).toLocaleDateString('es-AR')}</p>
 
             <h4>Pagos</h4>
             <div className="table-responsive">
@@ -262,7 +263,7 @@ const ClienteDetalles = ({ currentUser }) => {
                 <tbody>
                   {venta.pagos && venta.pagos.map((pago, i) => {
                     saldoRestante -= pago.monto;
-                    const fecha = new Date(pago.fecha);
+                    const fecha = new Date(new Date(pago.fecha).getTime() + 12 * 60 * 60 * 1000);
                     return (
                       <tr key={i}>
                         <td>{fecha.getDate()}</td>

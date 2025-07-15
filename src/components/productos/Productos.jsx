@@ -402,7 +402,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
                     ${((producto.precio || 0) * 1).toLocaleString('es-AR')}
                   </span>
 
-                  {/* <div className="detalle-cuotas">
+                   <div className="detalle-cuotas">
                     {calcularCuotasHover(producto.precio || 0).map((c, idx) => (
                       <p key={idx}>En {c.cuotas} cuotas de ${c.montoCuota}</p>
                     ))}
@@ -430,7 +430,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
                         Pedir por WhatsApp
                       </button>
                     )}
-                  </div> */}
+                  </div> 
 
                   {roles.includes('invitado') && (
                     <button

@@ -56,6 +56,13 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
   const [ventaDeOtro, setVentaDeOtro] = useState(false);
   const [selectedVendedor, setSelectedVendedor] = useState('');
   const [usuarios] = useState(usuariosDB);
+  const fechaActual = new Date().toLocaleDateString('es-AR'); // Fecha en formato dd/mm/aaaa
+
+  // NUEVO: estado para fecha venta, por defecto HOY
+  const [fechaVenta, setFechaVenta] = useState(() => {
+    const hoy = new Date();
+    return hoy.toISOString().slice(0, 10); // yyyy-mm-dd para input date
+  });
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -142,6 +149,9 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
   const handleVentaDeOtroChange = (e) => setVentaDeOtro(e.target.checked);
   const handleSelectedVendedorChange = (e) => setSelectedVendedor(e.target.value);
 
+  // NUEVO handler para fecha
+  const handleFechaVentaChange = (e) => setFechaVenta(e.target.value);
+
   // Realizar venta
   const handleRealizarVenta = async () => {
     try {
@@ -171,7 +181,7 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
         sucursal,
         productos: carrito,
         cuotas: cuotasSeleccionadas,
-        fecha: new Date(),
+        fecha: new Date(fechaVenta), // uso la fecha seleccionada
         totalCredito,
         valorCuota: valorCuotaCalculado,
         pagos: [],
@@ -233,169 +243,189 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
 
   return (
     <div className="ventas">
-      <h2>Realizar Venta</h2>
       {ventaRealizada && <div className="alert alert-success">¡Venta realizada con éxito!</div>}
+      <div className="1">
+        <h3>Realizar Venta</h3>
 
-      {/* Buscador y selección de cliente */}
-      <div className="form-group">
-        <label htmlFor="cliente-buscador">Buscar Cliente por DNI o Nombre:</label>
-        <input
-          id="cliente-buscador"
-          type="text"
-          className="form-control"
-          placeholder="Buscar por DNI o Nombre"
-          value={searchTerm}
-          onChange={handleSearchChange}
-        />
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="cliente">Seleccionar Cliente:</label>
-        <select
-          id="cliente"
-          className="form-control"
-          value={selectedCliente}
-          onChange={handleClienteChange}
-        >
-          <option value="">-- Selecciona un Cliente --</option>
-          {filteredClientes.map((cliente, index) => (
-            <option key={`${cliente.id}-${index}`} value={cliente.id}>
-              {cliente.nombreCompleto}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Venta de otro usuario (solo para roles jefe o encargado) */}
-      {currentUser.role?.some(r => ['jefe', 'encargado'].includes(r)) && (
         <div className="form-group">
-          <label>
-            <input
-              type="checkbox"
-              checked={ventaDeOtro}
-              onChange={handleVentaDeOtroChange}
-              className="form-check-input"
-              style={{ width: 20, height: 20, marginRight: 8 }}
-            />
-            Venta de otro
-          </label>
-
-          {ventaDeOtro && (
-            <select
-              className="form-control mt-2"
-              value={selectedVendedor}
-              onChange={handleSelectedVendedorChange}
-            >
-              <option value="">-- Selecciona un Vendedor --</option>
-              {usuarios.map((usuario, index) => (
-                <option key={`${usuario.username}-${index}`} value={usuario.username}>
-                  {usuario.username}
-                </option>
-              ))}
-            </select>
-          )}
+          <label htmlFor="fechaVenta">Fecha de la Venta:</label>
+          <input
+            id="fechaVenta"
+            type="date"
+            className="form-control input-corto"
+            value={fechaVenta}
+            onChange={handleFechaVentaChange}
+            max={new Date().toISOString().split('T')[0]}
+          />
         </div>
-      )}
 
-      {/* Selección de cuotas */}
-      <div className="form-group">
-        <label htmlFor="cuotasSeleccionadas">Seleccionar Cantidad de Cuotas:</label>
-        <select
-          id="cuotasSeleccionadas"
-          className="form-control"
-          value={cuotasSeleccionadas}
-          onChange={handleCuotasSeleccionadasChange}
-        >
-          <option value="">-- Selecciona las Cuotas --</option>
-          {cuotas.map((opcion, index) => (
-            <option key={`${opcion.cuotas}-${index}`} value={opcion.cuotas}>
-              {opcion.cuotas} cuota{opcion.cuotas > 1 ? 's' : ''} de ${opcion.montoCuota} por mes
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Cargar primer cuota */}
-      <div className="form-group">
-        <label htmlFor="cargarPrimerCuota">Cargar Primer Cuota:</label>
-        <select
-          id="cargarPrimerCuota"
-          className="form-control"
-          value={cargarPrimerCuota ? 'sí' : 'no'}
-          onChange={handlePrimerCuotaChange}
-        >
-          <option value="sí">Sí</option>
-          <option value="no">No</option>
-        </select>
-      </div>
-
-      {/* Tipo de entrega */}
-      <div className="form-group">
-        <label htmlFor="entrega">Seleccionar Tipo de Entrega:</label>
-        <select
-          id="entrega"
-          className="form-control"
-          value={entrega}
-          onChange={handleEntregaChange}
-        >
-          <option value="sucursal">Retira en Sucursal</option>
-          <option value="domicilio">Envío a Domicilio</option>
-        </select>
-      </div>
-
-      {/* Selección de chofer (solo si entrega a domicilio) */}
-      {entrega === 'domicilio' && (
+        {/* Buscador y selección de cliente */}
         <div className="form-group">
-          <label htmlFor="chofer">Seleccionar Chofer:</label>
+          <label htmlFor="cliente-buscador">Buscar Cliente por DNI o Nombre:</label>
+          <input
+            id="cliente-buscador"
+            type="text"
+            className="form-control input-corto"
+            placeholder="Buscar por DNI o Nombre"
+            value={searchTerm}
+            onChange={handleSearchChange}
+          />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="cliente">Seleccionar Cliente:</label>
           <select
-            id="chofer"
-            className="form-control"
-            value={selectedChofer ? selectedChofer.nombre : ''}
-            onChange={handleChoferChange}
+            id="cliente"
+            className="form-control input-corto"
+            value={selectedCliente}
+            onChange={handleClienteChange}
           >
-            <option value="">-- Selecciona un Chofer --</option>
-            {choferes.map((chofer, index) => (
-              <option key={`${chofer.nombre}-${index}`} value={chofer.nombre}>
-                {chofer.nombre}
+            <option value="">-- Selecciona un Cliente --</option>
+            {filteredClientes.map((cliente, index) => (
+              <option key={`${cliente.id}-${index}`} value={cliente.id}>
+                {cliente.nombreCompleto}
               </option>
             ))}
           </select>
         </div>
-      )}
 
-      {/* Productos en el carrito */}
-      <h3>Productos en Carrito</h3>
-      <div className="card-container">
-        {carrito.map(producto => (
-          <div className="card" key={producto.id}>
-            <img src={producto.imagenUrl} alt={producto.nombre} className="card-img-top" />
-            <div className="card-body">
-              <h5 className="card-title">{producto.nombre}</h5>
-              <p className="card-text">Precio: ${producto.precio.toLocaleString('es-AR')}</p>
-              <p className="card-text">Cantidad: {producto.cantidad}</p>
-              <p className="card-text">
-                Subtotal: ${(producto.precio * producto.cantidad).toLocaleString('es-AR')}
-              </p>
-              <p className="card-text">
-                Total Crédito: $
-                {(subtotal * (1 + (configuracionCuotas.find(c => c.cuotas === cuotasSeleccionadas)?.interes || 0) / 100)).toLocaleString('es-AR')}
-              </p>
-              <p className="card-text">Valor de Cada Cuota: ${valorCuota.toLocaleString('es-AR')}</p>
-            </div>
+        {/* Venta de otro usuario (solo para roles jefe o encargado) */}
+        {currentUser.role?.some(r => ['jefe', 'encargado'].includes(r)) && (
+          <div className="form-group">
+            <label>
+              <input
+                type="checkbox"
+                checked={ventaDeOtro}
+                onChange={handleVentaDeOtroChange}
+                className="form-check-input"
+                style={{ width: 20, height: 20, marginRight: 8 }}
+              />
+              Venta de otro
+            </label>
+
+            {ventaDeOtro && (
+              <select
+                className="form-control mt-2 input-corto"
+                value={selectedVendedor}
+                onChange={handleSelectedVendedorChange}
+              >
+                <option value="">-- Selecciona un Vendedor --</option>
+                {usuarios.map((usuario, index) => (
+                  <option key={`${usuario.username}-${index}`} value={usuario.username}>
+                    {usuario.username}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
-        ))}
-      </div>
+        )}
 
-      {/* Botón realizar venta */}
-      <button
-        className="btn btn-primary mt-4"
-        onClick={handleRealizarVenta}
-        disabled={!selectedCliente || cuotasSeleccionadas === ''}
-      >
-        Realizar Venta
-      </button>
+        {/* Selección de cuotas */}
+        <div className="form-group">
+          <label htmlFor="cuotasSeleccionadas">Seleccionar Cantidad de Cuotas:</label>
+          <select
+            id="cuotasSeleccionadas"
+            className="form-control input-corto"
+            value={cuotasSeleccionadas}
+            onChange={handleCuotasSeleccionadasChange}
+          >
+            <option value="">-- Selecciona las Cuotas --</option>
+            {cuotas.map((opcion, index) => (
+              <option key={`${opcion.cuotas}-${index}`} value={opcion.cuotas}>
+                {opcion.cuotas} cuota{opcion.cuotas > 1 ? 's' : ''} de ${opcion.montoCuota} por mes
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Cargar primer cuota */}
+        <div className="form-group">
+          <label htmlFor="cargarPrimerCuota">Cargar Primer Cuota:</label>
+          <select
+            id="cargarPrimerCuota"
+            className="form-control input-corto"
+            value={cargarPrimerCuota ? 'sí' : 'no'}
+            onChange={handlePrimerCuotaChange}
+          >
+            <option value="sí">Sí</option>
+            <option value="no">No</option>
+          </select>
+        </div>
+
+        {/* Tipo de entrega */}
+        <div className="form-group">
+          <label htmlFor="entrega">Seleccionar Tipo de Entrega:</label>
+          <select
+            id="entrega"
+            className="form-control input-corto"
+            value={entrega}
+            onChange={handleEntregaChange}
+          >
+            <option value="sucursal">Retira en Sucursal</option>
+            <option value="domicilio">Envío a Domicilio</option>
+          </select>
+        </div>
+
+        {/* Selección de chofer (solo si entrega a domicilio) */}
+        {entrega === 'domicilio' && (
+          <div className="form-group">
+            <label htmlFor="chofer">Seleccionar Chofer:</label>
+            <select
+              id="chofer"
+              className="form-control input-corto"
+              value={selectedChofer ? selectedChofer.nombre : ''}
+              onChange={handleChoferChange}
+            >
+              <option value="">-- Selecciona un Chofer --</option>
+              {choferes.map((chofer, index) => (
+                <option key={`${chofer.nombre}-${index}`} value={chofer.nombre}>
+                  {chofer.nombre}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+      </div>
+      <div className="2">
+        {/* Productos en el carrito */}
+        <h3>Productos en Carrito</h3>
+        <div className="card-container">
+          {carrito.map(producto => (
+            <div className="card" key={producto.id}>
+              <img src={producto.imagenUrl} alt={producto.nombre} className="card-img-top" />
+              <div className="card-body">
+                <h5 className="card-title">{producto.nombre}</h5>
+                <p className="card-text">Precio: ${producto.precio.toLocaleString('es-AR')}</p>
+                <p className="card-text">Cantidad: {producto.cantidad}</p>
+                <p className="card-text">
+                  Subtotal: ${(producto.precio * producto.cantidad).toLocaleString('es-AR')}
+                </p>
+                <p className="card-text">
+                  Total Crédito: $
+                  {(
+                    subtotal *
+                    (1 +
+                      (configuracionCuotas.find(c => c.cuotas === cuotasSeleccionadas)?.interes || 0) /
+                      100)
+                  ).toLocaleString('es-AR')}
+                </p>
+                <p className="card-text">Valor de Cada Cuota: ${valorCuota.toLocaleString('es-AR')}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Botón realizar venta */}
+        <button
+          className="btn btn-primary mt-4"
+          onClick={handleRealizarVenta}
+          disabled={!selectedCliente || cuotasSeleccionadas === ''}
+        >
+          Realizar Venta
+        </button>
+      </div>
     </div>
   );
-};
+}
 
 export default Ventas;

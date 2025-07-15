@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { db } from '../../firebaseConfig';
-import { collection, query, where, getDocs, updateDoc, doc } from 'firebase/firestore';
+import { collection, query, where, getDocs, updateDoc, doc, getDoc } from 'firebase/firestore';
 import Load from '../load/Load';
 import './ClienteDetalles.css';
 
@@ -17,18 +17,12 @@ const configuracionCuotas = [
   { cuotas: 24, interes: 180 }
 ];
 
-// Función corregida que devuelve cuota redondeada y monto total con interés sin redondear para evitar errores
 const calcularCuotaConInteres = (monto, cuotas) => {
   const config = configuracionCuotas.find(c => c.cuotas === cuotas);
   const interes = config ? config.interes : 0;
   const montoConInteres = monto * (1 + interes / 100);
-
-  // Cuota sin redondear
   const cuotaSinRedondeo = montoConInteres / cuotas;
-
-  // Cuota redondeada a múltiplos de 1000 para mostrar
   const cuotaRedondeada = Math.round(cuotaSinRedondeo / 1000) * 1000;
-
   return { cuotaRedondeada, montoConInteres };
 };
 
@@ -42,6 +36,8 @@ const ClienteDetalles = ({ currentUser }) => {
   const fechaRef = useRef(null);
   const montoRef = useRef(null);
 
+  const [clienteBloqueado, setClienteBloqueado] = useState(false);
+
   useEffect(() => {
     const fetchVentas = async () => {
       try {
@@ -50,7 +46,6 @@ const ClienteDetalles = ({ currentUser }) => {
         const ventasList = ventasSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setVentas(ventasList);
 
-        // Scroll automático a venta desde Home
         const ventaIdDesdeHome = location.state?.ventaId;
         if (ventaIdDesdeHome) {
           setTimeout(() => {
@@ -69,6 +64,43 @@ const ClienteDetalles = ({ currentUser }) => {
     fetchVentas();
   }, [clienteId, location.state]);
 
+  useEffect(() => {
+    const obtenerEstadoCliente = async () => {
+      try {
+        const clienteRef = doc(db, 'clientes', clienteId);
+        const clienteSnap = await getDoc(clienteRef);
+        if (clienteSnap.exists()) {
+          const clienteData = clienteSnap.data();
+          setClienteBloqueado(clienteData.bloqueado || false);
+        }
+      } catch (error) {
+        console.error("Error al obtener estado del cliente:", error);
+      }
+    };
+    obtenerEstadoCliente();
+  }, [clienteId]);
+
+  // Modificado para pedir contraseña SOLO para desbloquear
+  const handleToggleBloqueo = async () => {
+    if (clienteBloqueado) {
+      const password = prompt('Ingrese la contraseña para desbloquear al cliente:');
+      if (password !== '031285') {
+        alert('Contraseña incorrecta. No se desbloqueó el cliente.');
+        return;
+      }
+    }
+    try {
+      const clienteRef = doc(db, 'clientes', clienteId);
+      await updateDoc(clienteRef, {
+        bloqueado: !clienteBloqueado
+      });
+      setClienteBloqueado(!clienteBloqueado);
+    } catch (error) {
+      console.error('Error al cambiar estado de bloqueo del cliente:', error);
+      alert('No se pudo actualizar el estado del cliente');
+    }
+  };
+
   const handleCuotasChange = async (ventaId, nuevasCuotas) => {
     if (nuevasCuotas < 1) {
       alert("La cantidad de cuotas debe ser al menos 1");
@@ -84,7 +116,6 @@ const ClienteDetalles = ({ currentUser }) => {
       const montoBase = venta.productos.reduce((acc, p) => acc + p.precio * (p.cantidad || 1), 0);
       const { cuotaRedondeada, montoConInteres } = calcularCuotaConInteres(montoBase, nuevasCuotas);
 
-      // Guardar total real redondeado (no multiplicar cuota redondeada)
       const totalConInteres = Math.round(montoConInteres / 1000) * 1000;
 
       const ventaRef = doc(db, 'ventas', ventaId);
@@ -138,7 +169,25 @@ const ClienteDetalles = ({ currentUser }) => {
   if (loading) return <Load />;
 
   return (
-    <div className="cliente-detalles container">
+    <div className={`cliente-detalles container ${clienteBloqueado ? 'cliente-bloqueado' : ''}`}>
+      
+      {/* Alerta roja si el cliente está bloqueado */}
+      {clienteBloqueado && (
+        <div className="alerta-bloqueado">
+          ⚠️ Este cliente está <strong>BLOQUEADO</strong>. No otorgar crédito.
+        </div>
+      )}
+
+      {/* Botón para bloquear/desbloquear si es jefe */}
+      {currentUser?.role?.includes('jefe') && (
+        <button
+          className={`btn ${clienteBloqueado ? 'btn-success' : 'btn-danger'} mb-3`}
+          onClick={handleToggleBloqueo}
+        >
+          {clienteBloqueado ? 'Desbloquear cliente' : 'Bloquear cliente'}
+        </button>
+      )}
+
       <h2 className="my-4">Detalles de Ventas</h2>
       {ventas.map(venta => {
         const totalCredito = Math.round((venta.totalCredito || 0) / 1000) * 1000;
@@ -148,14 +197,12 @@ const ClienteDetalles = ({ currentUser }) => {
         const isComplete = saldo <= 0;
         let saldoRestante = totalCredito;
 
-        // Sumamos todos los productos redondeados a miles
         const montoBaseCuotas = venta.productos.reduce((acc, p) => {
           const precioRedondeado = Math.round(p.precio / 1000) * 1000;
           const cantidad = p.cantidad || 1;
           return acc + (precioRedondeado * cantidad);
         }, 0);
 
-        // Calculamos cuota y total con la función corregida
         const { cuotaRedondeada } = calcularCuotaConInteres(montoBaseCuotas, cuotas);
 
         const cuotasDisponibles = configuracionCuotas.map(({ cuotas }) => {

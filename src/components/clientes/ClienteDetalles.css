@@ -208,6 +208,17 @@ h4 {
 .venta-detalle.completo form {
   display: none;
 }
+.cliente-bloqueado {
+  background-color: #ff4d4d !important; /* rojo fuerte */
+  color: white;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.cliente-bloqueado .venta-detalle {
+  background-color: transparent !important;
+}
+
 
 @media (max-width: 768px) {
   .cliente-detalles {

@@ -35,6 +35,7 @@ const ClienteDetalles = ({ currentUser }) => {
   const ventaRefs = useRef({});
   const fechaRef = useRef(null);
   const montoRef = useRef(null);
+  const [clienteNombre, setClienteNombre] = useState('');
 
 
   const [clienteBloqueado, setClienteBloqueado] = useState(false);
@@ -73,6 +74,7 @@ const ClienteDetalles = ({ currentUser }) => {
         if (clienteSnap.exists()) {
           const clienteData = clienteSnap.data();
           setClienteBloqueado(clienteData.bloqueado || false);
+          setClienteNombre(clienteData.nombreCompleto || '');
         }
       } catch (error) {
         console.error("Error al obtener estado del cliente:", error);
@@ -222,7 +224,8 @@ const ClienteDetalles = ({ currentUser }) => {
             className={`venta-detalle ${isComplete ? 'completo' : ''} ${ventaSeleccionadaId === venta.id ? 'venta-seleccionada' : ''}`}
           >
             <h3>Venta {venta.id}</h3>
-            <p><strong>Nombre:</strong> {clienteId}</p>
+            <p>Cliente: <strong>{clienteNombre}</strong></p>
+            <p><strong>D.N.I:</strong> {clienteId}</p>
             <p><strong>Total Crédito $:</strong> {totalCredito.toLocaleString('es-AR')}</p>
             <p><strong>Cuotas de:</strong> {(Math.round(totalCredito / cuotas / 1000) * 1000).toLocaleString('es-AR')}</p>
             <p><strong>Su Compra:</strong> {venta.productos.map(p =>

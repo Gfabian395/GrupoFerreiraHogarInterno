@@ -138,7 +138,7 @@ const ClienteDetalles = ({ currentUser }) => {
   const agregarPago = async (ventaId, e) => {
     e.preventDefault();
     /* const fecha = new Date(e.target.fecha.value + "T12:00:00"); // hora neutra para evitar desfase */
-    const fecha = new Date(e.target.fecha.value); // ✅ Corrección
+    const fecha = e.target.fecha.value; // ← Esto es un string tipo "2025-07-16"
     let monto = Number(e.target.monto.value);
 
     const venta = ventas.find(v => v.id === ventaId);

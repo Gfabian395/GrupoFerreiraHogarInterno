@@ -246,7 +246,7 @@ const ClienteDetalles = ({ currentUser }) => {
             <p><strong>Valor por cuota:</strong>{' '}
               ${cuotaRedondeada.toLocaleString('es-AR')}
             </p>
-            <p><strong>Fecha de Venta:</strong> {new Date(venta.fecha.seconds * 1000 + 12 * 60 * 60 * 1000).toLocaleDateString('es-AR')}</p>
+            <p><strong>Fecha de Venta:</strong> {new Date(venta.fecha.seconds * 1000).toLocaleDateString('es-AR')}</p>
 
             <h4>Pagos</h4>
             <div className="table-responsive">

@@ -181,7 +181,7 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
         sucursal,
         productos: carrito,
         cuotas: cuotasSeleccionadas,
-        fecha: new Date(fechaVenta), // uso la fecha seleccionada
+        fecha: new Date(), // uso la fecha seleccionada
         totalCredito,
         valorCuota: valorCuotaCalculado,
         pagos: [],

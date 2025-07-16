@@ -2,16 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../../firebaseConfig';
 import Load from '../load/Load';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer
-} from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContaine } from 'recharts';
 
 const Resumen = () => {
   const [loading, setLoading] = useState(true);
@@ -85,7 +76,7 @@ const Resumen = () => {
 
       // Generar array con los últimos 12 meses en orden ascendente
       const meses = [];
-      for(let i=11; i>=0; i--) {
+      for (let i = 11; i >= 0; i--) {
         const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
         const key = formatYearMonth(d);
         meses.push({

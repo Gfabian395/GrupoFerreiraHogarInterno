@@ -268,7 +268,8 @@ const Clientes = ({ currentUser }) => {
       {/* Tarjetas de Cliente */}
       <div className="card-container mt-4">
         {filteredClientes.map((cliente, index) => (
-          <div className="card" key={`${cliente.dni}-${index}`} onClick={() => handleClienteClick(cliente.dni)}>
+          <div
+            className={`card ${cliente.bloqueado ? 'bloqueado' : ''}`} key={`${cliente.dni}-${index}`} onClick={() => handleClienteClick(cliente.dni)}>
             <img
               src={cliente.imagenUrl || 'https://placehold.co/200x200'}
               alt={cliente.nombreCompleto}

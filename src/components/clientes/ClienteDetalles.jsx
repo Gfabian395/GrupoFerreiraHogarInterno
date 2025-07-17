@@ -174,6 +174,22 @@ const ClienteDetalles = ({ currentUser }) => {
 
   return (
     <div className={`cliente-detalles container ${clienteBloqueado ? 'cliente-bloqueado' : ''}`}>
+      {/* RESUMEN DE DEUDA TOTAL */}
+      <div className="resumen-total mt-5 p-3 border rounded bg-light">
+        <h3>Resumen de Deuda Total</h3>
+        <p><strong>Total Créditos:</strong> ${ventas.reduce((acc, v) => acc + Math.round((v.totalCredito || 0) / 1000) * 1000, 0).toLocaleString('es-AR')}</p>
+        <p><strong>Total Pagado:</strong> ${ventas.reduce((acc, v) => {
+          const pagos = v.pagos || [];
+          return acc + pagos.reduce((sum, p) => sum + Math.round(p.monto / 1000) * 1000, 0);
+        }, 0).toLocaleString('es-AR')}</p>
+        <p><strong>Deuda Total:</strong> ${(
+          ventas.reduce((acc, v) => acc + Math.round((v.totalCredito || 0) / 1000) * 1000, 0) -
+          ventas.reduce((acc, v) => {
+            const pagos = v.pagos || [];
+            return acc + pagos.reduce((sum, p) => sum + Math.round(p.monto / 1000) * 1000, 0);
+          }, 0)
+        ).toLocaleString('es-AR')}</p>
+      </div>
 
       {/* Alerta roja si el cliente está bloqueado */}
       {clienteBloqueado && (

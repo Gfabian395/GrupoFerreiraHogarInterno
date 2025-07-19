@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db, storage } from '../../firebaseConfig';
 import { collection, getDocs, deleteDoc, doc, updateDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import './Categorias.css';
 import Load from '../load/Load';
 import BusquedaGlobal from '../busqueda global/BusquedaGlobal';
@@ -15,7 +15,7 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
   const [deleteId, setDeleteId] = useState(null);
   const [password, setPassword] = useState('');
   const [alerta, setAlerta] = useState('');
-  
+
   // Estado para el buscador global
   const [query, setQuery] = useState('');
 
@@ -77,7 +77,7 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
   };
 
   const handleEditCategoria = (categoria) => {
-    if (['jefe', 'encargado'].some(r => currentUser?.role?.includes(r))) {
+    if (['jefe', 'encargado', 'fotografo'].some(r => currentUser?.role?.includes(r))) {
       setEditCategoria(categoria);
       setEditNombre(categoria.nombre);
       setEditImagenUrl(categoria.imagenUrl);
@@ -108,16 +108,32 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
 
       if (editImagenFile) {
         setUploading(true);
+
+        // 1. Subir nueva imagen
         const imageRef = ref(storage, `categorias/${Date.now()}_${editImagenFile.name}`);
         await uploadBytes(imageRef, editImagenFile);
         nuevaImagenUrl = await getDownloadURL(imageRef);
+
+        // 2. Borrar imagen anterior (si existe)
+        if (editCategoria.imagenUrl) {
+          try {
+            const oldPath = decodeURIComponent(editCategoria.imagenUrl.split('/o/')[1].split('?')[0]);
+            const oldRef = ref(storage, oldPath);
+            await deleteObject(oldRef);
+          } catch (err) {
+            console.warn("No se pudo borrar la imagen anterior:", err.message);
+          }
+        }
+
         setUploading(false);
       }
 
+      // 3. Actualizar Firestore
       await updateDoc(doc(db, 'categorias', editCategoria.id), {
-        nombre: editNombre,
+        ...(currentUser?.role?.includes('fotografo') ? {} : { nombre: editNombre }),
         imagenUrl: nuevaImagenUrl,
       });
+
       setAlerta('Categoría actualizada con éxito');
       setTimeout(() => window.location.reload(), 1000);
     } catch (error) {
@@ -157,7 +173,7 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
         <ul>
           {categorias.map(categoria => (
             <li key={categoria.id} className="categoria-card">
-              {['jefe', 'encargado'].some(r => currentUser?.role?.includes(r)) && (
+              {(['jefe', 'encargado', 'fotografo'].some(r => currentUser?.role?.includes(r))) && (
                 <button
                   className="btn-esquina top-right"
                   onClick={(e) => {
@@ -229,13 +245,20 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
             <div className="form-popup">
               <h3>Editar Categoría</h3>
               <form onSubmit={saveEditCategoria}>
-                <input
-                  type="text"
-                  value={editNombre}
-                  onChange={(e) => setEditNombre(e.target.value)}
-                  placeholder="Nombre de la Categoría"
-                  required
-                />
+                {!currentUser?.role?.includes('fotografo') && (
+                  <input
+                    type="text"
+                    value={editNombre}
+                    onChange={(e) => setEditNombre(e.target.value)}
+                    placeholder="Nombre de la Categoría"
+                    required
+                  />
+                )}
+                {currentUser?.role?.includes('fotografo') && (
+                  <p style={{ marginBottom: '1rem', color: '#777' }}>
+                    Solo puede editar la imagen.
+                  </p>
+                )}
                 <input
                   type="file"
                   accept="image/*"

@@ -85,12 +85,15 @@ const Clientes = ({ currentUser }) => {
 
   const handleAddCliente = async (e) => {
     e.preventDefault();
-    if (!selectedFile) return alert('Subí una imagen del cliente.');
 
     try {
-      const imageRef = ref(storage, `clientes/${newCliente.dni}.jpg`);
-      await uploadBytes(imageRef, selectedFile);
-      const imagenUrl = await getDownloadURL(imageRef);
+      let imagenUrl = 'https://placehold.co/200x200';
+
+      if (selectedFile) {
+        const imageRef = ref(storage, `clientes/${newCliente.dni}.jpg`);
+        await uploadBytes(imageRef, selectedFile);
+        imagenUrl = await getDownloadURL(imageRef);
+      }
 
       const clienteData = {
         ...newCliente,
@@ -98,6 +101,7 @@ const Clientes = ({ currentUser }) => {
         nombreCompleto: formatNombre(newCliente.nombreCompleto),
         imagenUrl,
       };
+
       await setDoc(doc(db, 'clientes', newCliente.dni), clienteData);
       setClientes(prev => [...prev, clienteData]);
       setFilteredClientes(prev => [...prev, clienteData]);
@@ -333,7 +337,7 @@ const FormularioCliente = ({
       ))}
       <div className="form-group">
         <label>{esFotografo ? 'Subir nueva imagen:' : 'Subir imagen del cliente:'}</label>
-        <input type="file" accept="image/*" onChange={handleFileChange} required={!esFotografo} />
+        <input type="file" accept="image/*" onChange={handleFileChange} />
       </div>
       {selectedFile && (
         <div className="preview-image-container">

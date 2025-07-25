@@ -76,15 +76,19 @@ const Productos = ({ onAddToCart, currentUser }) => {
   const calcularCuotasHover = (precio) => {
     if (isNaN(precio) || precio <= 0) return [];
 
-    const cuotasFiltradas = configuracionCuotas.filter((opcion) => {
-      if (precio < 30000) return opcion.cuotas <= 2;
-      if (precio >= 30000 && precio < 80000) return opcion.cuotas <= 3;
-      if (precio >= 80000 && precio < 150000) return opcion.cuotas <= 6;
-      if (precio >= 150000 && precio < 250000) return opcion.cuotas <= 9;
-      if (precio >= 250000 && precio < 350000) return opcion.cuotas <= 12;
-      if (precio >= 350000 && precio < 500000) return opcion.cuotas <= 18;
-      return true;
-    });
+    const cuotasFiltradas = [
+      { cuotas: 1, interes: 0 },
+      ...configuracionCuotas.filter((opcion) => {
+        if (precio < 30000) return opcion.cuotas <= 2;
+        if (precio >= 30000 && precio < 80000) return opcion.cuotas <= 3;
+        if (precio >= 80000 && precio < 150000) return opcion.cuotas <= 6;
+        if (precio >= 150000 && precio < 250000) return opcion.cuotas <= 9;
+        if (precio >= 250000 && precio < 350000) return opcion.cuotas <= 12;
+        if (precio >= 350000 && precio < 500000) return opcion.cuotas <= 18;
+        return true;
+      })
+    ];
+
 
     return cuotasFiltradas.map(({ cuotas, interes }) => {
       const montoConInteres = precio * (1 + interes / 100);
@@ -402,7 +406,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
                     ${((producto.precio || 0) * 1).toLocaleString('es-AR')}
                   </span>
 
-                   <div className="detalle-cuotas">
+                  <div className="detalle-cuotas">
                     {calcularCuotasHover(producto.precio || 0).map((c, idx) => (
                       <p key={idx}>En {c.cuotas} cuotas de ${c.montoCuota}</p>
                     ))}
@@ -430,7 +434,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
                         Pedir por WhatsApp
                       </button>
                     )}
-                  </div> 
+                  </div>
 
                   {roles.includes('invitado') && (
                     <button
@@ -452,7 +456,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
                     </button>
                   )}
 
-                   {(['jefe', 'vendedor', 'encargado', 'fotografo', ].some((r) => roles.includes(r))) && (
+                  {(['jefe', 'vendedor', 'encargado', 'fotografo',].some((r) => roles.includes(r))) && (
                     <>
                       <p>
                         Andes 4034: {stock4034}
@@ -492,7 +496,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
                         ) : null}
                       </p>
                     </>
-                  )} 
+                  )}
                 </div>
 
                 {(roles.includes('jefe') || roles.includes('encargado') || roles.includes('fotografo')) && (

@@ -53,15 +53,18 @@ const Carrito = ({ productos, onRemoveFromCart, onClearCart, currentUser }) => {
 
   const subtotalConDescuento = subtotal - (subtotal * descuento) / 100;
 
-  const cuotasDisponibles = configuracionCuotas.filter(({ cuotas }) => {
-    if (subtotal < 30000) return cuotas <= 2;
-    if (subtotal >= 30000 && subtotal < 80000) return cuotas <= 3;
-    if (subtotal >= 80000 && subtotal < 150000) return cuotas <= 6;
-    if (subtotal >= 150000 && subtotal < 250000) return cuotas <= 9;
-    if (subtotal >= 250000 && subtotal < 350000) return cuotas <= 12;
-    if (subtotal >= 350000 && subtotal < 500000) return cuotas <= 18;
-    return true;
-  });
+  const cuotasDisponibles = [
+    { cuotas: 1, interes: 0 }, // Siempre disponible
+    ...configuracionCuotas.filter(({ cuotas }) => {
+      if (subtotal < 30000) return cuotas <= 2;
+      if (subtotal >= 30000 && subtotal < 80000) return cuotas <= 3;
+      if (subtotal >= 80000 && subtotal < 150000) return cuotas <= 6;
+      if (subtotal >= 150000 && subtotal < 250000) return cuotas <= 9;
+      if (subtotal >= 250000 && subtotal < 350000) return cuotas <= 12;
+      if (subtotal >= 350000 && subtotal < 500000) return cuotas <= 18;
+      return true;
+    })
+  ];
 
   const handleConfirmarFormulario = () => {
     if (!cuotaSeleccionada) return alert('Seleccioná una cantidad de cuotas.');
@@ -90,9 +93,18 @@ const Carrito = ({ productos, onRemoveFromCart, onClearCart, currentUser }) => {
   };
 
   const handlePedirWhatsapp = () => {
-    const cuotaObj = cuotasDisponibles.find(c => c.cuotas === parseInt(cuotaSeleccionada));
-    const montoConInteres = subtotalConDescuento * (1 + cuotaObj.interes / 100);
-    const montoCuota = Math.round(montoConInteres / cuotaObj.cuotas / 1000) * 1000;
+    let cuotaObj;
+    let montoCuota;
+
+    if (parseInt(cuotaSeleccionada) === 1) {
+      cuotaObj = { cuotas: 1, interes: 0 };
+      montoCuota = subtotalConDescuento;
+    } else {
+      cuotaObj = cuotasDisponibles.find(c => c.cuotas === parseInt(cuotaSeleccionada));
+      const montoConInteres = subtotalConDescuento * (1 + cuotaObj.interes / 100);
+      montoCuota = Math.round(montoConInteres / cuotaObj.cuotas / 1000) * 1000;
+    }
+
     const totalCompra = productos.reduce((acc, p) => acc + p.precio * p.cantidad, 0);
 
     let mensaje = `Hola, quiero hacer un pedido:\n\n*PRODUCTOS*\n`;
@@ -222,7 +234,9 @@ const Carrito = ({ productos, onRemoveFromCart, onClearCart, currentUser }) => {
               const montoCuota = Math.round(montoConInteres / c.cuotas / 1000) * 1000;
               return (
                 <option key={c.cuotas} value={c.cuotas}>
-                  {c.cuotas} cuotas de ${montoCuota.toLocaleString('es-AR')}
+                  {c.cuotas === 1
+                    ? `1 pago sin interés de $${montoCuota.toLocaleString('es-AR')}`
+                    : `${c.cuotas} cuotas de $${montoCuota.toLocaleString('es-AR')}`}
                 </option>
               );
             })}

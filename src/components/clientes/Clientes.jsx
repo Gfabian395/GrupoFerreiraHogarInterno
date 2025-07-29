@@ -42,17 +42,32 @@ const Clientes = ({ currentUser }) => {
 
   const fetchClientes = async () => {
     try {
-      const clienteCollection = collection(db, 'clientes');
-      const snapshot = await getDocs(clienteCollection);
-      const list = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      list.sort((a, b) => a.nombreCompleto.localeCompare(b.nombreCompleto));
-      setClientes(list);
-      setFilteredClientes(list);
+      // 1️⃣ Obtener clientes
+      const clienteSnapshot = await getDocs(collection(db, 'clientes'));
+      const clientesList = clienteSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+      // 2️⃣ Obtener ventas
+      const ventasSnapshot = await getDocs(collection(db, 'ventas'));
+      const ventasList = ventasSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+      // 3️⃣ Unir clientes con sus ventas
+      const clientesConVentas = clientesList.map(cliente => {
+        const ventasCliente = ventasList.filter(venta => venta.clienteId === cliente.dni);
+        return { ...cliente, ventas: ventasCliente };
+      });
+
+      // 4️⃣ Ordenar por nombre
+      clientesConVentas.sort((a, b) => a.nombreCompleto.localeCompare(b.nombreCompleto));
+
+      // 5️⃣ Actualizar estados
+      setClientes(clientesConVentas);
+      setFilteredClientes(clientesConVentas);
       setLoading(false);
     } catch (error) {
-      console.error('Error al obtener clientes:', error);
+      console.error('Error al obtener clientes y ventas:', error);
     }
   };
+
 
   useEffect(() => {
     fetchClientes();
@@ -188,6 +203,62 @@ const Clientes = ({ currentUser }) => {
     return () => document.removeEventListener('mousedown', handleOutsideClick);
   }, [mostrarFormulario, mostrarEditar, mostrarEliminar]);
 
+  const calcularTipoCliente = (ventas = []) => {
+    let comprasPagadas = 0;
+
+    ventas.forEach(venta => {
+      // Verificamos que pagos exista y tenga datos
+      const pagosTotales = (venta.pagos || []).reduce(
+        (total, pago) => total + (pago.monto || 0),
+        0
+      );
+
+      if (pagosTotales >= (venta.totalCredito || 0)) {
+        comprasPagadas++;
+      }
+    });
+
+    // Clasificar según el número de compras pagadas
+    if (comprasPagadas >= 15) return 'VIP';
+    if (comprasPagadas >= 10) return 'Excelente';
+    if (comprasPagadas >= 7) return 'Buen cliente';
+    if (comprasPagadas >= 5) return 'Cliente responsable';
+    if (comprasPagadas >= 3) return 'Nuevo';
+
+    return 'Sin clasificación';
+  };
+
+
+  const calcularCalificacionPromedio = (ventas = []) => {
+    const calificaciones = ventas.flatMap(venta =>
+      (venta.pagos || []).map(pago => pago.calificacion || 0)
+    );
+
+    const sumaCalificaciones = calificaciones.reduce(
+      (total, calificacion) => total + calificacion,
+      0
+    );
+
+    return calificaciones.length > 0
+      ? sumaCalificaciones / calificaciones.length
+      : 0;
+  };
+
+  const obtenerColorCliente = (tipoCliente) => {
+    switch (tipoCliente) {
+      case 'VIP':
+        return '#FFD700'; // Oro
+      case 'Excelente':
+        return '#FF00FF'; // Fucsia
+      case 'Buen cliente':
+        return '#0000FF'; // Azul
+      case 'Cliente responsable':
+        return '#50C878'; // Verde esmeralda
+      default:
+        return '#FFFFFF'; // Blanco (sin clasificación)
+    }
+  };
+
   if (loading) return <Load />;
 
   return (
@@ -271,41 +342,65 @@ const Clientes = ({ currentUser }) => {
 
       {/* Tarjetas de Cliente */}
       <div className="card-container mt-4">
-        {filteredClientes.map((cliente, index) => (
-          <div
-            className={`card ${cliente.bloqueado ? 'bloqueado' : ''}`} key={`${cliente.dni}-${index}`} onClick={() => handleClienteClick(cliente.dni)}>
-            <img
-              src={cliente.imagenUrl || 'https://placehold.co/200x200'}
-              alt={cliente.nombreCompleto}
-              className="card-img-top"
-            />
-            <div className="card-body">
-              <h5 className="card-title">{cliente.nombreCompleto}</h5>
-              <a
-                href={`https://wa.me/${cliente.telefono1}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-success"
-              >
-                Chat en WhatsApp
-              </a>
-              {(currentUser?.role.includes('jefe') || currentUser?.role.includes('encargado') || esFotografo) && (
-                <button className="btn btn-warning" onClick={(e) => { e.stopPropagation(); startEditCliente(cliente); }}>
-                  Editar
-                </button>
-              )}
-              {currentUser?.role.includes('jefe') && (
-                <button className="btn btn-danger ml-2" onClick={(e) => {
-                  e.stopPropagation();
-                  setEditClienteId(cliente.dni);
-                  setMostrarEliminar(true);
-                }}>
-                  Eliminar
-                </button>
-              )}
+        {filteredClientes.map((cliente, index) => {
+          // Calculamos tipo de cliente y calificación promedio
+          const tipoCliente = calcularTipoCliente(cliente.ventas || []);
+
+          return (
+            <div
+              className={`card ${cliente.bloqueado ? 'bloqueado' : ''}`}
+              key={`${cliente.dni}-${index}`}
+              onClick={() => handleClienteClick(cliente.dni)}
+              style={{ backgroundColor: obtenerColorCliente(tipoCliente) }}
+            >
+              <img
+                src={cliente.imagenUrl || 'https://placehold.co/200x200'}
+                alt={cliente.nombreCompleto}
+                className="card-img-top"
+              />
+              <div className="card-body">
+                <h5 className="card-title">{cliente.nombreCompleto}</h5>
+
+                {/* Nuevo: Tipo de cliente */}
+                <p className="badge bg-info text-dark">
+                  {tipoCliente || 'Sin clasificación'}
+                </p>
+
+                <a
+                  href={`https://wa.me/${cliente.telefono1}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-success"
+                >
+                  Chat en WhatsApp
+                </a>
+                {(currentUser?.role.includes('jefe') || currentUser?.role.includes('encargado') || esFotografo) && (
+                  <button
+                    className="btn btn-warning"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      startEditCliente(cliente);
+                    }}
+                  >
+                    Editar
+                  </button>
+                )}
+                {currentUser?.role.includes('jefe') && (
+                  <button
+                    className="btn btn-danger ml-2"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditClienteId(cliente.dni);
+                      setMostrarEliminar(true);
+                    }}
+                  >
+                    Eliminar
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

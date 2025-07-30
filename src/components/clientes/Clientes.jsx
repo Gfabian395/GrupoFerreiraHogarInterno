@@ -131,8 +131,10 @@ const Clientes = ({ currentUser }) => {
   const handleUpdateCliente = async (e) => {
     e.preventDefault();
     try {
-      const clienteDoc = doc(db, 'clientes', editClienteId);
-      let imagenUrl = null;
+      const oldDocRef = doc(db, 'clientes', editClienteId);
+      const newDocRef = doc(db, 'clientes', newCliente.dni.toString());
+
+      let imagenUrl = newCliente.imagenUrl;
 
       if (selectedFile) {
         const imageRef = ref(storage, `clientes/${newCliente.dni}.jpg`);
@@ -140,20 +142,23 @@ const Clientes = ({ currentUser }) => {
         imagenUrl = await getDownloadURL(imageRef);
       }
 
-      if (esFotografo) {
-        if (!imagenUrl) return alert('Seleccioná una imagen para actualizar');
-        await setDoc(clienteDoc, { imagenUrl }, { merge: true });
-        alert('Imagen actualizada exitosamente');
+      const updatedData = {
+        ...newCliente,
+        dni: newCliente.dni.toString(),
+        nombreCompleto: formatNombre(newCliente.nombreCompleto),
+        imagenUrl,
+      };
+
+      if (editClienteId !== newCliente.dni) {
+        // 🔹 DNI cambió → crear nuevo doc y borrar el viejo
+        await setDoc(newDocRef, updatedData);
+        await deleteDoc(oldDocRef);
       } else {
-        await setDoc(clienteDoc, {
-          ...newCliente,
-          dni: newCliente.dni.toString(),
-          nombreCompleto: formatNombre(newCliente.nombreCompleto),
-          imagenUrl: imagenUrl || newCliente.imagenUrl,
-        });
-        alert('Cliente actualizado exitosamente');
+        // 🔹 DNI igual → actualizar doc
+        await setDoc(oldDocRef, updatedData, { merge: true });
       }
 
+      alert('Cliente actualizado exitosamente');
       setMostrarEditar(false);
       setSelectedFile(null);
       setEditClienteId(null);
@@ -371,20 +376,24 @@ const Clientes = ({ currentUser }) => {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn btn-success"
+                  onClick={(e) => e.stopPropagation()}
                 >
-                  Chat en WhatsApp
+                  <i className='bx bxl-whatsapp'></i>
                 </a>
+
                 {(currentUser?.role.includes('jefe') || currentUser?.role.includes('encargado') || esFotografo) && (
                   <button
-                    className="btn btn-warning"
+                    className="btn btn-edit"
                     onClick={(e) => {
                       e.stopPropagation();
                       startEditCliente(cliente);
                     }}
+                    title="Editar cliente"
                   >
-                    Editar
+                    <i className='bx bxs-pencil'></i>
                   </button>
                 )}
+
                 {currentUser?.role.includes('jefe') && (
                   <button
                     className="btn btn-danger ml-2"
@@ -393,11 +402,25 @@ const Clientes = ({ currentUser }) => {
                       setEditClienteId(cliente.dni);
                       setMostrarEliminar(true);
                     }}
+                    title="Eliminar cliente"
                   >
-                    Eliminar
+                    <i className='bx bxs-trash-alt'></i>
                   </button>
                 )}
+
+                <div className="tooltip-container">
+                  <button
+                    type="button"
+                    className="btn btn-info ml-2"
+                    onClick={(e) => e.stopPropagation()}
+                    title="Ver observaciones"
+                  >
+                    <i className='bx bx-info-circle'></i>
+                  </button>
+                  <span className="tooltip-text">{cliente.observacion || 'Sin observaciones'}</span>
+                </div>
               </div>
+
             </div>
           );
         })}

@@ -26,8 +26,10 @@
   left: 0;
   width: 100%;
   height: 100%;
-  backdrop-filter: blur(10px); /* Ajusta el valor según sea necesario */
-  background: rgba(0, 0, 0, 0.5); /* Para dar un efecto más oscuro */
+  backdrop-filter: blur(10px);
+  /* Ajusta el valor según sea necesario */
+  background: rgba(0, 0, 0, 0.5);
+  /* Para dar un efecto más oscuro */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -39,7 +41,8 @@
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  position: relative; /* Añadir posición relativa para el botón de cierre */
+  position: relative;
+  /* Añadir posición relativa para el botón de cierre */
   z-index: 1001;
 }
 
@@ -99,28 +102,35 @@
   width: 100%;
   max-width: 400px;
   padding: 12px 20px;
-  margin: 20px auto; /* Centrar horizontalmente */
+  margin: 20px auto;
+  /* Centrar horizontalmente */
   box-sizing: border-box;
   border: 1px solid #ccc;
-  border-radius: 25px; /* Bordes redondeados */
+  border-radius: 25px;
+  /* Bordes redondeados */
   font-size: 16px;
   transition: border-color 0.3s, box-shadow 0.3s;
-  display: block; /* Asegura que ocupe toda la fila para centrar correctamente */
+  display: block;
+  /* Asegura que ocupe toda la fila para centrar correctamente */
 }
 
 .search-bar:focus {
-  border-color: #5c6ac4; /* Color del borde al enfocar */
-  box-shadow: 0 0 8px rgba(92, 106, 196, 0.5); /* Sombra al enfocar */
+  border-color: #5c6ac4;
+  /* Color del borde al enfocar */
+  box-shadow: 0 0 8px rgba(92, 106, 196, 0.5);
+  /* Sombra al enfocar */
   outline: none;
 }
 
 .search-bar::placeholder {
-  color: #999; /* Color del texto del placeholder */
+  color: #999;
+  /* Color del texto del placeholder */
   font-style: italic;
 }
 
 .search-bar:focus::placeholder {
-  color: #ccc; /* Color del placeholder al enfocar */
+  color: #ccc;
+  /* Color del placeholder al enfocar */
 }
 
 .search-container {
@@ -128,7 +138,8 @@
   justify-content: center;
   align-items: center;
   width: 100%;
-  margin-top: 20px; /* Espacio superior para ajustarlo */
+  margin-top: 20px;
+  /* Espacio superior para ajustarlo */
 }
 
 /* Card del cliente */
@@ -172,6 +183,15 @@
   border-bottom: 1px solid #3a3a55;
 }
 
+/* 📝 Nombre */
+.card-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  text-align: center;
+  color: #00ffe7;
+  letter-spacing: 0.5px;
+}
+
 /* 📦 Contenido de la tarjeta */
 .card-body {
   color: #f1f1f1;
@@ -185,25 +205,11 @@
   transition: background 0.3s ease-in-out;
 }
 
-
-/* 📝 Nombre */
-.card-title {
-  font-size: 1.2rem;
-  font-weight: 600;
-  text-align: center;
-  color: #00ffe7;
-  letter-spacing: 0.5px;
-}
-
 /* 🔘 Botones dentro de la tarjeta */
 .card-body .btn {
-  width: 100%;
-  padding: 10px 0;
-  font-size: 0.95rem;
-  font-weight: 500;
-  border-radius: 8px;
-  transition: background 0.3s ease;
+  border-radius: 50%;
   text-align: center;
+  position: absolute;
 }
 
 /* WhatsApp */
@@ -211,6 +217,15 @@
   background: linear-gradient(to right, #25d366, #128c7e);
   color: white;
   border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 25px;
+  top: -5%;
+  left: 2%;
 }
 
 .card-body .btn-success:hover {
@@ -218,35 +233,102 @@
 }
 
 /* Editar */
-.card-body .btn-warning {
-  background: linear-gradient(135deg, #ffcc00, #ffaa00);
-  color: #222;
+.card-body .btn-edit {
+  background: linear-gradient(to right, #fdc785, #ffdf20) !important;
+  color: white !important;
   border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 25px;
+  top: -2%;
+  right: 2%;
 }
 
-.card-body .btn-warning:hover {
+.card-body .btn-edit:hover {
   background: linear-gradient(135deg, #ffdd33, #ff9900);
 }
 
 /* Eliminar */
 .card-body .btn-danger {
-  background: linear-gradient(to right, #ff5f6d, #ffc371);
+  background: linear-gradient(135deg, #ff5f6d, #ffc371) !important;
   color: white;
   border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 25px;
+  bottom: 1%;
+  left: -2%;
 }
 
 .card-body .btn-danger:hover {
   background: linear-gradient(to right, #ff3c4e, #fcb045);
 }
 
-.preview-image{
+.preview-image {
   width: 200px;
 }
 
 .card.bloqueado {
-  background-color: #ec7063 !important; 
+  background-color: #ec7063 !important;
   border: 2px solid #ff0000;
 }
+
+.card-body .btn-info {
+  background: linear-gradient(135deg, #4facfe, #00f2fe) !important;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 25px;
+}
+
+.card-body .btn-info:hover {
+  background: linear-gradient(to right, #3b8dff, #00c6ff);
+}
+
+/* Tooltip */
+.card-body .tooltip-container {
+  position: absolute;
+  top: 84%;
+  right: 27%;
+}
+
+.tooltip-text {
+  visibility: hidden;
+  width: 220px;
+  background: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  padding: 8px;
+  position: absolute;
+  z-index: 10;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  white-space: normal;
+  box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.tooltip-container:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
 
 /* 🔧 Responsive */
 @media (max-width: 500px) {
@@ -255,6 +337,8 @@
   }
 
   .card-body .btn {
-    font-size: 0.9rem;
+    font-size: 15px;
+    width: 25px;
+    height: 25px;
   }
 }

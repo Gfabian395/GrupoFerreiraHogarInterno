@@ -391,7 +391,7 @@ const Clientes = ({ currentUser }) => {
                     <i className='bx bxs-pencil'></i>
                   </button>
                 )}
-                
+
                 {currentUser?.role.includes('jefe') && (
                   <button
                     className="btn btn-danger ml-2"
@@ -404,6 +404,17 @@ const Clientes = ({ currentUser }) => {
                     <i className='bx bxs-trash-alt'></i>
                   </button>
                 )}
+
+                <div className="tooltip-container">
+                  <button
+                    type="button"
+                    className="btn btn-info ml-2"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <i className='bx bx-info-circle'></i>
+                  </button>
+                  <span className="tooltip-text">{cliente.observacion || 'Sin observaciones'}</span>
+                </div>
               </div>
             </div>
           );

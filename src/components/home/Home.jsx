@@ -11,14 +11,26 @@ const Home = () => {
   useEffect(() => {
     const fetchClientesConPagosProximos = async () => {
       const ventasCollection = collection(db, 'ventas');
-      const ventasSnapshot = await getDocs(ventasCollection);
+      const clientesCollection = collection(db, 'clientes');
+
+      const [ventasSnapshot, clientesSnapshot] = await Promise.all([
+        getDocs(ventasCollection),
+        getDocs(clientesCollection)
+      ]);
+
       const ventasList = ventasSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const clientesList = clientesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
       const hoy = new Date();
       const clientesProximos = [];
 
       ventasList.forEach(venta => {
         const { clienteId, valorCuota, pagos = [], totalCredito, vendedor, nombreCompleto } = venta;
+
+        // ✅ Buscar si el cliente está bloqueado
+        const clienteInfo = clientesList.find(c => c.dni === clienteId);
+        if (clienteInfo?.bloqueado) return; // ❌ No incluir bloqueados
+
         const totalPagado = pagos.reduce((sum, pago) => sum + (pago.monto || 0), 0);
         if (totalPagado >= totalCredito) return;
 
@@ -60,6 +72,7 @@ const Home = () => {
 
     fetchClientesConPagosProximos();
   }, []);
+
 
   const handleDniDobleClick = (clienteId, ventaId) => {
     navigate(`/cliente/${clienteId}`, {

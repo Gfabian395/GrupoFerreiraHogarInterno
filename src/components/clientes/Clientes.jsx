@@ -16,6 +16,7 @@ const Clientes = ({ currentUser }) => {
     entrecalles: '',
     telefono1: '+549',
     telefono2: '+549',
+    observacion: '',
   });
   const [selectedFile, setSelectedFile] = useState(null);
   const [editClienteId, setEditClienteId] = useState(null);
@@ -366,7 +367,7 @@ const Clientes = ({ currentUser }) => {
               <div className="card-body">
                 <h5 className="card-title">{cliente.nombreCompleto}</h5>
 
-                {/* Nuevo: Tipo de cliente */}
+                {/* Tipo de cliente */}
                 <p className="badge bg-info text-dark">
                   {tipoCliente || 'Sin clasificación'}
                 </p>
@@ -381,18 +382,20 @@ const Clientes = ({ currentUser }) => {
                   <i className='bx bxl-whatsapp'></i>
                 </a>
 
-                {(currentUser?.role.includes('jefe') || currentUser?.role.includes('encargado') || esFotografo) && (
-                  <button
-                    className="btn btn-edit"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      startEditCliente(cliente);
-                    }}
-                    title="Editar cliente"
-                  >
-                    <i className='bx bxs-pencil'></i>
-                  </button>
-                )}
+                {(currentUser?.role.includes('jefe') ||
+                  currentUser?.role.includes('encargado') ||
+                  esFotografo) && (
+                    <button
+                      className="btn btn-edit"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        startEditCliente(cliente);
+                      }}
+                      title="Editar cliente"
+                    >
+                      <i className='bx bxs-pencil'></i>
+                    </button>
+                  )}
 
                 {currentUser?.role.includes('jefe') && (
                   <button
@@ -420,9 +423,9 @@ const Clientes = ({ currentUser }) => {
                   <span className="tooltip-text">{cliente.observacion || 'Sin observaciones'}</span>
                 </div>
               </div>
-
             </div>
           );
+
         })}
       </div>
     </div>
@@ -453,10 +456,22 @@ const FormularioCliente = ({
           />
         </div>
       ))}
+
+      {/* ✅ Nuevo campo Observaciones */}
+      <div className="form-group">
+        <textarea
+          className="form-control"
+          placeholder="Observaciones"
+          value={cliente.observacion || ''}
+          onChange={(e) => setCliente({ ...cliente, observacion: e.target.value })}
+        />
+      </div>
+
       <div className="form-group">
         <label>{esFotografo ? 'Subir nueva imagen:' : 'Subir imagen del cliente:'}</label>
         <input type="file" accept="image/*" onChange={handleFileChange} />
       </div>
+
       {selectedFile && (
         <div className="preview-image-container">
           <img
@@ -466,6 +481,7 @@ const FormularioCliente = ({
           />
         </div>
       )}
+
       <button type="submit" className="btn btn-primary">
         {esFotografo ? 'Actualizar Imagen' : (cliente?.dni ? 'Actualizar Cliente' : 'Agregar Cliente')}
       </button>

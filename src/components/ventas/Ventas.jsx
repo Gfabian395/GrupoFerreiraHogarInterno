@@ -173,12 +173,16 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
 
       const ventasCollection = collection(db, 'ventas');
 
+      const ahora = new Date();
+      const [year, month, day] = fechaVenta.split('-');
+      const fechaConHora = new Date(year, month - 1, day, ahora.getHours(), ahora.getMinutes(), ahora.getSeconds());
+
       const venta = {
         clienteId: selectedCliente,
         sucursal,
         productos: carrito,
         cuotas: cuotasSeleccionadas,
-        fecha: new Date(), // uso la fecha seleccionada
+        fecha: fechaConHora, // ✅ Fecha elegida + hora exacta
         totalCredito,
         valorCuota: valorCuotaCalculado,
         pagos: [],

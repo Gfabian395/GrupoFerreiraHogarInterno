@@ -181,7 +181,7 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
                     handleEditCategoria(categoria);
                   }}
                 >
-                  ✏️
+                  <i className='bx bxs-pencil'></i>
                 </button>
               )}
 
@@ -193,7 +193,7 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
                     promptDeleteCategoria(categoria.id);
                   }}
                 >
-                  🗑️
+                  <i className='bx bxs-trash-alt'></i>
                 </button>
               )}
 

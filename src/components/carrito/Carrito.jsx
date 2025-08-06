@@ -184,7 +184,7 @@ const Carrito = ({ productos, onRemoveFromCart, onClearCart, currentUser }) => {
                   onClick={() => onRemoveFromCart(producto.id)}
                   disabled={outOfStock}
                 >
-                  Eliminar
+                  <i className='bx bxs-trash-alt'></i>
                 </button>
               </div>
             </div>

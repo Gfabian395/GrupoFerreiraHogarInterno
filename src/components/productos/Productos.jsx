@@ -501,13 +501,13 @@ const Productos = ({ onAddToCart, currentUser }) => {
 
                 {(roles.includes('jefe') || roles.includes('encargado') || roles.includes('fotografo')) && (
                   <>
-                    <button className="boton-editar" onClick={() => handleShowFormulario(producto)}>✏️</button>
+                    <button className="boton-editar" onClick={() => handleShowFormulario(producto)}><i className='bx bxs-pencil'></i></button>
                     {roles.includes('jefe') && (
                       <button
                         className="boton-borrar"
                         onClick={() => confirmarYEliminar(producto.id)}
                       >
-                        🗑️
+                        <i className='bx bxs-trash-alt'></i>
                       </button>
                     )}
                   </>

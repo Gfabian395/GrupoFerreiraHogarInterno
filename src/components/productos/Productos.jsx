@@ -5,6 +5,8 @@ import { collection, getDocs, updateDoc, deleteDoc, doc } from 'firebase/firesto
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import Load from '../load/Load';
 import './Productos.css';
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 const Productos = ({ onAddToCart, currentUser }) => {
   const { categoriaId } = useParams();
@@ -352,9 +354,61 @@ const Productos = ({ onAddToCart, currentUser }) => {
 
   if (loading) return <Load />;
 
+  const generarPDFStock = async () => {
+    try {
+      const pdf = new jsPDF("p", "mm", "a4");
+      let y = 10; // posición vertical inicial
+
+      for (const producto of filteredProductos) {
+        // Evitar que se pase del final de la hoja
+        if (y > 270) {
+          pdf.addPage();
+          y = 10;
+        }
+
+        // Obtener imagen como base64
+        const img = await cargarImagenBase64(producto.imagenUrl || 'https://via.placeholder.com/150');
+
+        // Agregar imagen
+        pdf.addImage(img, "JPEG", 5, y, 15, 15); // X, Y, ancho, alto
+
+        // Agregar nombre (sin precio)
+        pdf.text(producto.nombre || "Sin nombre", 45, y + 10);
+
+        y += 20; // espacio entre productos
+      }
+
+      pdf.save("control_stock.pdf");
+    } catch (error) {
+      console.error("Error generando PDF:", error);
+    }
+  };
+
+  const cargarImagenBase64 = (url) => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.setAttribute("crossOrigin", "anonymous"); // evitar problemas de CORS
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL("image/jpeg"));
+      };
+      img.src = url;
+    });
+  };
+
   return (
     <>
       {alerta && <div className="alert alert-success">{alerta}</div>}
+
+      {roles.includes('jefe') && (
+        <button onClick={generarPDFStock} className="btn-pdf">
+          📄 Descargar PDF Stock
+        </button>
+      )}
 
       <div className="productos">
         <input

@@ -236,6 +236,23 @@
   font-size: 1rem;
 }
 
+.btn-pdf {
+  background: #e63946;
+  color: white;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.btn-pdf:hover {
+  background: #d62828;
+}
+
+.btn-pdf:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
 @keyframes aparecer {
   from {
     opacity: 0;

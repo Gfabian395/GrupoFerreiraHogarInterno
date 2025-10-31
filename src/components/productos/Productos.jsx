@@ -8,6 +8,7 @@ import './Productos.css';
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { QRCodeCanvas } from "qrcode.react";
+import QRCode from 'qrcode';
 
 const Productos = ({ onAddToCart, currentUser }) => {
   const { categoriaId } = useParams();
@@ -401,6 +402,75 @@ const Productos = ({ onAddToCart, currentUser }) => {
     });
   };
 
+  const descargarQRCategoria = async () => {
+    try {
+      const pdf = new jsPDF("p", "mm", "a4");
+      const qrSize = 30; // QR 3 cm
+      const imgSize = 30; // Imagen 3 cm
+      const padding = 5;
+      const itemsPerRow = 3; // 3 tarjetas por fila
+      const rowHeight = Math.max(qrSize, imgSize) + 15; // altura de cada fila
+      let x = padding;
+      let y = padding;
+
+      for (let i = 0; i < filteredProductos.length; i++) {
+        const producto = filteredProductos[i];
+
+        // Generar QR
+        const urlProducto = `${window.location.origin}/producto/${categoriaId}/${producto.id}`;
+        const qrDataUrl = await QRCode.toDataURL(urlProducto, { margin: 1, width: 150 });
+
+        // Cargar imagen del producto
+        const imgDataUrl = await new Promise((resolve) => {
+          const img = new Image();
+          img.crossOrigin = "anonymous";
+          img.onload = () => {
+            const canvas = document.createElement("canvas");
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0);
+            resolve(canvas.toDataURL("image/jpeg"));
+          };
+          img.src = producto.imagenUrl || "https://via.placeholder.com/150";
+        });
+
+        // Fondo de tarjeta
+        pdf.setFillColor(245, 245, 245);
+        pdf.roundedRect(x - 2, y - 2, qrSize + imgSize + 10, rowHeight, 2, 2, "F");
+
+        // QR
+        pdf.addImage(qrDataUrl, "PNG", x, y, qrSize, qrSize);
+
+        // Imagen al lado del QR
+        pdf.addImage(imgDataUrl, "JPEG", x + qrSize + 5, y, imgSize, imgSize);
+
+        // Nombre del producto debajo
+        pdf.setFontSize(8);
+        pdf.text(producto.nombre || "Sin nombre", x, y + rowHeight - 5, { maxWidth: qrSize + imgSize + 5 });
+
+        // Ajustar posición
+        if ((i + 1) % itemsPerRow === 0) {
+          x = padding;
+          y += rowHeight + 5; // espacio entre filas
+          if (y + rowHeight > 290) { // nueva página
+            pdf.addPage();
+            y = padding;
+          }
+        } else {
+          x += qrSize + imgSize + 5; // espacio entre columnas
+        }
+      }
+
+      pdf.save(`QR_${categoriaId}.pdf`);
+    } catch (error) {
+      console.error("Error generando PDF de QRs:", error);
+      setAlerta("Ocurrió un error al generar los QRs");
+      setTimeout(() => setAlerta(""), 3000);
+    }
+  };
+
+
   return (
     <>
       {alerta && <div className="alert alert-success">{alerta}</div>}
@@ -410,6 +480,13 @@ const Productos = ({ onAddToCart, currentUser }) => {
           📄 Descargar PDF Stock
         </button>
       )}
+
+      {roles.includes('jefe') && (
+        <button onClick={descargarQRCategoria} className="btn-pdf">
+          📄 Descargar QRs de la categoría
+        </button>
+      )}
+
 
       <div className="productos">
         <input
@@ -568,17 +645,18 @@ const Productos = ({ onAddToCart, currentUser }) => {
                   </>
                 )}
 
-                <div className="qr-contenedor">
-                  <QRCodeCanvas
-                    value={`${window.location.origin}/producto/${categoriaId}/${producto.id}`}
-                    size={80}
-                    bgColor="#ffffff"
-                    fgColor="#000000"
-                    includeMargin={true}
-                  />
-                  <p className="qr-texto">Escaneá para ver el producto</p>
-                </div>
-
+                {roles.includes('jefe') && (
+                  <div className="qr-contenedor">
+                    <QRCodeCanvas
+                      value={`${window.location.origin}/producto/${categoriaId}/${producto.id}`}
+                      size={80}
+                      bgColor="#ffffff"
+                      fgColor="#000000"
+                      includeMargin={true}
+                    />
+                    <p className="qr-texto">Escaneá para ver el producto</p>
+                  </div>
+                )}
               </li>
             );
           })}

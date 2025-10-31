@@ -85,23 +85,25 @@ export default function DetalleProducto() {
             </div>
           )}
 
-          {/* 🔹 Mostrar cuotas */}
           <div className="cuotas">
             <h4>Opciones de cuotas</h4>
             <ul>
               {cuotasDisponibles.map((c) => {
                 const montoConInteres = producto.precio * (1 + c.interes / 100);
-                const montoCuota = Math.round(montoConInteres / c.cuotas / 100) * 100;
+                // 🔹 Redondear al múltiplo de 1000 más cercano
+                const montoCuota = Math.round(montoConInteres / c.cuotas / 1000) * 1000;
+
                 return (
                   <li key={c.cuotas}>
                     {c.cuotas === 1
-                      ? `1 pago sin interés de $${montoCuota.toLocaleString("es-AR")}`
-                      : `${c.cuotas} cuotas de $${montoCuota.toLocaleString("es-AR")}`}
+                      ? `Precio de contado $${montoCuota.toLocaleString("es-AR")}`
+                      : ` ${c.cuotas} Cuotas de $${montoCuota.toLocaleString("es-AR")}`}
                   </li>
                 );
               })}
             </ul>
           </div>
+
         </div>
       </div>
     </div>

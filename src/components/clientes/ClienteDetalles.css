@@ -1,0 +1,279 @@
+/* Contenedor principal */
+.cliente-detalles {
+  max-width: 1000px;
+  margin: 40px auto;
+  padding: 20px 30px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #fefefe;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+}
+
+/* Tarjeta de venta */
+.venta-detalle {
+  background-color: #f5f7fa;
+  padding: 25px 30px;
+  border-radius: 16px;
+  margin-bottom: 24px;
+  box-shadow: 0 6px 15px rgba(0, 123, 255, 0.2);
+  border-left: 6px solid #007bff;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.5s ease, border-color 0.5s ease;
+  cursor: pointer;
+}
+
+.venta-detalle:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 28px rgba(0, 123, 255, 0.35);
+}
+
+.venta-detalle.completo {
+  background-color: #e6f5ea;
+  border-left-color: #28a745;
+  box-shadow: 0 6px 15px rgba(40, 167, 69, 0.3);
+}
+
+.venta-detalle.completo:hover {
+  box-shadow: 0 12px 28px rgba(40, 167, 69, 0.45);
+}
+
+/* Venta seleccionada resaltada en dorado por 5s */
+.venta-seleccionada {
+  background-color: #fff8dc;
+  /* fondo dorado claro */
+  border-left-color: #ffd700 !important;
+  /* borde dorado */
+  box-shadow: 0 0 15px 5px rgba(255, 215, 0, 0.7) !important;
+  /* sombra dorada */
+}
+
+/* Títulos */
+.venta-detalle h3 {
+  margin-top: 0;
+  color: #2c3e50;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+/* Textos */
+.venta-detalle p {
+  margin: 10px 0;
+  color: #555;
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+/* Tabla de pagos */
+.table-responsive {
+  overflow-x: auto;
+  margin-top: 1rem;
+}
+
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 8px;
+  margin-top: 15px;
+  font-size: 1rem;
+  color: #444;
+}
+
+.table th,
+.table td {
+  padding: 12px 15px;
+  background-color: #fff;
+  text-align: center;
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  transition: background-color 0.2s ease;
+}
+
+.table th {
+  background-color: #f0f4f8;
+  color: #34495e;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.table td:hover {
+  background-color: #f9fbff;
+}
+
+/* Filas con atraso */
+.cliente-atrasado td {
+  background-color: #ffe6e6 !important;
+  color: #c0392b;
+  font-weight: 600;
+}
+
+/* Formulario de pago */
+form {
+  margin-top: 25px;
+  max-width: 400px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+label {
+  font-weight: 600;
+  margin-bottom: 8px;
+  display: block;
+  color: #34495e;
+  font-size: 1rem;
+}
+
+input[type="date"],
+input[type="number"],
+select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.8px solid #ccc;
+  border-radius: 10px;
+  font-size: 1rem;
+  background-color: #fff;
+  color: #2c3e50;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+input:focus,
+select:focus {
+  border-color: #007bff;
+  outline: none;
+  box-shadow: 0 0 8px rgba(0, 123, 255, 0.4);
+}
+
+/* Botones */
+.btn {
+  padding: 12px 24px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.25s ease, transform 0.15s ease;
+  box-shadow: 0 5px 15px rgba(0, 123, 255, 0.3);
+  color: #fff;
+  background-color: #007bff;
+  user-select: none;
+}
+
+.btn-primary:hover {
+  background-color: #0056b3;
+  box-shadow: 0 8px 24px rgba(0, 86, 179, 0.5);
+  transform: translateY(-2px);
+}
+
+.btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  box-shadow: none;
+  background-color: #6c757d;
+}
+
+/* Cuotas select */
+.form-select {
+  margin-top: 8px;
+  width: 100%;
+  border-radius: 10px;
+  padding: 10px 14px;
+  border: 1.8px solid #ccc;
+  font-size: 1rem;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.form-select:focus {
+  border-color: #007bff;
+  outline: none;
+  box-shadow: 0 0 8px rgba(0, 123, 255, 0.4);
+}
+
+/* Sección Agregar Pago */
+h4 {
+  margin-top: 30px;
+  color: #007bff;
+  font-size: 1.3rem;
+  font-weight: 700;
+  border-bottom: 2px solid #ddd;
+  padding-bottom: 6px;
+}
+
+/* Ocultar botones y formulario cuando está completo */
+.venta-detalle.completo .btn,
+.venta-detalle.completo form {
+  display: none;
+}
+.cliente-bloqueado {
+  background-color: #ff4d4d !important; /* rojo fuerte */
+  color: white;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.cliente-bloqueado .venta-detalle {
+  background-color: transparent !important;
+}
+
+
+@media (max-width: 768px) {
+  .cliente-detalles {
+    padding: 15px 20px;
+    margin: 20px 10px;
+  }
+
+  .venta-detalle {
+    padding: 20px;
+  }
+
+  .venta-detalle h3 {
+    font-size: 1.2rem;
+  }
+
+  .venta-detalle p {
+    font-size: 0.95rem;
+  }
+
+  .table-responsive {
+    overflow-x: auto;
+  }
+
+  .table {
+    font-size: 0.9rem;
+    min-width: 600px;
+    /* permite scroll horizontal si es necesario */
+  }
+
+  form {
+    max-width: 100%;
+  }
+
+  .btn {
+    width: 100%;
+    padding: 10px;
+    font-size: 1rem;
+  }
+
+  input[type="date"],
+  input[type="number"],
+  select,
+  .form-select {
+    font-size: 0.95rem;
+    padding: 10px;
+  }
+
+  h4 {
+    font-size: 1.1rem;
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 12px;
+  }
+
+}

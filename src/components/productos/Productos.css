@@ -1,0 +1,306 @@
+.productos ul {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+  padding: 20px;
+}
+
+.productos li {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  transition: transform 0.3s ease;
+  animation: fadeInCard 0.5s ease-in-out;
+}
+
+.preview-imagen {
+  width: 200px;
+}
+
+@keyframes fadeInCard {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.productos li:hover {
+  transform: translateY(-5px);
+}
+
+.producto-imagen {
+  width: 200px;
+  height: 200px;
+  object-fit: contain;
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+
+.detallitos h6 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.precio-texto {
+  font-size: 20px;
+  font-weight: bold;
+  color: #2e7d32;
+  margin-bottom: 4px;
+}
+
+.detalle-cuotas {
+  margin-top: 8px;
+  text-align: left;
+  font-size: 14px;
+  color: #555;
+}
+
+.detalle-cuotas p {
+  margin: 2px 0;
+  padding: 2px 0;
+  border-bottom: 1px dashed #ccc;
+}
+
+.boton-agregar,
+.boton-incrementar {
+  padding: 8px 12px;
+  margin: 4px;
+  border-radius: 8px;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.boton-agregar {
+  background-color: #1976d2;
+  color: white;
+}
+
+.boton-agregar:hover {
+  background-color: #115293;
+}
+
+.boton-incrementar {
+  background-color: #43a047;
+  color: white;
+}
+
+.boton-incrementar:hover {
+  background-color: #2e7d32;
+}
+
+.boton-editar,
+.boton-borrar {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  position: absolute;
+}
+
+.boton-editar {
+  top: 10px;
+  right: 80%;
+  color: #ffa000;
+}
+
+.boton-borrar {
+  top: 10px;
+  right: -3%;
+  color: #d32f2f;
+}
+
+.boton-detalles {
+  margin-top: 12px;
+  background-color: #5c6ac4;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: none;
+  font-weight: bold;
+  transition: background-color 0.3s;
+  cursor: pointer;
+}
+
+.boton-detalles:hover {
+  background-color: #3f51b5;
+}
+
+.badge-stock {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background-color: #d32f2f;
+  color: white;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  z-index: 10;
+}
+
+/* Aplica efecto visual para productos sin stock */
+.producto-sin-stock {
+  opacity: 0.5;
+  filter: grayscale(100%);
+}
+
+.modal-imagen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999;
+  cursor: zoom-out;
+}
+
+.imagen-modal-grande {
+  width: 60%;
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+  animation: aparecer 0.3s ease-in-out;
+}
+
+.boton-whatsapp {
+  margin-top: 10px;
+  display: inline-block;
+  background-color: #25D366;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
+}
+
+.boton-whatsapp:hover {
+  background-color: #1ebe5d;
+}
+
+.modal-cuotas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-cuotas-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5);
+  z-index: 999;
+}
+
+.modal-cuotas-content {
+  background: white;
+  padding: 20px 30px;
+  border-radius: 8px;
+  z-index: 1001;
+  min-width: 320px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.3);
+}
+
+.modal-cuotas-content h3 {
+  margin-top: 0;
+}
+
+.modal-cuotas-content select {
+  width: 100%;
+  padding: 8px;
+  font-size: 1rem;
+}
+
+.btn-pdf {
+  background: #e63946;
+  color: white;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.btn-pdf:hover {
+  background: #d62828;
+}
+
+.btn-pdf:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.cerrar-modal {
+  position: absolute;
+  top: 20px;
+  right: 30px;
+  color: white;
+  font-size: 30px;
+  font-weight: bold;
+  cursor: pointer;
+  z-index: 100000;
+}
+
+
+/* Estilos responsivos */
+@media (max-width: 600px) {
+  .productos ul {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* COLORES SEGÚN CATEGORÍA (ajustá según tus IDs) */
+.categoria-muebles {
+  border-top: 6px solid #ff7043;
+}
+
+.categoria-electro {
+  border-top: 6px solid #42a5f5;
+}
+
+.categoria-hogar {
+  border-top: 6px solid #66bb6a;
+}
+
+.categoria-tecnologia {
+  border-top: 6px solid #ab47bc;
+}
+
+.categoria-otros {
+  border-top: 6px solid #ffa000;
+}

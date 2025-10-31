@@ -1,0 +1,345 @@
+/* Clientes.css */
+.container {
+  position: relative;
+}
+
+.floating-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.blur-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  backdrop-filter: blur(10px);
+  /* Ajusta el valor según sea necesario */
+  background: rgba(0, 0, 0, 0.5);
+  /* Para dar un efecto más oscuro */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.floating-form {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  position: relative;
+  /* Añadir posición relativa para el botón de cierre */
+  z-index: 1001;
+}
+
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-control {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.btn-primary {
+  background-color: #007bff;
+  color: white;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  color: white;
+}
+
+.btn-warning {
+  background-color: #ffc107;
+  color: white;
+}
+
+.btn-danger {
+  background-color: #dc3545;
+  color: white;
+}
+
+/* Buscador */
+
+.search-bar {
+  width: 100%;
+  max-width: 400px;
+  padding: 12px 20px;
+  margin: 20px auto;
+  /* Centrar horizontalmente */
+  box-sizing: border-box;
+  border: 1px solid #ccc;
+  border-radius: 25px;
+  /* Bordes redondeados */
+  font-size: 16px;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  display: block;
+  /* Asegura que ocupe toda la fila para centrar correctamente */
+}
+
+.search-bar:focus {
+  border-color: #5c6ac4;
+  /* Color del borde al enfocar */
+  box-shadow: 0 0 8px rgba(92, 106, 196, 0.5);
+  /* Sombra al enfocar */
+  outline: none;
+}
+
+.search-bar::placeholder {
+  color: #999;
+  /* Color del texto del placeholder */
+  font-style: italic;
+}
+
+.search-bar:focus::placeholder {
+  color: #ccc;
+  /* Color del placeholder al enfocar */
+}
+
+.search-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  margin-top: 20px;
+  /* Espacio superior para ajustarlo */
+}
+
+/* Card del cliente */
+
+/* 🔲 Contenedor de tarjetas */
+.card-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  justify-content: center;
+  margin-top: 40px;
+  padding: 0 16px;
+}
+
+/* 🧱 Tarjeta principal */
+.card {
+  width: 240px;
+  background: linear-gradient(145deg, #1f1f2e, #2a2a40);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #2e2e40;
+}
+
+.card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.5);
+}
+
+/* 🖼️ Imagen superior */
+.card-img-top {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  border-bottom: 1px solid #3a3a55;
+}
+
+/* 📝 Nombre */
+.card-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  text-align: center;
+  color: #00ffe7;
+  letter-spacing: 0.5px;
+}
+
+/* 📦 Contenido de la tarjeta */
+.card-body {
+  color: #f1f1f1;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
+  transition: background 0.3s ease-in-out;
+}
+
+/* 🔘 Botones dentro de la tarjeta */
+.card-body .btn {
+  border-radius: 50%;
+  text-align: center;
+  position: absolute;
+}
+
+/* WhatsApp */
+.card-body .btn-success {
+  background: linear-gradient(to right, #25d366, #128c7e);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 25px;
+  top: -5%;
+  left: 2%;
+}
+
+.card-body .btn-success:hover {
+  background: linear-gradient(to right, #1bdc6c, #0f7b6a);
+}
+
+/* Editar */
+.card-body .btn-edit {
+  background: linear-gradient(to right, #fdc785, #ffdf20) !important;
+  color: white !important;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 25px;
+  top: -2%;
+  right: 2%;
+}
+
+.card-body .btn-edit:hover {
+  background: linear-gradient(135deg, #ffdd33, #ff9900);
+}
+
+/* Eliminar */
+.card-body .btn-danger {
+  background: linear-gradient(135deg, #ff5f6d, #ffc371) !important;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 25px;
+  bottom: 1%;
+  left: -2%;
+}
+
+.card-body .btn-danger:hover {
+  background: linear-gradient(to right, #ff3c4e, #fcb045);
+}
+
+.preview-image {
+  width: 200px;
+}
+
+.card.bloqueado {
+  background-color: #ec7063 !important;
+  border: 2px solid #ff0000;
+}
+
+.card-body .btn-info {
+  background: linear-gradient(135deg, #4facfe, #00f2fe) !important;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 25px;
+}
+
+.card-body .btn-info:hover {
+  background: linear-gradient(to right, #3b8dff, #00c6ff);
+}
+
+/* Tooltip */
+.card-body .tooltip-container {
+  position: absolute;
+  top: 84%;
+  right: 27%;
+}
+
+.tooltip-text {
+    visibility: hidden;
+    width: 200px; /* un poco más ancho */
+    background: rgba(0, 0, 0, 0.9);
+    color: #fff;
+    font-size: 0.9rem;
+    border-radius: 8px;
+    padding: 10px 12px;
+    position: fixed; /* ✅ ahora es flotante y no se corta */
+    z-index: 9999; /* ✅ siempre al frente */
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.2s ease;
+    white-space: normal;
+    pointer-events: none; /* evita bloquear clicks */
+    transform: translate(-50%, -10px); /* animación de aparición */
+}
+
+/* Cuando haces hover en el contenedor */
+.tooltip-container:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+    transform: translate(-70%, -100%); /* se desplaza suavemente */
+}
+
+
+
+/* 🔧 Responsive */
+@media (max-width: 500px) {
+  .card {
+    width: 100%;
+  }
+
+  .card-body .btn {
+    font-size: 15px;
+    width: 25px;
+    height: 25px;
+  }
+}

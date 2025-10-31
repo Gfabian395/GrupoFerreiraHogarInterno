@@ -1,0 +1,115 @@
+/* Contenedor principal */
+.resumen {
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 30px 25px;
+  background: #ffffff;
+  border-radius: 15px;
+  box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+}
+
+/* Título */
+.resumen h2 {
+  text-align: center;
+  font-weight: 700;
+  font-size: 2rem;
+  margin-bottom: 25px;
+  color: #222;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Gráfico ocupa todo ancho disponible */
+.resumen .recharts-wrapper {
+  border-radius: 12px;
+  background: #f8f9fa;
+  padding: 15px;
+  box-shadow: inset 0 0 10px #ddd;
+}
+
+/* Totales: flex con espacio y cards */
+.totales {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 35px;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+
+.totales > div {
+  flex: 1 1 300px;
+  background: #f5f7fa;
+  border-radius: 12px;
+  padding: 20px 25px;
+  box-shadow: 0 8px 15px rgba(0,0,0,0.05);
+  transition: transform 0.3s ease;
+}
+
+.totales > div:hover {
+  transform: translateY(-5px);
+}
+
+.totales h3 {
+  margin-bottom: 15px;
+  font-weight: 600;
+  color: #444;
+  border-bottom: 2px solid #4caf50;
+  padding-bottom: 8px;
+}
+
+.totales p {
+  font-size: 1.15rem;
+  margin: 10px 0;
+  color: #555;
+}
+
+.totales strong {
+  color: #111;
+}
+
+/* Balance section */
+.balance {
+  margin-top: 50px;
+  text-align: center;
+  background: #e9f7ef;
+  padding: 25px 20px;
+  border-radius: 15px;
+  box-shadow: 0 10px 25px rgba(76,175,80,0.15);
+}
+
+.balance h3 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: #2e7d32;
+  letter-spacing: 0.04em;
+}
+
+.balance p {
+  font-size: 1.2rem;
+  margin: 8px 0;
+  color: #2e7d32;
+}
+
+.balance strong {
+  font-weight: 700;
+  color: #1b5e20;
+}
+
+/* Responsive para móviles */
+@media (max-width: 600px) {
+  .totales {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .totales > div {
+    padding: 15px 20px;
+  }
+
+  .balance {
+    padding: 20px 15px;
+  }
+}

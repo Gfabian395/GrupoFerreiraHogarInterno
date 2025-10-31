@@ -1,0 +1,207 @@
+.cierre-caja {
+  padding: 30px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
+  color: #333;
+  min-height: 100vh;
+  animation: fadeInPage 0.8s ease forwards;
+}
+
+@keyframes fadeInPage {
+  from { opacity: 0; transform: translateY(10px);}
+  to { opacity: 1; transform: translateY(0);}
+}
+
+.cierre-caja h2 {
+  margin-bottom: 25px;
+  font-weight: 700;
+  font-size: 2rem;
+  color: #1e2a78;
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+}
+
+.cierre-caja .table-responsive {
+  overflow-x: auto;
+  margin-bottom: 30px;
+  border-radius: 12px;
+  box-shadow: 0 10px 20px rgba(30, 42, 120, 0.1);
+  background: white;
+  transition: box-shadow 0.3s ease;
+}
+.cierre-caja .table-responsive:hover {
+  box-shadow: 0 15px 30px rgba(30, 42, 120, 0.2);
+}
+
+.cierre-caja .table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 10px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.cierre-caja .table th,
+.cierre-caja .table td {
+  padding: 12px 15px;
+  background: #f8faff;
+  color: #1e2a78;
+  border: none;
+  transition: background-color 0.3s ease;
+  border-radius: 8px;
+}
+
+.cierre-caja .table th {
+  background: #1e2a78;
+  color: #fff;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: 0 2px 5px rgba(30, 42, 120, 0.15);
+}
+
+.cierre-caja .table tbody tr:hover td {
+  background: #d3e0ff;
+  cursor: pointer;
+  color: #0a1437;
+  font-weight: 600;
+}
+
+.cierre-caja h3 {
+  margin-top: 30px;
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: #1e2a78;
+  text-align: center;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+}
+
+.cierre-caja button {
+  margin: 15px 10px 0 0;
+  padding: 12px 28px;
+  background: linear-gradient(135deg, #4158d0, #c850c0);
+  color: #fff;
+  font-weight: 600;
+  font-size: 1rem;
+  border: none;
+  border-radius: 30px;
+  box-shadow: 0 8px 15px rgba(200, 80, 192, 0.3);
+  cursor: pointer;
+  transition: background 0.4s ease, box-shadow 0.4s ease, transform 0.2s ease;
+  user-select: none;
+}
+
+.cierre-caja button:hover {
+  background: linear-gradient(135deg, #c850c0, #4158d0);
+  box-shadow: 0 12px 20px rgba(200, 80, 192, 0.6);
+  transform: translateY(-3px);
+}
+
+.cierre-caja button:active {
+  transform: translateY(-1px) scale(0.98);
+  box-shadow: 0 6px 12px rgba(200, 80, 192, 0.3);
+}
+
+/* Formulario flotante */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(30, 42, 120, 0.7);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeInOverlay 0.5s ease forwards;
+}
+
+@keyframes fadeInOverlay {
+  from {opacity: 0;}
+  to {opacity: 1;}
+}
+
+.form-popup {
+  background: #fff;
+  padding: 30px 40px;
+  border-radius: 20px;
+  box-shadow: 0 25px 40px rgba(30, 42, 120, 0.2);
+  width: 90%;
+  max-width: 480px;
+  z-index: 1001;
+  display: flex;
+  flex-direction: column;
+  animation: popIn 0.4s ease forwards;
+}
+
+@keyframes popIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.form-popup h3 {
+  margin-bottom: 20px;
+  color: #1e2a78;
+  font-weight: 700;
+  font-size: 1.8rem;
+  text-align: center;
+  letter-spacing: 1px;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+}
+
+.form-popup label {
+  margin-top: 12px;
+  margin-bottom: 6px;
+  font-weight: 600;
+  color: #444;
+}
+
+.form-popup select,
+.form-popup input[type="text"],
+.form-popup input[type="number"] {
+  padding: 10px 14px;
+  border: 2px solid #1e2a78;
+  border-radius: 12px;
+  outline: none;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+.form-popup select:focus,
+.form-popup input[type="text"]:focus,
+.form-popup input[type="number"]:focus {
+  border-color: #c850c0;
+  box-shadow: 0 0 8px rgba(200, 80, 192, 0.5);
+}
+
+.form-popup button {
+  margin-top: 25px;
+  padding: 12px 25px;
+  border-radius: 30px;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: white;
+  background: linear-gradient(135deg, #c850c0, #4158d0);
+  border: none;
+  cursor: pointer;
+  transition: background 0.4s ease;
+  box-shadow: 0 10px 20px rgba(200, 80, 192, 0.4);
+  user-select: none;
+}
+
+.form-popup button:hover {
+  background: linear-gradient(135deg, #4158d0, #c850c0);
+  box-shadow: 0 15px 30px rgba(200, 80, 192, 0.7);
+}
+
+.form-popup button:active {
+  transform: scale(0.97);
+  box-shadow: 0 6px 12px rgba(200, 80, 192, 0.3);
+}

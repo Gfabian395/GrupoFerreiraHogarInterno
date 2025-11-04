@@ -13,7 +13,6 @@ const ProductoCard = ({
   const outOfStock4320 = stock4320 === 0;
   const outOfStockBoth = outOfStock4034 && outOfStock4320;
 
-  // Función para calcular cuotas (simplificada)
   const configuracionCuotas = [
     { cuotas: 2, interes: 15 },
     { cuotas: 3, interes: 25 },
@@ -48,18 +47,37 @@ const ProductoCard = ({
   const productoClass = (roles.includes('invitado') || !outOfStockBoth) ? '' : 'producto-sin-stock';
 
   return (
-    <li className={`card-producto ${productoClass} categoria-${producto.categoriaId}`} style={{ listStyle: 'none', marginBottom: '1rem', border: '1px solid #ccc', padding: '1rem', borderRadius: '6px' }}>
-      {outOfStockBoth && <span style={{ color: 'red', fontWeight: 'bold' }}>SIN STOCK</span>}
-
+    <li
+      className={`card-producto ${productoClass} categoria-${producto.categoriaId}`}
+      style={{
+        listStyle: 'none',
+        marginBottom: '1rem',
+        border: '1px solid #ccc',
+        padding: '1rem',
+        borderRadius: '6px'
+      }}
+    >
       <img
         src={producto.imagenUrl || 'https://via.placeholder.com/150'}
         alt={producto.nombre || 'Sin nombre'}
-        style={{ width: '150px', height: '150px', objectFit: 'contain', cursor: 'zoom-in', marginBottom: '5px' }}
+        style={{
+          width: '150px',
+          height: '150px',
+          objectFit: 'contain',
+          cursor: 'zoom-in',
+          marginBottom: '5px'
+        }}
         loading="lazy"
         onClick={() => onOpenImage(producto.imagenUrl)}
       />
 
       <h4>{producto.nombre || 'Sin nombre'}</h4>
+
+      {outOfStockBoth && (
+        <p style={{ color: 'red', fontWeight: 'bold', margin: '5px 0' }}>
+          🚫 SIN STOCK DISPONIBLE
+        </p>
+      )}
 
       <p style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>
         ${((producto.precio || 0) * 1).toLocaleString('es-AR')}
@@ -77,17 +95,39 @@ const ProductoCard = ({
         <>
           <p>
             Andes 4034: {stock4034}
-            <button onClick={() => onAddToCart(producto, 'Andes4034')} disabled={outOfStock4034} style={{ marginLeft: '0.5rem' }}>+🛒</button>
+            <button
+              onClick={() => onAddToCart(producto, 'Andes4034')}
+              disabled={outOfStock4034}
+              style={{ marginLeft: '0.5rem' }}
+            >
+              +🛒
+            </button>
             {(roles.includes('jefe') || roles.includes('encargado')) && (
-              <button onClick={() => onIncrementStock(producto.id, 'cantidadDisponibleAndes4034')} style={{ marginLeft: '0.5rem' }}>+</button>
+              <button
+                onClick={() => onIncrementStock(producto.id, 'cantidadDisponibleAndes4034')}
+                style={{ marginLeft: '0.5rem' }}
+              >
+                +
+              </button>
             )}
           </p>
 
           <p>
             Andes 4320: {stock4320}
-            <button onClick={() => onAddToCart(producto, 'Andes4320')} disabled={outOfStock4320} style={{ marginLeft: '0.5rem' }}>+🛒</button>
+            <button
+              onClick={() => onAddToCart(producto, 'Andes4320')}
+              disabled={outOfStock4320}
+              style={{ marginLeft: '0.5rem' }}
+            >
+              +🛒
+            </button>
             {(roles.includes('jefe') || roles.includes('encargado')) && (
-              <button onClick={() => onIncrementStock(producto.id, 'cantidadDisponibleAndes4320')} style={{ marginLeft: '0.5rem' }}>+</button>
+              <button
+                onClick={() => onIncrementStock(producto.id, 'cantidadDisponibleAndes4320')}
+                style={{ marginLeft: '0.5rem' }}
+              >
+                +
+              </button>
             )}
           </p>
         </>
@@ -95,8 +135,12 @@ const ProductoCard = ({
 
       {(roles.includes('jefe') || roles.includes('encargado') || roles.includes('fotografo')) && (
         <>
-          <button onClick={() => onEdit(producto)} style={{ marginRight: '0.5rem' }}>✏️ Editar</button>
-          {roles.includes('jefe') && <button onClick={() => onDelete(producto.id)}>🗑️ Eliminar</button>}
+          <button onClick={() => onEdit(producto)} style={{ marginRight: '0.5rem' }}>
+            ✏️ Editar
+          </button>
+          {roles.includes('jefe') && (
+            <button onClick={() => onDelete(producto.id)}>🗑️ Eliminar</button>
+          )}
         </>
       )}
     </li>

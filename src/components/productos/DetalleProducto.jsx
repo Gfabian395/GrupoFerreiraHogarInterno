@@ -56,20 +56,45 @@ export default function DetalleProducto() {
 
   // 🔹 Detectar modelos tipo Andes y formatear nombres
   const modelosAndes = Object.entries(producto)
-    .filter(([key]) => key.toLowerCase().includes("andes") && producto[key] > 0)
+    .filter(([key]) => key.toLowerCase().includes("andes"))
     .map(([key, value]) => ({
       modelo: key.replace(/cantidaddisponibleandes/gi, "Los Andes "),
-      cantidad: value,
+      cantidad: parseInt(value || 0, 10),
     }));
+
+  // 🔹 Calcular si hay stock total
+  const totalStock = modelosAndes.reduce((acc, m) => acc + m.cantidad, 0);
+  const sinStock = totalStock === 0;
 
   return (
     <div className="detalle-container">
       <div className="detalle-card">
-        <img src={producto.imagenUrl} alt={producto.nombre} className="detalle-imagen" />
+        <img
+          src={producto.imagenUrl}
+          alt={producto.nombre}
+          className="detalle-imagen"
+        />
         <div className="detalle-info">
           <h2>{producto.nombre}</h2>
+
+          {/* 🔴 Mostrar mensaje si no hay stock */}
+          {sinStock && (
+            <p
+              style={{
+                color: "red",
+                fontWeight: "bold",
+                fontSize: "1.1rem",
+                marginBottom: "8px",
+              }}
+            >
+              🚫 SIN STOCK DISPONIBLE
+            </p>
+          )}
+
           <p className="descripcion">{producto.descripcion}</p>
-          <p className="precio">${producto.precio?.toLocaleString("es-AR")}</p>
+          <p className="precio">
+            ${producto.precio?.toLocaleString("es-AR")}
+          </p>
 
           {/* 🔹 Mostrar disponibilidad por modelo */}
           {modelosAndes.length > 0 && (
@@ -78,7 +103,16 @@ export default function DetalleProducto() {
               <ul>
                 {modelosAndes.map((m) => (
                   <li key={m.modelo}>
-                    {m.modelo}: <strong>{m.cantidad}</strong> unidades
+                    {m.modelo}:{" "}
+                    <strong
+                      style={{
+                        color: m.cantidad === 0 ? "red" : "green",
+                      }}
+                    >
+                      {m.cantidad === 0
+                        ? "SIN STOCK"
+                        : `${m.cantidad} unidades`}
+                    </strong>
                   </li>
                 ))}
               </ul>
@@ -90,20 +124,23 @@ export default function DetalleProducto() {
             <ul>
               {cuotasDisponibles.map((c) => {
                 const montoConInteres = producto.precio * (1 + c.interes / 100);
-                // 🔹 Redondear al múltiplo de 1000 más cercano
-                const montoCuota = Math.round(montoConInteres / c.cuotas / 1000) * 1000;
+                const montoCuota =
+                  Math.round(montoConInteres / c.cuotas / 1000) * 1000;
 
                 return (
                   <li key={c.cuotas}>
                     {c.cuotas === 1
-                      ? `Precio de contado $${montoCuota.toLocaleString("es-AR")}`
-                      : ` ${c.cuotas} Cuotas de $${montoCuota.toLocaleString("es-AR")}`}
+                      ? `Precio de contado $${montoCuota.toLocaleString(
+                          "es-AR"
+                        )}`
+                      : `${c.cuotas} Cuotas de $${montoCuota.toLocaleString(
+                          "es-AR"
+                        )}`}
                   </li>
                 );
               })}
             </ul>
           </div>
-
         </div>
       </div>
     </div>

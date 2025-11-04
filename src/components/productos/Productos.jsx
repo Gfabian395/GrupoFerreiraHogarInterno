@@ -759,11 +759,12 @@ const Productos = ({ onAddToCart, currentUser }) => {
                     type="number"
                     className="form-control"
                     placeholder="Stock Andes 4320"
-                    name="cantidadDisponibleAndes 4320"
+                    name="cantidadDisponibleAndes4320"
                     value={currentProduct.cantidadDisponibleAndes4320 || ''}
                     onChange={handleInputChange}
                     required
                   />
+
                 </div>
 
                 <div className="form-group">

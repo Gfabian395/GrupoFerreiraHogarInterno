@@ -435,19 +435,35 @@ const Productos = ({ onAddToCart, currentUser }) => {
           img.src = producto.imagenUrl || "https://via.placeholder.com/150";
         });
 
-        // Fondo de tarjeta
-        pdf.setFillColor(245, 245, 245);
+        // Fondo de tarjeta (NEGRO)
+        pdf.setFillColor(0, 0, 0);
         pdf.roundedRect(x - 2, y - 2, qrSize + imgSize + 10, rowHeight, 2, 2, "F");
+
+        // ✅ Línea blanca vertical al comienzo de cada QR
+        pdf.setDrawColor(255, 255, 255); // blanco
+        pdf.setLineWidth(1);             // 1 px
+        pdf.line(
+          x - 2,               // un poquito antes del QR
+          y - 2,               // arriba del card
+          x - 2,               // misma X
+          y - 2 + rowHeight    // abajo del card
+        );
 
         // QR
         pdf.addImage(qrDataUrl, "PNG", x, y, qrSize, qrSize);
 
         // Imagen al lado del QR
-        pdf.addImage(imgDataUrl, "JPEG", x + qrSize + 5, y, imgSize, imgSize);
+        pdf.addImage(imgDataUrl, "JPEG", x + qrSize + 3, y, imgSize, imgSize);
 
-        // Nombre del producto debajo
-        pdf.setFontSize(8);
-        pdf.text(producto.nombre || "Sin nombre", x, y + rowHeight - 5, { maxWidth: qrSize + imgSize + 5 });
+        // Nombre del producto debajo (centrado y en blanco)
+        pdf.setFontSize(11);                // ✅ Más grande
+        pdf.setTextColor(255, 255, 255);    // ✅ Blanco
+        pdf.text(
+          producto.nombre || "Sin nombre",
+          x + (qrSize + imgSize + 5) / 2,   // ✅ Centrado
+          y + rowHeight - 5,
+          { maxWidth: qrSize + imgSize + 5, align: "center" }
+        );
 
         // Ajustar posición
         if ((i + 1) % itemsPerRow === 0) {
@@ -470,6 +486,127 @@ const Productos = ({ onAddToCart, currentUser }) => {
     }
   };
 
+  const redondearAlMil = (valor) => {
+    return Math.round(valor / 1000) * 1000;
+  };
+
+  const handleAumentarPrecios = async () => {
+    if (!roles.includes('jefe')) {
+      setAlerta('No tienes permiso para modificar los precios.');
+      setTimeout(() => setAlerta(''), 3000);
+      return;
+    }
+
+    const porcentaje = prompt("¿Cuánto querés aumentar? (Ej: 10 para +10%)");
+
+    if (porcentaje === null) return;
+
+    const porcNum = Number(porcentaje);
+
+    if (isNaN(porcNum) || porcNum <= 0) {
+      alert("Porcentaje inválido");
+      return;
+    }
+
+    const confirmar = window.confirm(
+      `Vas a aumentar TODOS los precios en ${porcNum}%.\n¿Confirmás?`
+    );
+
+    if (!confirmar) return;
+
+    try {
+      for (const producto of productos) {
+        const prodRef = doc(
+          db,
+          `categorias/${categoriaId}/productos`,
+          producto.id
+        );
+
+        const calculado = producto.precio * (1 + porcNum / 100);
+        const nuevoPrecio = redondearAlMil(calculado);
+
+        await updateDoc(prodRef, { precio: nuevoPrecio });
+      }
+
+      // Actualizar estado local
+      setProductos(prev =>
+        prev.map(prod => ({
+          ...prod,
+          precio: redondearAlMil(prod.precio * (1 + porcNum / 100)),
+        }))
+      );
+
+      setAlerta(`Precios aumentados en ${porcentaje}% con éxito`);
+      setTimeout(() => setAlerta(''), 3000);
+
+    } catch (error) {
+      console.error("Error aumentando precios:", error);
+      setAlerta("Error al aumentar los precios");
+      setTimeout(() => setAlerta(''), 3000);
+    }
+  };
+
+
+  const handleBajarPrecios = async () => {
+    if (!roles.includes('jefe')) {
+      setAlerta('No tienes permiso para modificar los precios.');
+      setTimeout(() => setAlerta(''), 3000);
+      return;
+    }
+
+    const porcentaje = prompt("¿Cuánto querés bajar? (Ej: 10 para -10%)");
+
+    if (porcentaje === null) return;
+
+    const porcNum = Number(porcentaje);
+
+    if (isNaN(porcNum) || porcNum <= 0) {
+      alert("Porcentaje inválido");
+      return;
+    }
+
+    const confirmar = window.confirm(
+      `Vas a bajar TODOS los precios en ${porcNum}%.\n¿Confirmás?`
+    );
+
+    if (!confirmar) return;
+
+    try {
+      for (const producto of productos) {
+        const prodRef = doc(
+          db,
+          `categorias/${categoriaId}/productos`,
+          producto.id
+        );
+
+        let calculado = producto.precio * (1 - porcNum / 100);
+        let nuevoPrecio = redondearAlMil(calculado);
+
+        if (nuevoPrecio < 1000) nuevoPrecio = 1000; // evitar precios 0 o muy chicos
+
+        await updateDoc(prodRef, { precio: nuevoPrecio });
+      }
+
+      // Actualizar estado local
+      setProductos(prev =>
+        prev.map(prod => {
+          let calculado = prod.precio * (1 - porcNum / 100);
+          let nuevoPrecio = redondearAlMil(calculado);
+          if (nuevoPrecio < 1000) nuevoPrecio = 1000;
+          return { ...prod, precio: nuevoPrecio };
+        })
+      );
+
+      setAlerta(`Precios bajados en ${porcentaje}% con éxito`);
+      setTimeout(() => setAlerta(''), 3000);
+
+    } catch (error) {
+      console.error("Error bajando precios:", error);
+      setAlerta("Error al bajar los precios");
+      setTimeout(() => setAlerta(''), 3000);
+    }
+  };
+
 
   return (
     <>
@@ -487,6 +624,41 @@ const Productos = ({ onAddToCart, currentUser }) => {
         </button>
       )}
 
+      {roles.includes('jefe') && (
+        <button
+          onClick={handleAumentarPrecios}
+          className="btn-subir-precios"
+          style={{
+            backgroundColor: '#d9534f',
+            color: 'white',
+            padding: '10px',
+            borderRadius: '8px',
+            marginBottom: '10px',
+            border: 'none',
+            cursor: 'pointer'
+          }}
+        >
+          🔥 Aumentar precios de todos los productos
+        </button>
+      )}
+
+      {roles.includes('jefe') && (
+        <button
+          onClick={handleBajarPrecios}
+          className="btn-bajar-precios"
+          style={{
+            backgroundColor: '#0275d8',
+            color: 'white',
+            padding: '10px',
+            borderRadius: '8px',
+            marginBottom: '10px',
+            border: 'none',
+            cursor: 'pointer'
+          }}
+        >
+          📉 Bajar precios de todos los productos
+        </button>
+      )}
 
       <div className="productos">
         <input

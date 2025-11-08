@@ -607,6 +607,24 @@ const Productos = ({ onAddToCart, currentUser }) => {
     }
   };
 
+  const handleCompartirProducto = async (producto) => {
+    const url = `${window.location.origin}/producto/${categoriaId}/${producto.id}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: producto.nombre,
+          text: "Mirá este producto",
+          url: url
+        });
+      } catch (error) {
+        console.log("El usuario canceló o hubo un error:", error);
+      }
+    } else {
+      navigator.clipboard.writeText(url);
+      alert("Enlace copiado al portapapeles");
+    }
+  };
 
   return (
     <>
@@ -738,6 +756,24 @@ const Productos = ({ onAddToCart, currentUser }) => {
                         Pedir por WhatsApp
                       </button>
                     )}
+
+                    <button
+  className="btn-compartir"
+  onClick={() => handleCompartirProducto(producto)}
+  style={{
+    marginTop: "10px",
+    padding: "8px 12px",
+    backgroundColor: "#0084ff",
+    color: "white",
+    border: "none",
+    borderRadius: "6px",
+    cursor: "pointer",
+    fontWeight: "bold",
+  }}
+>
+  Compartir 🔗
+</button>
+
                   </div>
 
                   {roles.includes('invitado') && (

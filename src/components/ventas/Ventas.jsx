@@ -19,7 +19,7 @@ const usuariosDB = [
 
 // Configuración de cuotas
 const configuracionCuotas = [
-  { cuotas: 1, interes: 0 }, // 1 pago sin interés
+  { cuotas: 1, interes: 0 },
   { cuotas: 2, interes: 15 },
   { cuotas: 3, interes: 25 },
   { cuotas: 4, interes: 40 },
@@ -39,6 +39,7 @@ const choferes = [
 ];
 
 const Ventas = ({ carrito, onClearCart, currentUser }) => {
+
   const [clientes, setClientes] = useState([]);
   const [filteredClientes, setFilteredClientes] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -53,12 +54,13 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
   const [ventaDeOtro, setVentaDeOtro] = useState(false);
   const [selectedVendedor, setSelectedVendedor] = useState('');
   const [usuarios] = useState(usuariosDB);
-  const fechaActual = new Date().toLocaleDateString('es-AR'); // Fecha en formato dd/mm/aaaa
 
-  // NUEVO: estado para fecha venta, por defecto HOY
+  const fechaActual = new Date().toLocaleDateString('es-AR');
+
+  // Fecha Venta
   const [fechaVenta, setFechaVenta] = useState(() => {
     const hoy = new Date();
-    return hoy.toISOString().slice(0, 10); // yyyy-mm-dd para input date
+    return hoy.toISOString().slice(0, 10);
   });
 
   const location = useLocation();
@@ -67,7 +69,10 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
   const sucursal = location.state?.sucursal || 'Andes 4034';
   const subtotal = location.state?.subtotal || 0;
 
-  // Carga clientes de Firebase
+  //  ❌ SE QUITA ENVÍO AUTOMÁTICO EN RENDER (ROMPE TODO)
+  //  👉 SE EJECUTA SOLO CUANDO LA VENTA SE CREA (más abajo)
+
+  // Cargar Clientes
   useEffect(() => {
     const fetchClientes = async () => {
       try {
@@ -83,7 +88,7 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
     fetchClientes();
   }, []);
 
-  // Filtrar clientes según búsqueda
+  // Filtrar clientes
   useEffect(() => {
     const filtered = clientes.filter(cliente =>
       cliente.nombreCompleto.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -92,7 +97,7 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
     setFilteredClientes(filtered);
   }, [searchTerm, clientes]);
 
-  // Calcular cuotas y valor cuota
+  // Calcular cuotas
   useEffect(() => {
     if (subtotal <= 0 || isNaN(subtotal)) {
       setCuotas([{ mensaje: 'Por favor, ingrese un monto válido.' }]);
@@ -127,9 +132,12 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
     const totalCredito = subtotal * (1 + cuotaSeleccionadaObj.interes / 100);
     const valorCuotaCalculado = Math.round(totalCredito / cuotasSeleccionadas / 1000) * 1000;
     setValorCuota(valorCuotaCalculado);
+
   }, [subtotal, cuotasSeleccionadas]);
 
-  // Handlers
+  // -----------------------------------------------------------
+  //               HANDLERS
+  // -----------------------------------------------------------
   const handleSearchChange = (e) => setSearchTerm(e.target.value);
   const handleClienteChange = (e) => setSelectedCliente(e.target.value);
   const handleCuotasSeleccionadasChange = (e) => setCuotasSeleccionadas(Number(e.target.value));
@@ -145,90 +153,139 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
   };
   const handleVentaDeOtroChange = (e) => setVentaDeOtro(e.target.checked);
   const handleSelectedVendedorChange = (e) => setSelectedVendedor(e.target.value);
-
-  // NUEVO handler para fecha
   const handleFechaVentaChange = (e) => setFechaVenta(e.target.value);
 
-  // Realizar venta
+  // -----------------------------------------------------------
+  //             REALIZAR VENTA COMPLETA + COMPROBANTE
+  // -----------------------------------------------------------
   const handleRealizarVenta = async () => {
     try {
-      if (!selectedCliente) {
-        alert('Por favor, selecciona un cliente.');
-        return;
-      }
-      if (!cuotasSeleccionadas) {
-        alert('Por favor, selecciona la cantidad de cuotas.');
-        return;
-      }
-      if (entrega === 'domicilio' && !selectedChofer) {
-        alert('Por favor, selecciona un chofer para la entrega a domicilio.');
-        return;
-      }
 
-      const vendedor = ventaDeOtro && selectedVendedor ? selectedVendedor : currentUser.username;
+      if (!selectedCliente) return alert('Por favor, selecciona un cliente.');
+      if (!cuotasSeleccionadas) return alert('Por favor, selecciona cuotas.');
+      if (entrega === 'domicilio' && !selectedChofer)
+        return alert('Selecciona un chofer.');
 
-      const cuotaSeleccionadaObj = configuracionCuotas.find(c => c.cuotas === cuotasSeleccionadas) || { interes: 0 };
+      const vendedor = ventaDeOtro && selectedVendedor
+        ? selectedVendedor
+        : currentUser.username;
+
+      const cuotaSeleccionadaObj =
+        configuracionCuotas.find(c => c.cuotas === cuotasSeleccionadas) || { interes: 0 };
+
       const totalCredito = subtotal * (1 + cuotaSeleccionadaObj.interes / 100);
-      const valorCuotaCalculado = Math.round(totalCredito / cuotasSeleccionadas / 1000) * 1000;
+      const valorCuotaCalculado =
+        Math.round(totalCredito / cuotasSeleccionadas / 1000) * 1000;
 
       const ventasCollection = collection(db, 'ventas');
 
       const ahora = new Date();
       const [year, month, day] = fechaVenta.split('-');
-      const fechaConHora = new Date(year, month - 1, day, ahora.getHours(), ahora.getMinutes(), ahora.getSeconds());
+      const fechaConHora = new Date(
+        year,
+        month - 1,
+        day,
+        ahora.getHours(),
+        ahora.getMinutes(),
+        ahora.getSeconds()
+      );
 
       const venta = {
         clienteId: selectedCliente,
         sucursal,
         productos: carrito,
         cuotas: cuotasSeleccionadas,
-        fecha: fechaConHora, // ✅ Fecha elegida + hora exacta
+        fecha: fechaConHora,
         totalCredito,
         valorCuota: valorCuotaCalculado,
         pagos: [],
         vendedor,
         entrega,
-        chofer: entrega === 'domicilio' ? selectedChofer : null,
+        chofer: entrega === 'domicilio' ? selectedChofer : null
       };
 
       // Guardar venta
       const ventaRef = await addDoc(ventasCollection, venta);
 
-      // Actualizar inventario
+      // ╔══════════════════════════════════════════╗
+      // ║     ENVÍO AUTOMÁTICO - FORMATO B         ║
+      // ╚══════════════════════════════════════════╝
+
+      const clienteReal = clientes.find(c => c.id === selectedCliente);
+
+      if (clienteReal) {
+        const datosCliente = {
+          nombre: clienteReal.nombreCompleto || "Cliente",
+          dni: clienteReal.dni || "Sin DNI",
+          direccion: clienteReal.direccion || "",
+          entrecalles: clienteReal.entrecalles || "",
+          localidad: clienteReal.localidad || "",
+          telefono1: clienteReal.telefono1 || "",
+          telefono2: clienteReal.telefono2 || ""
+        };
+
+        const ventaParaTicket = {
+          ...venta,
+          id: ventaRef.id
+        };
+
+        const comprobanteTexto = generarComprobanteVentaTipoB(
+          datosCliente,
+          ventaParaTicket
+        );
+
+        const telefonoCliente =
+          clienteReal.telefono1 ||
+          clienteReal.telefono2 ||
+          null;
+
+        if (telefonoCliente) {
+          enviarComprobanteWhatsApp(telefonoCliente, comprobanteTexto);
+        }
+      }
+
+      // FIN ENVÍO AUTOMÁTICO
+
+      // Actualizar stock
       for (const producto of carrito) {
         try {
-          if (!producto.categoriaId) {
-            console.error(`Producto sin categoriaId: ${producto.id}`);
-            continue;
-          }
-          const productoRef = doc(db, `categorias/${producto.categoriaId}/productos`, producto.id);
+          if (!producto.categoriaId) continue;
+
+          const productoRef = doc(
+            db,
+            `categorias/${producto.categoriaId}/productos`,
+            producto.id
+          );
+
           let fieldKey = null;
           if (producto.sucursal === 'Andes4034') fieldKey = 'cantidadDisponibleAndes4034';
           else if (producto.sucursal === 'Andes4320') fieldKey = 'cantidadDisponibleAndes4320';
 
-          if (!fieldKey) {
-            console.error(`Sucursal inválida para producto ${producto.id}: ${producto.sucursal}`);
-            continue;
-          }
-
           const stockActual = parseInt(producto[fieldKey]);
           const stockNuevo = stockActual - producto.cantidad;
 
-          if (isNaN(stockActual) || stockActual <= 0 || stockNuevo < 0) {
-            alert(`Stock insuficiente para el producto "${producto.nombre}" en ${producto.sucursal}.`);
+          if (stockNuevo < 0) {
+            alert(`Stock insuficiente para ${producto.nombre}.`);
             continue;
           }
 
           await updateDoc(productoRef, { [fieldKey]: stockNuevo });
-        } catch (error) {
-          console.error(`Error actualizando producto ${producto.id}:`, error);
+
+        } catch (err) {
+          console.error(err);
         }
       }
 
-      // Registrar primer pago si corresponde
+      // Primer pago automático
       if (cargarPrimerCuota) {
         const fechaPago = new Date().toISOString().split('T')[0];
-        const pagoInicial = [{ fecha: fechaPago, monto: valorCuotaCalculado, usuario: currentUser.username }];
+        const pagoInicial = [
+          {
+            fecha: fechaPago,
+            monto: valorCuotaCalculado,
+            usuario: currentUser.username
+          }
+        ];
         await updateDoc(ventaRef, { pagos: pagoInicial });
       }
 
@@ -236,11 +293,108 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
       onClearCart();
       alert('Venta realizada con éxito.');
       navigate('/clientes');
+
     } catch (error) {
-      console.error('Error al realizar la venta:', error);
-      alert('Ocurrió un error al realizar la venta. Intenta nuevamente.');
+      console.error(error);
+      alert('Error al realizar la venta.');
     }
   };
+
+  // -----------------------------------------------------------
+  // FUNCIÓN: ENVIAR MENSAJE WHATSAPP
+  // -----------------------------------------------------------
+  function enviarComprobanteWhatsApp(telefono, mensaje) {
+    const numero = telefono.replace(/[^0-9]/g, "");
+    const texto = encodeURIComponent(mensaje);
+    window.open(`https://wa.me/${numero}?text=${texto}`, "_blank");
+  }
+
+  // -----------------------------------------------------------
+  // FUNCIÓN: GENERAR COMPROBANTE TIPO B
+  // -----------------------------------------------------------
+  function generarComprobanteVentaTipoB(datosCliente, venta) {
+
+    const {
+      nombre,
+      dni,
+      direccion,
+      entrecalles,
+      localidad,
+      telefono1,
+      telefono2
+    } = datosCliente;
+
+    const {
+      sucursal,
+      productos,
+      cuotas,
+      valorCuota,
+      vendedor,
+      entrega,
+      chofer,
+      fecha
+    } = venta;
+
+    const fechaFormateada = new Date(fecha).toLocaleDateString("es-AR");
+
+    const cuotaRedondeada = Math.round(valorCuota / 1000) * 1000;
+
+    const totalProductos = productos.reduce((acc, p) => {
+      const precioUnit = Math.round(p.precio / 1000) * 1000;
+      return acc + precioUnit * (p.cantidad || 1);
+    }, 0);
+
+    // Detectar si la primera cuota fue pagada
+    const pagoPrimeraCuota =
+      cargarPrimerCuota || (venta.pagos && venta.pagos.length > 0)
+        ? " Sí, abonó la primera cuota"
+        : " No, está pendiente el pago";
+
+    const productosTexto = productos.map(p => {
+      const precioUnit = Math.round(p.precio / 1000) * 1000;
+      const subtotal = precioUnit * (p.cantidad || 1);
+
+      return `
+ Producto: ${p.nombre}
+ Cantidad: ${p.cantidad}`;
+    }).join("\n");
+
+    return `
+ *COMPROBANTE DE VENTA*
+
+ *ID de Venta:* ${venta.id}
+
+ *Sucursal:* ${sucursal}
+ *Fecha:* ${fechaFormateada}
+
+ *Cliente:* ${nombre}
+ *DNI:* ${dni}
+
+ *Dirección:* ${direccion || "No informado"}
+ *Entre calles:* ${entrecalles || "No informado"}
+ *Localidad:* ${localidad || "No informado"}
+
+ *Teléfonos:*
+${telefono1 ? `- ${telefono1}` : ""}
+${telefono2 ? `- ${telefono2}` : ""}
+
+---------------------------------------
+ *Detalle de productos:*
+---------------------------------------
+${productosTexto}
+
+ *Cuotas:* ${cuotas} cuotas de $${cuotaRedondeada.toLocaleString("es-AR")}
+
+*Pago primera cuota:* ${pagoPrimeraCuota}
+
+ *Vendedor:* ${vendedor}
+
+ *Entrega:* ${entrega === 'domicilio' ? 'A domicilio ' : 'Retira en local '}
+${entrega === 'domicilio' && chofer ? ` *Chofer:* ${chofer.nombre}` : ""}
+
+ *¡Gracias por su compra!* 
+`;
+  }
 
   return (
     <div className="ventas">

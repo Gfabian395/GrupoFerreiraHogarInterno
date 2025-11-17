@@ -54,7 +54,7 @@
 }
 
 .descripcioncita h6 {
-  font-size: 18px;
+  font-size: 12px;
   font-weight: 600;
   color: #333;
   margin: 0;
@@ -217,21 +217,6 @@
   }
 }
 
-/* @media (max-width: 600px) {
-  .categorias ul {
-    grid-template-columns: 1fr;
-  }
-
-  .categoria-card img {
-    height: 140px;
-    object-fit: contain;
-  }
-
-  .descripcioncita h6 {
-    font-size: 16px;
-  }
-} */
-
 @media (max-width: 768px) {
   .categorias {
     background-image: url('../../assets/Navida.V.jpg');
@@ -241,7 +226,7 @@
   }
 
   .categoria-card {
-    width: 180px;
+    width: 165px;
   }
 
   .categorias ul {

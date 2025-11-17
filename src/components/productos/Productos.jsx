@@ -14,7 +14,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
   const { categoriaId } = useParams();
   const location = useLocation();
   const { resaltadoId } = location.state || {};
-
+  const [openMenu, setOpenMenu] = useState(false);
   const [productos, setProductos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [alerta, setAlerta] = useState('');
@@ -628,55 +628,37 @@ const Productos = ({ onAddToCart, currentUser }) => {
 
   return (
     <>
-      {alerta && <div className="alert alert-success">{alerta}</div>}
+      {roles.includes("jefe") && (
+        <div className="box">
+          <div
+            className={`dropdown ${openMenu ? "active" : ""}`}
+            onClick={() => setOpenMenu(!openMenu)}
+          >
+            Opciones 🔧
+            <span className="left-icon"></span>
+            <span className="right-icon"></span>
 
-      {roles.includes('jefe') && (
-        <button onClick={generarPDFStock} className="btn-pdf">
-          📄 Descargar PDF Stock
-        </button>
+            <div className="items">
+              <button onClick={generarPDFStock} style={{ "--i": 1 }}>
+                <span></span>📄 Descargar PDF Stock
+              </button>
+
+              <button onClick={descargarQRCategoria} style={{ "--i": 2 }}>
+                <span></span>📄 Descargar QRs de la categoría
+              </button>
+
+              <button onClick={handleAumentarPrecios} style={{ "--i": 3 }}>
+                <span></span>🔥 Aumentar precios
+              </button>
+
+              <button onClick={handleBajarPrecios} style={{ "--i": 4 }}>
+                <span></span>📉 Bajar precios
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
-      {roles.includes('jefe') && (
-        <button onClick={descargarQRCategoria} className="btn-pdf">
-          📄 Descargar QRs de la categoría
-        </button>
-      )}
-
-      {roles.includes('jefe') && (
-        <button
-          onClick={handleAumentarPrecios}
-          className="btn-subir-precios"
-          style={{
-            backgroundColor: '#d9534f',
-            color: 'white',
-            padding: '10px',
-            borderRadius: '8px',
-            marginBottom: '10px',
-            border: 'none',
-            cursor: 'pointer'
-          }}
-        >
-          🔥 Aumentar precios de todos los productos
-        </button>
-      )}
-
-      {roles.includes('jefe') && (
-        <button
-          onClick={handleBajarPrecios}
-          className="btn-bajar-precios"
-          style={{
-            backgroundColor: '#0275d8',
-            color: 'white',
-            padding: '10px',
-            borderRadius: '8px',
-            marginBottom: '10px',
-            border: 'none',
-            cursor: 'pointer'
-          }}
-        >
-          📉 Bajar precios de todos los productos
-        </button>
-      )}
 
       <div className="productos">
         <input
@@ -758,21 +740,21 @@ const Productos = ({ onAddToCart, currentUser }) => {
                     )}
 
                     <button
-  className="btn-compartir"
-  onClick={() => handleCompartirProducto(producto)}
-  style={{
-    marginTop: "10px",
-    padding: "8px 12px",
-    backgroundColor: "#0084ff",
-    color: "white",
-    border: "none",
-    borderRadius: "6px",
-    cursor: "pointer",
-    fontWeight: "bold",
-  }}
->
-  Compartir 🔗
-</button>
+                      className="btn-compartir"
+                      onClick={() => handleCompartirProducto(producto)}
+                      style={{
+                        marginTop: "10px",
+                        padding: "8px 12px",
+                        backgroundColor: "#0084ff",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "6px",
+                        cursor: "pointer",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      Compartir 🔗
+                    </button>
 
                   </div>
 
@@ -853,7 +835,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
                   </>
                 )}
 
-                {roles.includes('jefe') && (
+                {/* {roles.includes('jefe') && (
                   <div className="qr-contenedor">
                     <QRCodeCanvas
                       value={`${window.location.origin}/producto/${categoriaId}/${producto.id}`}
@@ -864,7 +846,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
                     />
                     <p className="qr-texto">Escaneá para ver el producto</p>
                   </div>
-                )}
+                )} */}
               </li>
             );
           })}

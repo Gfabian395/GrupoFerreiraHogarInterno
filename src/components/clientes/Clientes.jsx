@@ -268,7 +268,7 @@ const Clientes = ({ currentUser }) => {
   if (loading) return <Load />;
 
   return (
-    <div className="container">
+    <div className="clientes-container">
       <button onClick={handleAddButtonClick} className="floating-btn">+</button>
 
       {/* Formularios Flotantes */}
@@ -347,7 +347,7 @@ const Clientes = ({ currentUser }) => {
       </div>
 
       {/* Tarjetas de Cliente */}
-      <div className="card-container mt-4">
+      <div className="card-container">
         {filteredClientes.map((cliente, index) => {
           // Calculamos tipo de cliente y calificación promedio
           const tipoCliente = calcularTipoCliente(cliente.ventas || []);

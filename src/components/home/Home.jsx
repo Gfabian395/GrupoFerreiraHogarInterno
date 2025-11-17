@@ -6,6 +6,7 @@ import './Home.css';
 
 const Home = () => {
   const [clientesConPagosProximos, setClientesConPagosProximos] = useState([]);
+  const [mostrarTabla, setMostrarTabla] = useState(false); // 👈 OCULTA POR DEFECTO
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -27,9 +28,9 @@ const Home = () => {
       ventasList.forEach(venta => {
         const { clienteId, valorCuota, pagos = [], totalCredito, vendedor, nombreCompleto } = venta;
 
-        // ✅ Buscar si el cliente está bloqueado
+        // ❌ excluir si está bloqueado
         const clienteInfo = clientesList.find(c => c.dni === clienteId);
-        if (clienteInfo?.bloqueado) return; // ❌ No incluir bloqueados
+        if (clienteInfo?.bloqueado) return;
 
         const totalPagado = pagos.reduce((sum, pago) => sum + (pago.monto || 0), 0);
         if (totalPagado >= totalCredito) return;
@@ -73,7 +74,6 @@ const Home = () => {
     fetchClientesConPagosProximos();
   }, []);
 
-
   const handleDniDobleClick = (clienteId, ventaId) => {
     navigate(`/cliente/${clienteId}`, {
       state: { ventaId }
@@ -83,45 +83,58 @@ const Home = () => {
   return (
     <div className="home">
       <h2 className="clientes-title">Clientes que deben pagar en los próximos 7 días</h2>
+
+      {/* 🔘 BOTÓN MOSTRAR / OCULTAR */}
+      <button
+        className="btn-toggle"
+        onClick={() => setMostrarTabla(!mostrarTabla)}
+      >
+        {mostrarTabla ? "Ocultar tabla" : "Mostrar tabla"}
+      </button>
+
       <div className="clientes-pagos-container">
-        {clientesConPagosProximos.length > 0 ? (
-          <table className="clientes-table">
-            <thead>
-              <tr>
-                <th>DNI</th>
-                <th>Monto de Cuota</th>
-                <th>Vendedor</th>
-                <th>Próxima Fecha de Pago</th>
-              </tr>
-            </thead>
-            <tbody>
-              {clientesConPagosProximos.map((cliente, index) => (
-                <tr
-                  key={`${cliente.clienteId}-${index}`}
-                  className={`cliente-item-row ${cliente.atrasado ? 'cliente-atrasado' : ''}`}
-                >
-                  <td
-                    className="cliente-dni"
-                    onDoubleClick={() => handleDniDobleClick(cliente.clienteId, cliente.ventaId)}
-                    title="Doble clic para ver las compras"
-                    style={{ cursor: 'pointer', fontWeight: 'bold', color: '#007bff' }}
-                  >
-                    {cliente.clienteId}
-                  </td>
-                  <td className="cliente-cuota">
-                    ${typeof cliente.valorCuota === 'number'
-                      ? cliente.valorCuota.toLocaleString('es-AR')
-                      : cliente.valorCuota}
-                  </td>
-                  <td className="cliente-vendedor">{cliente.vendedor}</td>
-                  <td className="cliente-fecha">{cliente.proximaFecha}</td>
+
+        {mostrarTabla && (  // 👈 SOLO SE MUESTRA SI mostrarTabla = true
+          clientesConPagosProximos.length > 0 ? (
+            <table className="clientes-table">
+              <thead>
+                <tr>
+                  <th>DNI</th>
+                  <th>Monto de Cuota</th>
+                  <th>Vendedor</th>
+                  <th>Próxima Fecha de Pago</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <p className="no-clientes">No hay clientes con pagos en los próximos 7 días.</p>
+              </thead>
+              <tbody>
+                {clientesConPagosProximos.map((cliente, index) => (
+                  <tr
+                    key={`${cliente.clienteId}-${index}`}
+                    className={`cliente-item-row ${cliente.atrasado ? 'cliente-atrasado' : ''}`}
+                  >
+                    <td
+                      className="cliente-dni"
+                      onDoubleClick={() => handleDniDobleClick(cliente.clienteId, cliente.ventaId)}
+                      title="Doble clic para ver las compras"
+                      style={{ cursor: 'pointer', fontWeight: 'bold', color: '#007bff' }}
+                    >
+                      {cliente.clienteId}
+                    </td>
+                    <td className="cliente-cuota">
+                      ${typeof cliente.valorCuota === 'number'
+                        ? cliente.valorCuota.toLocaleString('es-AR')
+                        : cliente.valorCuota}
+                    </td>
+                    <td className="cliente-vendedor">{cliente.vendedor}</td>
+                    <td className="cliente-fecha">{cliente.proximaFecha}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p className="no-clientes">No hay clientes con pagos en los próximos 7 días.</p>
+          )
         )}
+
       </div>
     </div>
   );

@@ -1,3 +1,7 @@
+.navbar-brand {
+    font-family: "Griffy", system-ui;
+}
+
 .profile-image {
     width: 30px;
     height: 30px;

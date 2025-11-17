@@ -1,12 +1,29 @@
+@import url('https://fonts.googleapis.com/css2?family=Griffy&display=swap');
+
 /* Contenedor principal */
-.cliente-detalles {
-  max-width: 1000px;
-  margin: 40px auto;
-  padding: 20px 30px;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #fefefe;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-  border-radius: 16px;
+ .cliente-detalles {
+     padding: 5px 10px;
+    /* font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; */
+    background-color: #fefefe;
+    /* box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1); */
+    /* border-radius: 16px; */
+    background-image: url(/src/assets/Navidad.H.jpg);
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    min-height: 100vw;
+  
+}
+
+.CD-Title {
+  display: table;
+  color: #fff;
+  font-family: "Griffy", system-ui;
+  font-weight: 400;
+  font-style: normal;
+  backdrop-filter: blur(50px);
+  padding: 10px;
+  margin: 11px;
 }
 
 /* Tarjeta de venta */
@@ -48,11 +65,15 @@
 
 /* Títulos */
 .venta-detalle h3 {
-  margin-top: 0;
-  color: #2c3e50;
-  font-size: 1.5rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
+  font-family: "Griffy", system-ui;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.Deuda-Title{
+  font-family: "Griffy", system-ui;
+  font-weight: 400;
+  font-style: normal;
 }
 
 /* Textos */
@@ -222,8 +243,11 @@ h4 {
 
 @media (max-width: 768px) {
   .cliente-detalles {
-    padding: 15px 20px;
-    margin: 20px 10px;
+     padding: 1rem;
+    background-image: url('../../assets/Navida.V.jpg');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
   }
 
   .venta-detalle {

@@ -342,11 +342,11 @@ Atendido por: ${usuario}
   if (loading) return <Load />;
 
   return (
-    <div className={`cliente-detalles container ${clienteBloqueado ? 'cliente-bloqueado' : ''}`}>
+    <div className={`cliente-detalles ${clienteBloqueado ? 'cliente-bloqueado' : ''}`}>
 
       {/* RESUMEN DE DEUDA TOTAL */}
       <div className="resumen-total mt-5 p-3 border rounded bg-light">
-        <h3>Resumen de Deuda Total</h3>
+        <h3 className='Deuda-Title'>Resumen de Deuda Total</h3>
 
         <p><strong>Total Créditos:</strong> $
           {ventas
@@ -394,7 +394,7 @@ Atendido por: ${usuario}
         </button>
       )}
 
-      <h2 className="my-4">Detalles de Ventas</h2>
+      <h2 className="CD-Title">Detalles de Ventas</h2>
 
       {ventas.map(venta => {
         const totalCredito = Math.round((venta.totalCredito || 0) / 1000) * 1000;

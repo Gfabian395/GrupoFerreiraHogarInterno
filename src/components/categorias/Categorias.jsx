@@ -160,14 +160,13 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
         onChange={e => setQuery(e.target.value)}
         placeholder="Buscar productos..."
         className="search-input"
-        style={{ marginBottom: '1rem', padding: '0.5rem', width: '100%' }}
       />
 
       {/* Renderizamos solo el buscador global */}
       <BusquedaGlobal query={query} />
 
       {/* Seguimos mostrando las categorías sin filtro */}
-      <div className="categorias" style={{ marginTop: '2rem' }}>
+      <div className="categorias">
         {alerta && <div className="alert alert-danger">{alerta}</div>}
 
         <ul>
@@ -255,7 +254,7 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
                   />
                 )}
                 {currentUser?.role?.includes('fotografo') && (
-                  <p style={{ marginBottom: '1rem', color: '#777' }}>
+                  <p>
                     Solo puede editar la imagen.
                   </p>
                 )}
@@ -268,7 +267,6 @@ const Categorias = ({ onSelectCategoria, currentUser }) => {
                   <img
                     src={editImagenUrl}
                     alt="Vista previa"
-                    style={{ width: '200px', marginTop: '10px' }}
                   />
                 )}
                 <button type="submit" className="btn btn-success" disabled={uploading}>

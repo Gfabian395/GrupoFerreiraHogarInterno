@@ -1,17 +1,24 @@
 /* Estilos generales del carrito */
 .carrito {
-  padding: 30px;
-  max-width: 1200px;
-  margin: 0 auto;
-  background-color: #fdfdfd;
-  border-radius: 16px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+  padding: 2rem;
+  text-align: center;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-image: url('../../assets/Navidad.H.jpg');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  min-height: 100vh;
 }
 
 .carrito h2 {
-  font-size: 28px;
-  color: #333;
-  margin-bottom: 25px;
+  display: table;
+  color: #fff;
+  font-family: "Griffy", system-ui;
+  font-weight: 400;
+  font-style: normal;
+  backdrop-filter: blur(50px);
+  padding: 10px;
+  margin: 11px;
 }
 
 /* Contenedor de productos */
@@ -20,16 +27,6 @@
   flex-wrap: wrap;
   gap: 24px;
   justify-content: center;
-}
-
-/* Estilos individuales de las tarjetas */
-.card {
-  width: 240px;
-  background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  transition: transform 0.2s ease;
 }
 
 .card:hover {
@@ -142,4 +139,14 @@ button {
 
 .carrito strong {
   color: #333;
+}
+
+@media (max-width: 768px) {
+  .carrito {
+    padding: 1rem;
+    background-image: url('../../assets/Navida.V.jpg');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+  }
 }

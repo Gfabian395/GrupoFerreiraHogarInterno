@@ -1,16 +1,29 @@
+@import url('https://fonts.googleapis.com/css2?family=Griffy&display=swap');
+
+
 .home {
   padding: 2rem;
   text-align: center;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: #f9fbfd;
+  background-image: url('../../assets/Navidad.H.jpg');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   min-height: 100vh;
 }
 
 .home h2 {
-  margin-bottom: 1.5rem;
-  font-size: 1.8rem;
-  color: #2c3e50;
+  display: table;
+  color: #fff;
+  font-family: "Griffy", system-ui;
+  font-weight: 400;
+  font-style: normal;
+  backdrop-filter: blur(50px);
+  padding: 10px;
+  margin: 11px;
 }
+
+
 
 /* 🏅 Ranking de vendedores */
 .ranking-container {
@@ -25,7 +38,7 @@
 .ranking-item {
   background: white;
   border-radius: 1rem;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   padding: 1rem;
   width: 150px;
   transition: transform 0.3s ease;
@@ -39,9 +52,11 @@
 .ranking-1 {
   border-top: 4px solid gold;
 }
+
 .ranking-2 {
   border-top: 4px solid silver;
 }
+
 .ranking-3 {
   border-top: 4px solid #cd7f32;
 }
@@ -77,7 +92,7 @@
   background: #fff;
   padding: 1rem;
   border-radius: 1rem;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   max-width: 1000px;
   margin: auto;
 }
@@ -134,6 +149,10 @@
 @media (max-width: 768px) {
   .home {
     padding: 1rem;
+    background-image: url('../../assets/Navida.V.jpg');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
   }
 
   .home h2 {

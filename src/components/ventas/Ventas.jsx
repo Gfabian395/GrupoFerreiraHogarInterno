@@ -400,7 +400,7 @@ ${entrega === 'domicilio' && chofer ? ` *Chofer:* ${chofer.nombre}` : ""}
     <div className="ventas">
       {ventaRealizada && <div className="alert alert-success">¡Venta realizada con éxito!</div>}
       <div className="1">
-        <h3>Realizar Venta</h3>
+        <h2>Realizar Venta</h2>
 
         <div className="form-group">
           <label htmlFor="fechaVenta">Fecha de la Venta:</label>

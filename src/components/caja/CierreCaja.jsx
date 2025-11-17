@@ -34,6 +34,7 @@ const CierreCaja = ({ currentUser }) => {
   const totalGastado = gastos.reduce((acc, g) => acc + g.monto, 0);
   const navigate = useNavigate();
   const [vendedorSeleccionado, setVendedorSeleccionado] = useState('');
+  const [showTables, setShowTables] = useState(false); // por defecto ocultas
 
   // Cada vez que cambien ventasTotal o cobrosTotal se actualiza el total recaudado
   useEffect(() => {
@@ -267,217 +268,273 @@ const CierreCaja = ({ currentUser }) => {
     }
   };
 
-  return (
-    <div className="cierre-caja">
-      <h2>Cierre de Caja</h2>
-      {loading ? (
-        <Load />
-      ) : (
-        <>
-          {/* Tabla de Ventas */}
-          <div className="table-responsive">
-            <table className="table table-bordered">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Cliente</th>
-                  <th>Vendedor</th>
-                  <th>Fecha</th>
-                  <th>Monto</th>
-                </tr>
-              </thead>
-              <tbody>
-                {movimientos.map((m, i) => (
-                  <tr key={i}>
-                    <td>{m.id || 'N/A'}</td><td>{m.clienteId || 'N/A'}</td><td>{m.vendedor || 'N/A'}</td><td>{m.fecha || 'N/A'}</td><td>{`$${m.monto.toLocaleString('es-AR')}`}</td>
+ return (
+  <div className="cierre-caja">
+    <h2>Cierre de Caja</h2>
+    {loading ? (
+      <Load />
+    ) : (
+      <>
+        {/* BOTÓN MOSTRAR/OCULTAR */}
+        <button
+          onClick={() => setShowTables(!showTables)}
+          className="toggle-btn"
+        >
+          {showTables ? "Ocultar Tablas" : "Mostrar Tablas"}
+        </button>
+
+        {/* SOLO SE MUESTRAN SI showTables ES TRUE */}
+        {showTables && (
+          <>
+            {/* Tabla de Ventas */}
+            <div className="table-responsive">
+              <table className="table table-bordered">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Cliente</th>
+                    <th>Vendedor</th>
+                    <th>Fecha</th>
+                    <th>Monto</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Tabla de Cobros */}
-          <h2>Cobros del Mes</h2>
-          <div className="table-responsive">
-            <table className="table table-bordered">
-              <thead>
-                <tr>
-                  <th>Cliente</th>
-                  <th>Venta ID</th>
-                  <th>Fecha</th>
-                  <th>Monto</th>
-                  <th>Usuario</th>
-                </tr>
-              </thead>
-              <tbody>
-                {cobros.length > 0 ? (
-                  cobros.map((c, i) => (
+                </thead>
+                <tbody>
+                  {movimientos.map((m, i) => (
                     <tr key={i}>
-                      <td>{c.clienteId || 'N/A'}</td><td>{c.ventaId || 'N/A'}</td><td>{c.fechaStr || 'N/A'}</td><td>{`$${parseFloat(c.monto).toLocaleString('es-AR')}`}</td><td>{c.usuario || '-'}</td>
+                      <td>{m.id || "N/A"}</td>
+                      <td>{m.clienteId || "N/A"}</td>
+                      <td>{m.vendedor || "N/A"}</td>
+                      <td>{m.fecha || "N/A"}</td>
+                      <td>{`$${m.monto.toLocaleString("es-AR")}`}</td>
                     </tr>
-                  ))
-                ) : (
-                  <tr><td colSpan="5">No hay cobros registrados este mes.</td></tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
-          {/* Muestra el total recaudado (ventas + cobros) */}
-          <h3>Total Recaudado: ${totalRecaudado.toLocaleString('es-AR')}</h3>
-          <button onClick={() => navigate('/resumen')}>Ver Resumen</button>
-          <button onClick={() => setShowGastoForm(true)}>Agregar Gasto</button>
-
-
-
-          {/* Tabla de Gastos */}
-          <h2>Gastos del Mes</h2>
-          <div className="table-responsive">
-            <table className="table table-bordered">
-              <thead>
-                <tr>
-                  <th>ID</th>{/* Nueva columna para mostrar el ID */}
-                  <th>Fecha</th>
-                  <th>Tipo</th>
-                  <th>Monto</th>
-                </tr>
-              </thead>
-              <tbody>
-                {gastos.length > 0 ? (
-                  gastos
-                    .sort((a, b) => {
-                      const [da, ma, ya] = a.fechaStr.split('/').map(Number);
-                      const [db, mb, yb] = b.fechaStr.split('/').map(Number);
-                      const fechaA = new Date(ya, ma - 1, da);
-                      const fechaB = new Date(yb, mb - 1, db);
-                      return fechaB - fechaA;
-                    })
-                    .map((gasto) => (
-                      <tr key={gasto.id}>
-                        <td>{gasto.id}</td>{/* Mostramos el ID */}
-                        <td>{gasto.fechaStr}</td>
-                        <td>{gasto.tipo}</td>
-                        <td>{`$${gasto.monto.toLocaleString('es-AR')}`}</td>
+            {/* Tabla de Cobros */}
+            <h2>Cobros del Mes</h2>
+            <div className="table-responsive">
+              <table className="table table-bordered">
+                <thead>
+                  <tr>
+                    <th>Cliente</th>
+                    <th>Venta ID</th>
+                    <th>Fecha</th>
+                    <th>Monto</th>
+                    <th>Usuario</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {cobros.length > 0 ? (
+                    cobros.map((c, i) => (
+                      <tr key={i}>
+                        <td>{c.clienteId || "N/A"}</td>
+                        <td>{c.ventaId || "N/A"}</td>
+                        <td>{c.fechaStr || "N/A"}</td>
+                        <td>{`$${parseFloat(c.monto).toLocaleString(
+                          "es-AR"
+                        )}`}</td>
+                        <td>{c.usuario || "-"}</td>
                       </tr>
                     ))
-                ) : (
-                  <tr><td colSpan="4">No se registraron gastos este mes.</td></tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          <h3>Total Gastado: ${gastos.reduce((acc, g) => acc + g.monto, 0).toLocaleString('es-AR')}</h3>
-
-          {/* Ranking de Vendedores (solo a partir de ventas) */}
-          <h2>Ranking de Vendedores del Mes</h2>
-          <div className="table-responsive">
-            <table className="table table-bordered">
-              <thead>
-                <tr>
-                  <th>Vendedor</th>
-                  <th>Cant. Ventas</th>
-                  <th>Total Ingresado</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rankingVendedores.length > 0 ? rankingVendedores.map((v, i) => (
-                  <tr key={i}>
-                    <td>{v.vendedor}</td><td>{v.cantVentas}</td><td>{`$${v.totalIngresado.toLocaleString('es-AR')}`}</td>
-                  </tr>
-                )) : (
-                  <tr><td colSpan="3">Aún no hay datos para el ranking de este mes.</td></tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          <div
-            className="resumen-final"
-            style={{
-              marginTop: '20px',
-              padding: '20px',
-              border: '2px solid #28a745',
-              borderRadius: '10px',
-              backgroundColor: '#e9fbe5',
-              textAlign: 'center',
-              fontWeight: 'bold',
-              fontSize: '1.5rem',
-              color: '#155724',
-            }}
-          >
-            Dinero en Mano: ${(totalRecaudado - totalGastado).toLocaleString('es-AR')}
-          </div>
-
-          {showGastoForm && (
-            <div className="overlay">
-              <div className="form-popup">
-                <h3>Agregar Gasto</h3>
-
-                <label>Razón del Gasto:</label>
-                <select value={gastoRazon} onChange={(e) => setGastoRazon(e.target.value)}>
-                  <option value="">Seleccione una opción</option>
-                  <option value="Sueldos">Sueldos</option>
-                  <option value="Anticipos">Anticipos</option>
-                  <option value="Contadora">Contadora</option>
-                  <option value="Agua">Agua</option>
-                  <option value="Luz">Luz</option>
-                  <option value="Gas">Gas</option>
-                  <option value="Limpieza">Limpieza</option>
-                  <option value="Patente">Patente</option>
-                  <option value="Seguro">Seguro</option>
-                  <option value="Combustible">Combustible</option>
-                  <option value="Toolo">Toolo</option>
-                  <option value="Chicho">Chicho</option>
-                  <option value="Mica">Mica</option>
-                  <option value="Prestamos">Prestamos</option>
-                  <option value="Rondas">Rondas</option>
-                  <option value="Maxi">Maxi</option>
-                  <option value="Lucas">Lucas</option>
-                  <option value="Roxana">Roxana</option>
-                  <option value="JR">JR</option>
-                  <option value="Cuttiani">Cuttiani</option>
-                  <option value="MyO">MyO</option>
-                  <option value="Otros">Otros</option>
-                </select>
-
-                {(gastoRazon === 'Anticipos' || gastoRazon === 'Sueldos') && (
-                  <select value={vendedorSeleccionado} onChange={(e) => setVendedorSeleccionado(e.target.value)}>
-                    <option value="">Seleccioná un vendedor</option>
-                    {usuariosDB
-                      .filter(
-                        (user) =>
-                          user.role === 'vendedor' ||
-                          user.role === 'jefe' ||
-                          user.role === 'encargado'
-                      )
-                      .map((user, index) => (
-                        <option key={index} value={user.username}>
-                          {user.username}
-                        </option>
-                      ))}
-                  </select>
-                )}
-
-                {gastoRazon === 'Otros' && (
-                  <>
-                    <label>Especifique otra razón:</label>
-                    <input type="text" value={otraRazon} onChange={(e) => setOtraRazon(e.target.value)} />
-                  </>
-                )}
-
-                <label>Monto:</label>
-                <input type="number" value={gastoMonto} onChange={(e) => setGastoMonto(e.target.value)} />
-
-                <button onClick={handleAddGasto}>Guardar Gasto</button>
-                <button onClick={() => setShowGastoForm(false)}>Cancelar</button>
-              </div>
+                  ) : (
+                    <tr>
+                      <td colSpan="5">No hay cobros registrados este mes.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
-          )}
-        </>
-      )}
-    </div>
-  );
+
+            {/* Total Recaudado */}
+            <h3>Total Recaudado: ${totalRecaudado.toLocaleString("es-AR")}</h3>
+            <button onClick={() => navigate("/resumen")}>Ver Resumen</button>
+            <button onClick={() => setShowGastoForm(true)}>Agregar Gasto</button>
+
+            {/* Tabla de Gastos */}
+            <h2>Gastos del Mes</h2>
+            <div className="table-responsive">
+              <table className="table table-bordered">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Fecha</th>
+                    <th>Tipo</th>
+                    <th>Monto</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {gastos.length > 0 ? (
+                    gastos
+                      .sort((a, b) => {
+                        const [da, ma, ya] = a.fechaStr.split("/").map(Number);
+                        const [db, mb, yb] = b.fechaStr.split("/").map(Number);
+                        const fechaA = new Date(ya, ma - 1, da);
+                        const fechaB = new Date(yb, mb - 1, db);
+                        return fechaB - fechaA;
+                      })
+                      .map((gasto) => (
+                        <tr key={gasto.id}>
+                          <td>{gasto.id}</td>
+                          <td>{gasto.fechaStr}</td>
+                          <td>{gasto.tipo}</td>
+                          <td>{`$${gasto.monto.toLocaleString("es-AR")}`}</td>
+                        </tr>
+                      ))
+                  ) : (
+                    <tr>
+                      <td colSpan="4">No se registraron gastos este mes.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <h3>
+              Total Gastado: $
+              {gastos
+                .reduce((acc, g) => acc + g.monto, 0)
+                .toLocaleString("es-AR")}
+            </h3>
+
+            {/* Ranking de Vendedores */}
+            <h2>Ranking de Vendedores del Mes</h2>
+            <div className="table-responsive">
+              <table className="table table-bordered">
+                <thead>
+                  <tr>
+                    <th>Vendedor</th>
+                    <th>Cant. Ventas</th>
+                    <th>Total Ingresado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rankingVendedores.length > 0 ? (
+                    rankingVendedores.map((v, i) => (
+                      <tr key={i}>
+                        <td>{v.vendedor}</td>
+                        <td>{v.cantVentas}</td>
+                        <td>{`$${v.totalIngresado.toLocaleString("es-AR")}`}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="3">
+                        Aún no hay datos para el ranking de este mes.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+
+        {/* Resumen Final */}
+        <div
+          className="resumen-final"
+          style={{
+            marginTop: "20px",
+            padding: "20px",
+            border: "2px solid #28a745",
+            borderRadius: "10px",
+            backgroundColor: "#e9fbe5",
+            textAlign: "center",
+            fontWeight: "bold",
+            fontSize: "1.5rem",
+            color: "#155724",
+          }}
+        >
+          Dinero en Mano: $
+          {(totalRecaudado - totalGastado).toLocaleString("es-AR")}
+        </div>
+
+        {/* Popup: Agregar Gasto */}
+        {showGastoForm && (
+          <div className="overlay">
+            <div className="form-popup">
+              <h3>Agregar Gasto</h3>
+
+              <label>Razón del Gasto:</label>
+              <select
+                value={gastoRazon}
+                onChange={(e) => setGastoRazon(e.target.value)}
+              >
+                <option value="">Seleccione una opción</option>
+                <option value="Sueldos">Sueldos</option>
+                <option value="Anticipos">Anticipos</option>
+                <option value="Contadora">Contadora</option>
+                <option value="Agua">Agua</option>
+                <option value="Luz">Luz</option>
+                <option value="Gas">Gas</option>
+                <option value="Limpieza">Limpieza</option>
+                <option value="Patente">Patente</option>
+                <option value="Seguro">Seguro</option>
+                <option value="Combustible">Combustible</option>
+                <option value="Toolo">Toolo</option>
+                <option value="Chicho">Chicho</option>
+                <option value="Mica">Mica</option>
+                <option value="Prestamos">Prestamos</option>
+                <option value="Rondas">Rondas</option>
+                <option value="Maxi">Maxi</option>
+                <option value="Lucas">Lucas</option>
+                <option value="Roxana">Roxana</option>
+                <option value="JR">JR</option>
+                <option value="Cuttiani">Cuttiani</option>
+                <option value="MyO">MyO</option>
+                <option value="Otros">Otros</option>
+              </select>
+
+              {(gastoRazon === "Anticipos" || gastoRazon === "Sueldos") && (
+                <select
+                  value={vendedorSeleccionado}
+                  onChange={(e) => setVendedorSeleccionado(e.target.value)}
+                >
+                  <option value="">Seleccioná un vendedor</option>
+                  {usuariosDB
+                    .filter(
+                      (user) =>
+                        user.role === "vendedor" ||
+                        user.role === "jefe" ||
+                        user.role === "encargado"
+                    )
+                    .map((user, index) => (
+                      <option key={index} value={user.username}>
+                        {user.username}
+                      </option>
+                    ))}
+                </select>
+              )}
+
+              {gastoRazon === "Otros" && (
+                <>
+                  <label>Especifique otra razón:</label>
+                  <input
+                    type="text"
+                    value={otraRazon}
+                    onChange={(e) => setOtraRazon(e.target.value)}
+                  />
+                </>
+              )}
+
+              <label>Monto:</label>
+              <input
+                type="number"
+                value={gastoMonto}
+                onChange={(e) => setGastoMonto(e.target.value)}
+              />
+
+              <button onClick={handleAddGasto}>Guardar Gasto</button>
+              <button onClick={() => setShowGastoForm(false)}>Cancelar</button>
+            </div>
+          </div>
+        )}
+      </>
+    )}
+  </div>
+);
+
 };
 
 export default CierreCaja;

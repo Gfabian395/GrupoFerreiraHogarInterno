@@ -59,7 +59,7 @@ const BusquedaGlobal = ({ query }) => {
   }, [query]);
 
   return (
-    <div style={{ padding: '1rem', fontFamily: 'Arial' }}>
+    <div>
       {cargando && <Load />}
 
       {!cargando && resultados.length > 0 && (

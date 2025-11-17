@@ -1,9 +1,14 @@
+@import url('https://fonts.googleapis.com/css2?family=Griffy&display=swap');
+
 .cierre-caja {
-  padding: 30px;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
-  color: #333;
+ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-image: url('../../assets/Navidad.H.jpg');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   min-height: 100vh;
+  padding: 30px;
+  color: #333;
   animation: fadeInPage 0.8s ease forwards;
 }
 
@@ -13,11 +18,14 @@
 }
 
 .cierre-caja h2 {
-  margin-bottom: 25px;
-  font-weight: 700;
-  font-size: 2rem;
-  color: #1e2a78;
-  text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+  display: table;
+  color: #fff;
+  font-family: "Griffy", system-ui;
+  font-weight: 400;
+  font-style: normal;
+  backdrop-filter: blur(50px);
+  padding: 10px;
+  margin: 11px;
 }
 
 .cierre-caja .table-responsive {
@@ -205,3 +213,12 @@
   transform: scale(0.97);
   box-shadow: 0 6px 12px rgba(200, 80, 192, 0.3);
 }
+
+@media (max-width: 768px) {
+  .cierre-caja {
+    padding: 1rem;
+    background-image: url('../../assets/Navida.V.jpg');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+  }}

@@ -19,13 +19,15 @@
     "jquery": "^3.7.1",
     "jspdf": "^2.5.2",
     "jspdf-autotable": "^3.8.4",
+    "mo-js": "^0.288.2",
     "popper.js": "^1.16.1",
     "qrcode": "^1.5.4",
     "qrcode.react": "^4.2.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.9.5",
-    "recharts": "^2.15.4"
+    "recharts": "^2.15.4",
+    "splitting": "^1.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.19.0",

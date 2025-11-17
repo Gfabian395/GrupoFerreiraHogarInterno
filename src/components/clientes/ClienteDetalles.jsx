@@ -545,7 +545,8 @@ Gracias por su compra.
                   {venta.pagos &&
                     venta.pagos.map((pago, i) => {
                       saldoRestante -= pago.monto;
-                      const fecha = new Date(pago.fecha);
+                      const [y, m, d] = pago.fecha.split("-").map(Number);
+                      const fecha = new Date(y, m - 1, d); // Fecha local, sin conversión UTC
                       return (
                         <tr key={i}>
                           <td>{fecha.getDate()}</td>

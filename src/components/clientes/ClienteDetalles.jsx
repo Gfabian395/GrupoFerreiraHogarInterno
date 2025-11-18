@@ -44,31 +44,47 @@ const ClienteDetalles = ({ currentUser }) => {
   const [clienteBloqueado, setClienteBloqueado] = useState(false);
 
   // Cargar ventas del cliente
-  useEffect(() => {
-    const fetchVentas = async () => {
-      try {
-        const ventasQuery = query(collection(db, 'ventas'), where('clienteId', '==', clienteId));
-        const ventasSnapshot = await getDocs(ventasQuery);
-        const ventasList = ventasSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setVentas(ventasList);
+ useEffect(() => {
+  const fetchVentas = async () => {
+    try {
+      const ventasQuery = query(
+        collection(db, 'ventas'),
+        where('clienteId', '==', clienteId)
+      );
 
-        const ventaIdDesdeHome = location.state?.ventaId;
-        if (ventaIdDesdeHome) {
-          setTimeout(() => {
-            setVentaSeleccionadaId(ventaIdDesdeHome);
-            const ref = ventaRefs.current[ventaIdDesdeHome];
-            if (ref) ref.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            setTimeout(() => setVentaSeleccionadaId(null), 3000);
-          }, 500);
-        }
-      } catch (error) {
-        console.error("Error fetching ventas:", error);
-      } finally {
-        setLoading(false);
+      const ventasSnapshot = await getDocs(ventasQuery);
+      const ventasList = ventasSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+
+      setVentas(ventasList);
+
+      // 👉 Tomar ventaId desde URL o desde state
+      const queryParams = new URLSearchParams(location.search);
+      const ventaIdDesdeURL = queryParams.get("venta");
+      const ventaIdDesdeHome = ventaIdDesdeURL || location.state?.ventaId;
+
+      if (ventaIdDesdeHome) {
+        setTimeout(() => {
+          setVentaSeleccionadaId(ventaIdDesdeHome);
+
+          const ref = ventaRefs.current[ventaIdDesdeHome];
+          if (ref) ref.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+          // Highlight 3 segundos
+          setTimeout(() => setVentaSeleccionadaId(null), 3000);
+        }, 500);
       }
-    };
-    fetchVentas();
-  }, [clienteId, location.state]);
+    } catch (error) {
+      console.error("Error fetching ventas:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  fetchVentas();
+}, [clienteId, location.search, location.state]);
+
 
   // Cargar datos del cliente
   useEffect(() => {
@@ -542,29 +558,43 @@ Gracias por su compra.
                   </tr>
                 </thead>
                 <tbody>
-                  {venta.pagos &&
-                    venta.pagos.map((pago, i) => {
-                      saldoRestante -= pago.monto;
-                      const [y, m, d] = pago.fecha.split("-").map(Number);
-                      const fecha = new Date(y, m - 1, d); // Fecha local, sin conversión UTC
-                      return (
-                        <tr key={i}>
-                          <td>{fecha.getDate()}</td>
-                          <td>{fecha.getMonth() + 1}</td>
-                          <td>{fecha.getFullYear()}</td>
-                          <td>
-                            $
-                            {(Math.round(pago.monto / 1000) * 1000).toLocaleString("es-AR")}
-                          </td>
-                          <td>
-                            $
-                            {(Math.round(Math.max(0, saldoRestante) / 1000) * 1000).toLocaleString("es-AR")}
-                          </td>
-                          <td>{pago.usuario}</td>
-                        </tr>
-                      );
-                    })}
-                </tbody>
+  {venta.pagos &&
+    [...venta.pagos]
+      .sort((a, b) => {
+        const fechaA = new Date(a.fecha);
+        const fechaB = new Date(b.fecha);
+        return fechaA - fechaB; // 📌 Orden ascendente por fecha
+      })
+      .map((pago, i) => {
+        saldoRestante -= pago.monto;
+
+        const [y, m, d] = pago.fecha.split("-").map(Number);
+        const fecha = new Date(y, m - 1, d); // Fecha correcta sin UTC
+
+        return (
+          <tr key={i}>
+            <td>{fecha.getDate()}</td>
+            <td>{fecha.getMonth() + 1}</td>
+            <td>{fecha.getFullYear()}</td>
+
+            <td>
+              $
+              {(Math.round(pago.monto / 1000) * 1000).toLocaleString("es-AR")}
+            </td>
+
+            <td>
+              $
+              {(
+                Math.round(Math.max(0, saldoRestante) / 1000) * 1000
+              ).toLocaleString("es-AR")}
+            </td>
+
+            <td>{pago.usuario}</td>
+          </tr>
+        );
+      })}
+</tbody>
+
               </table>
             </div>
 

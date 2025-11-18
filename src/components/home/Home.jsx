@@ -75,9 +75,44 @@ const Home = () => {
   }, []);
 
   const handleDniDobleClick = (clienteId, ventaId) => {
-    navigate(`/cliente/${clienteId}`, {
-      state: { ventaId }
-    });
+  marcarRevisado(clienteId);
+  setClientesConPagosProximos(prev => [...prev]);
+
+  const url = `/clientes/${clienteId}/detalles?venta=${ventaId}`;
+  const win = window.open(url, "_blank");
+
+  if (win) win.focus();
+};
+
+
+
+
+  // Guarda revisión hasta las 23:59
+  const marcarRevisado = (dni) => {
+    const reset = new Date();
+    reset.setHours(23, 59, 59, 999);
+
+    const data = {
+      revisado: true,
+      expira: reset.getTime(),
+    };
+
+    localStorage.setItem(`rev_${dni}`, JSON.stringify(data));
+  };
+
+  // Verifica si sigue siendo válido
+  const estaRevisado = (dni) => {
+    const item = localStorage.getItem(`rev_${dni}`);
+    if (!item) return false;
+
+    const data = JSON.parse(item);
+
+    if (Date.now() > data.expira) {
+      localStorage.removeItem(`rev_${dni}`);
+      return false;
+    }
+
+    return true;
   };
 
   return (
@@ -114,10 +149,22 @@ const Home = () => {
                     <td
                       className="cliente-dni"
                       onDoubleClick={() => handleDniDobleClick(cliente.clienteId, cliente.ventaId)}
-                      title="Doble clic para ver las compras"
-                      style={{ cursor: 'pointer', fontWeight: 'bold', color: '#007bff' }}
+                      title="Doble clic para ver y marcar revisado"
+                      style={{
+                        cursor: 'pointer',
+                        fontWeight: 'bold',
+                        color: '#007bff',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}
                     >
-                      {cliente.clienteId}
+                      <span>{cliente.clienteId}</span>
+
+                      {/* ✔ si ya fue revisado hoy */}
+                      {estaRevisado(cliente.clienteId) && (
+                        <span style={{ color: 'green', fontSize: '20px' }}>✔</span>
+                      )}
                     </td>
                     <td className="cliente-cuota">
                       ${typeof cliente.valorCuota === 'number'

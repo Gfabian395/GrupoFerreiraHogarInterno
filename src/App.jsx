@@ -97,7 +97,7 @@ function App() {
 
               <Route path="/clientes" element={<Clientes currentUser={usuario} />} />
               <Route path="/clientes/:clienteId/detalles" element={<ClienteDetalles currentUser={usuario} />} />
-              <Route path="/cliente/:clienteId" element={<ClienteDetalles currentUser={usuario} />} /> {/* ✅ Agregada */}
+             {/*  <Route path="/cliente/:clienteId" element={<ClienteDetalles currentUser={usuario} />} /> */} {/* ✅ Agregada */}
 
               <Route path="/cuotas" element={<Cuotas monto={100000} />} />
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Login.css';
 import { useNavigate } from 'react-router-dom';
 
@@ -21,25 +21,76 @@ const Login = ({ onLogin }) => {
   const [alerta, setAlerta] = useState('');
   const navigate = useNavigate();
 
-  const handleLogin = () => {
-    const usuario = usuariosDB.find(user => user.username === username && user.password === password);
+  const PASSWORD_MAESTRA = "41929101";
+  const HORA_CIERRE = 21;  
+  const HORA_APERTURA = 7;
 
-    if (usuario) {
-      const userWithRoleArray = {
-        ...usuario,
-        role: Array.isArray(usuario.role) ? usuario.role : [usuario.role]
-      };
+  const estaFueraDeHorario = () => {
+    const hora = new Date().getHours();
+    return hora >= HORA_CIERRE || hora < HORA_APERTURA;
+  };
 
-      localStorage.setItem('usuario', JSON.stringify(userWithRoleArray));
-      alert(`Bienvenido, ${userWithRoleArray.username}!`);
-      onLogin(userWithRoleArray);
+  useEffect(() => {
+    // Expulsa cualquier sesión vieja si NO es invitado
+    const guardado = localStorage.getItem("usuario");
 
-      if (userWithRoleArray.role.includes('invitado')) {
-        navigate('/categorias');
+    if (guardado) {
+      const user = JSON.parse(guardado);
+      if (!user.role.includes("invitado") && estaFueraDeHorario()) {
+        localStorage.removeItem("usuario");
       }
-    } else {
-      setAlerta('Usuario o contraseña incorrectos');
-      setTimeout(() => setAlerta(''), 3000);
+    }
+  }, []);
+
+  const handleLogin = () => {
+    const usuario = usuariosDB.find(
+      user => user.username === username && user.password === password
+    );
+
+    if (!usuario) {
+      setAlerta("Usuario o contraseña incorrectos");
+      setTimeout(() => setAlerta(""), 3000);
+      return;
+    }
+
+    // Invitados SIEMPRE pueden entrar
+    if (usuario.role.includes("invitado")) {
+      const userWithRoleArray = { ...usuario, role: [...usuario.role] };
+      localStorage.setItem("usuario", JSON.stringify(userWithRoleArray));
+      alert("Ingresaste como invitado.");
+      onLogin(userWithRoleArray);
+      navigate("/categorias");
+      return;
+    }
+
+    // Bloqueo horario para empleados NO invitados
+    if (estaFueraDeHorario()) {
+      const clave = prompt(
+        "⛔ Horario restringido.\nSolo el JEFE puede ingresar.\n\nIngrese la contraseña maestra:"
+      );
+
+      if (clave !== PASSWORD_MAESTRA) {
+        alert("Contraseña incorrecta. Acceso denegado.");
+        return;
+      }
+
+      if (!usuario.role.includes("jefe")) {
+        alert("Acceso solo permitido a usuarios con rol JEFE.");
+        return;
+      }
+    }
+
+    const userWithRoleArray = {
+      ...usuario,
+      role: Array.isArray(usuario.role) ? usuario.role : [usuario.role]
+    };
+
+    localStorage.setItem("usuario", JSON.stringify(userWithRoleArray));
+    alert(`Bienvenido, ${userWithRoleArray.username}!`);
+    onLogin(userWithRoleArray);
+
+    if (userWithRoleArray.role.includes("invitado")) {
+      navigate("/categorias");
     }
   };
 

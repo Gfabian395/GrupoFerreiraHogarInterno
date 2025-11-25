@@ -44,46 +44,46 @@ const ClienteDetalles = ({ currentUser }) => {
   const [clienteBloqueado, setClienteBloqueado] = useState(false);
 
   // Cargar ventas del cliente
- useEffect(() => {
-  const fetchVentas = async () => {
-    try {
-      const ventasQuery = query(
-        collection(db, 'ventas'),
-        where('clienteId', '==', clienteId)
-      );
+  useEffect(() => {
+    const fetchVentas = async () => {
+      try {
+        const ventasQuery = query(
+          collection(db, 'ventas'),
+          where('clienteId', '==', clienteId)
+        );
 
-      const ventasSnapshot = await getDocs(ventasQuery);
-      const ventasList = ventasSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
+        const ventasSnapshot = await getDocs(ventasQuery);
+        const ventasList = ventasSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
 
-      setVentas(ventasList);
+        setVentas(ventasList);
 
-      // 👉 Tomar ventaId desde URL o desde state
-      const queryParams = new URLSearchParams(location.search);
-      const ventaIdDesdeURL = queryParams.get("venta");
-      const ventaIdDesdeHome = ventaIdDesdeURL || location.state?.ventaId;
+        // 👉 Tomar ventaId desde URL o desde state
+        const queryParams = new URLSearchParams(location.search);
+        const ventaIdDesdeURL = queryParams.get("venta");
+        const ventaIdDesdeHome = ventaIdDesdeURL || location.state?.ventaId;
 
-      if (ventaIdDesdeHome) {
-        setTimeout(() => {
-          setVentaSeleccionadaId(ventaIdDesdeHome);
+        if (ventaIdDesdeHome) {
+          setTimeout(() => {
+            setVentaSeleccionadaId(ventaIdDesdeHome);
 
-          const ref = ventaRefs.current[ventaIdDesdeHome];
-          if (ref) ref.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            const ref = ventaRefs.current[ventaIdDesdeHome];
+            if (ref) ref.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-          // Highlight 3 segundos
-          setTimeout(() => setVentaSeleccionadaId(null), 3000);
-        }, 500);
+            // Highlight 3 segundos
+            setTimeout(() => setVentaSeleccionadaId(null), 3000);
+          }, 500);
+        }
+      } catch (error) {
+        console.error("Error fetching ventas:", error);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Error fetching ventas:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-  fetchVentas();
-}, [clienteId, location.search, location.state]);
+    };
+    fetchVentas();
+  }, [clienteId, location.search, location.state]);
 
 
   // Cargar datos del cliente
@@ -320,40 +320,40 @@ const ClienteDetalles = ({ currentUser }) => {
   `;
   };
 
-  /* const generarComprobanteCompra = (cliente, venta, usuario) => {
+  const generarRecordatorioCuota = (venta) => {
+    // Mes actual en español
+    const meses = [
+      "ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO",
+      "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"
+    ];
+    const mesActual = meses[new Date().getMonth()];
+
+    // Producto (si hay varios, usa el primero)
+    const producto = venta.productos?.[0]?.nombre || "su compra";
+
+    // Monto de la cuota
+    const montoCuota = Math.round(
+      venta.totalCredito / venta.cuotas / 1000
+    ) * 1000;
+
     return `
-COMPROBANTE DE COMPRA
 
-Cliente: ${cliente.nombre}
-DNI: ${cliente.dni}
+Este es un mensaje automático.
 
-Venta Nº: ${venta.id}
-Fecha: ${new Date(venta.fecha.seconds * 1000).toLocaleDateString('es-AR')}
+Le escribimos para recordarle que su cuota correspondiente al mes de *${mesActual}* del producto *${producto}* está próxima a vencer.
 
-Producto(s):
-${venta.productos
-        .map(
-          p =>
-            `- ${p.nombre} (Cant: ${p.cantidad}) - Precio unitario: $${(
-              Math.round(p.precio / 1000) * 1000
-            ).toLocaleString('es-AR')}`
-        )
-        .join("\n")}
+El monto a pagar es de *$${montoCuota.toLocaleString("es-AR")}*.
 
-Total Crédito: $${Math.round(venta.totalCredito / 1000) * 1000
-        .toLocaleString("es-AR")}
+Para su comodidad, puede realizar el pago a través de Mercadopago o efectivo en cualquier sucursal.
+(Recuerde que transferencias y tarjetas tienen un 5% de recargo)
 
-Financiación:
-- Cuotas: ${venta.cuotas}
-- Valor por cuota: $${(
-        Math.round(venta.totalCredito / venta.cuotas / 1000) * 1000
-      ).toLocaleString("es-AR")}
+Si ya ha realizado el pago, por favor, desestime este mensaje.
 
-Atendido por: ${usuario}
-
-¡Gracias por su compra!
+Att  
+*GRUPO FERREIRA HOGAR*
 `;
-  }; */
+  };
+
 
   if (loading) return <Load />;
 
@@ -543,6 +543,27 @@ Gracias por su compra.
             </button>
             {/* ===================================================================== */}
 
+            <button
+              className="btn btn-warning mb-3"
+              onClick={async () => {
+                try {
+                  if (!clienteTelefono) {
+                    alert("El cliente no tiene teléfono registrado");
+                    return;
+                  }
+
+                  const mensaje = generarRecordatorioCuota(venta);
+
+                  enviarComprobanteWhatsApp(clienteTelefono, mensaje);
+                } catch (error) {
+                  console.error("Error enviando recordatorio:", error);
+                  alert("No se pudo enviar el recordatorio.");
+                }
+              }}
+            >
+              Recordar cuota
+            </button>
+
             {/* Tabla de pagos */}
             <h4>Pagos</h4>
             <div className="table-responsive">
@@ -558,42 +579,42 @@ Gracias por su compra.
                   </tr>
                 </thead>
                 <tbody>
-  {venta.pagos &&
-    [...venta.pagos]
-      .sort((a, b) => {
-        const fechaA = new Date(a.fecha);
-        const fechaB = new Date(b.fecha);
-        return fechaA - fechaB; // 📌 Orden ascendente por fecha
-      })
-      .map((pago, i) => {
-        saldoRestante -= pago.monto;
+                  {venta.pagos &&
+                    [...venta.pagos]
+                      .sort((a, b) => {
+                        const fechaA = new Date(a.fecha);
+                        const fechaB = new Date(b.fecha);
+                        return fechaA - fechaB; // 📌 Orden ascendente por fecha
+                      })
+                      .map((pago, i) => {
+                        saldoRestante -= pago.monto;
 
-        const [y, m, d] = pago.fecha.split("-").map(Number);
-        const fecha = new Date(y, m - 1, d); // Fecha correcta sin UTC
+                        const [y, m, d] = pago.fecha.split("-").map(Number);
+                        const fecha = new Date(y, m - 1, d); // Fecha correcta sin UTC
 
-        return (
-          <tr key={i}>
-            <td>{fecha.getDate()}</td>
-            <td>{fecha.getMonth() + 1}</td>
-            <td>{fecha.getFullYear()}</td>
+                        return (
+                          <tr key={i}>
+                            <td>{fecha.getDate()}</td>
+                            <td>{fecha.getMonth() + 1}</td>
+                            <td>{fecha.getFullYear()}</td>
 
-            <td>
-              $
-              {(Math.round(pago.monto / 1000) * 1000).toLocaleString("es-AR")}
-            </td>
+                            <td>
+                              $
+                              {(Math.round(pago.monto / 1000) * 1000).toLocaleString("es-AR")}
+                            </td>
 
-            <td>
-              $
-              {(
-                Math.round(Math.max(0, saldoRestante) / 1000) * 1000
-              ).toLocaleString("es-AR")}
-            </td>
+                            <td>
+                              $
+                              {(
+                                Math.round(Math.max(0, saldoRestante) / 1000) * 1000
+                              ).toLocaleString("es-AR")}
+                            </td>
 
-            <td>{pago.usuario}</td>
-          </tr>
-        );
-      })}
-</tbody>
+                            <td>{pago.usuario}</td>
+                          </tr>
+                        );
+                      })}
+                </tbody>
 
               </table>
             </div>

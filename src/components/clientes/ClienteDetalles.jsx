@@ -362,12 +362,56 @@ Att
 `;
   };
 
+  const confirmarCambioFecha = async () => {
+    const password = prompt("Ingrese la contraseña del jefe:");
+    if (password !== "031285") {
+      alert("Contraseña incorrecta.");
+      return;
+    }
+
+    if (!modalFecha.nuevaFecha) {
+      alert("Debe seleccionar una nueva fecha.");
+      return;
+    }
+
+    try {
+      const ventaRef = doc(db, "ventas", modalFecha.ventaId);
+      await updateDoc(ventaRef, {
+        proximaFechaPago: modalFecha.nuevaFecha,
+        proximaFechaModificadaPor: currentUser?.username || "Desconocido",
+        proximaFechaModificadaEn: new Date().toISOString()
+      });
+
+      setVentas(prev =>
+        prev.map(v =>
+          v.id === modalFecha.ventaId
+            ? { ...v, proximaFechaPago: modalFecha.nuevaFecha }
+            : v
+        )
+      );
+
+      alert("Fecha modificada correctamente.");
+      setModalFecha({ visible: false });
+
+    } catch (error) {
+      console.error("Error modificando fecha:", error);
+      alert("No se pudo actualizar la fecha.");
+    }
+  };
+
   // ===========================
   //   EXPANDIR / COLAPSAR
   // ===========================
   const toggleExpandir = (id) => {
     setExpandir(prev => ({ ...prev, [id]: !prev[id] }));
   };
+
+  const [modalFecha, setModalFecha] = useState({
+    visible: false,
+    ventaId: null,
+    fechaActual: "",
+    nuevaFecha: ""
+  });
 
   if (loading) return <Load />;
 
@@ -593,6 +637,22 @@ Gracias por su compra.
                     {new Date(venta.fecha.seconds * 1000).toLocaleDateString("es-AR")}
                   </p>
 
+                  {currentUser?.role?.includes("jefe") && (
+                    <button
+                      className="btn btn-warning mb-2"
+                      onClick={() =>
+                        setModalFecha({
+                          visible: true,
+                          ventaId: venta.id,
+                          fechaActual: venta.proximaFechaPago || "Sin asignar",
+                          nuevaFecha: ""
+                        })
+                      }
+                    >
+                      Cambiar Próxima Fecha
+                    </button>
+                  )}
+
                   <button
                     className="btn btn-success mb-3"
                     onClick={enviarCompraWhatsApp}
@@ -698,6 +758,68 @@ Gracias por su compra.
           );
         })}
 
+      {modalFecha.visible && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            background: "rgba(0,0,0,0.6)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 9999
+          }}
+        >
+          <div
+            style={{
+              background: "white",
+              padding: "20px",
+              borderRadius: "10px",
+              width: "90%",
+              maxWidth: "400px",
+              textAlign: "center"
+            }}
+          >
+            <h3>Cambiar Próxima Fecha</h3>
+
+            <p>
+              <strong>Fecha actual:</strong>{" "}
+              {modalFecha.fechaActual !== "Sin asignar"
+                ? new Date(modalFecha.fechaActual).toLocaleDateString("es-AR")
+                : "Sin asignar"}
+            </p>
+
+            <p><strong>Nueva fecha:</strong></p>
+
+            <input
+              type="date"
+              className="form-control"
+              onChange={(e) =>
+                setModalFecha(prev => ({ ...prev, nuevaFecha: e.target.value }))
+              }
+            />
+
+            <div className="mt-3">
+              <button
+                className="btn btn-success mx-2"
+                onClick={confirmarCambioFecha}
+              >
+                Confirmar
+              </button>
+
+              <button
+                className="btn btn-secondary mx-2"
+                onClick={() => setModalFecha({ visible: false })}
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

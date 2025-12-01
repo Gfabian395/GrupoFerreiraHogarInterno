@@ -11,6 +11,12 @@ const Home = () => {
   const [vendedoresUnicos, setVendedoresUnicos] = useState([]);
   const navigate = useNavigate();
 
+  // 🔹 Función para parsear fechas YYYY-MM-DD como local
+  const parseFechaLocal = (fechaStr) => {
+    const [year, month, day] = fechaStr.split('-');
+    return new Date(year, month - 1, day);
+  };
+
   useEffect(() => {
     const fetchClientesConPagosProximos = async () => {
       const ventasCollection = collection(db, 'ventas');
@@ -28,7 +34,7 @@ const Home = () => {
       const clientesProximos = [];
 
       ventasList.forEach(venta => {
-        const { clienteId, valorCuota, pagos = [], totalCredito, vendedor, nombreCompleto } = venta;
+        const { clienteId, valorCuota, pagos = [], totalCredito, vendedor, nombreCompleto, proximaFechaPago } = venta;
 
         const clienteInfo = clientesList.find(c => c.dni === clienteId);
         if (clienteInfo?.bloqueado) return;
@@ -36,16 +42,21 @@ const Home = () => {
         const totalPagado = pagos.reduce((sum, pago) => sum + (pago.monto || 0), 0);
         if (totalPagado >= totalCredito) return;
 
-        const ultimaFecha = pagos.length > 0
-          ? new Date(pagos[pagos.length - 1].fecha)
-          : venta.fecha?.seconds
-            ? new Date(venta.fecha.seconds * 1000)
-            : null;
+        // 🔹 Calcular próxima fecha correctamente
+        let proximaFecha;
+        if (proximaFechaPago) {
+          proximaFecha = parseFechaLocal(proximaFechaPago);
+        } else {
+          const ultimaFecha = pagos.length > 0
+            ? parseFechaLocal(pagos[pagos.length - 1].fecha)
+            : venta.fecha?.seconds
+              ? new Date(venta.fecha.seconds * 1000)
+              : null;
+          if (!ultimaFecha) return;
 
-        if (!ultimaFecha) return;
-
-        const proximaFecha = new Date(ultimaFecha);
-        proximaFecha.setMonth(proximaFecha.getMonth() + 1);
+          proximaFecha = new Date(ultimaFecha);
+          proximaFecha.setMonth(proximaFecha.getMonth() + 1);
+        }
 
         const diferenciaDias = Math.floor((proximaFecha - hoy) / (1000 * 60 * 60 * 24));
 
@@ -69,7 +80,7 @@ const Home = () => {
         return new Date(dateA) - new Date(dateB);
       });
 
-      // 🔥 FILTRAR SOLO VENDEDORES CON CLIENTES A COBRAR
+      // FILTRAR SOLO VENDEDORES CON CLIENTES A COBRAR
       const vendedoresConClientes = [
         ...new Set(clientesProximos.map(c => c.vendedor))
       ];
@@ -87,7 +98,6 @@ const Home = () => {
 
     const url = `/clientes/${clienteId}/detalles?venta=${ventaId}`;
     const win = window.open(url, "_blank");
-
     if (win) win.focus();
   };
 
@@ -129,7 +139,6 @@ const Home = () => {
       {mostrarTabla && (
         <div className="filtro-container">
           <label className="filtro-label">Filtrar por vendedor:</label>
-
           <select
             value={vendedorFiltro}
             onChange={(e) => setVendedorFiltro(e.target.value)}
@@ -169,18 +178,13 @@ const Home = () => {
                         title="Doble clic para ver y marcar revisado"
                       >
                         <span>{cliente.clienteId}</span>
-
-                        {estaRevisado(cliente.clienteId) && (
-                          <span className="revisado-check">✔</span>
-                        )}
+                        {estaRevisado(cliente.clienteId) && <span className="revisado-check">✔</span>}
                       </td>
-
                       <td className="cliente-cuota">
                         ${typeof cliente.valorCuota === 'number'
                           ? cliente.valorCuota.toLocaleString('es-AR')
                           : cliente.valorCuota}
                       </td>
-
                       <td className="cliente-vendedor">{cliente.vendedor}</td>
                       <td className="cliente-fecha">{cliente.proximaFecha}</td>
                     </tr>

@@ -24,10 +24,6 @@ const Home = () => {
       const ventasList = ventasSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       const clientesList = clientesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-      // VENDEDORES ÚNICOS
-      const vendedores = [...new Set(ventasList.map(v => v.vendedor))];
-      setVendedoresUnicos(vendedores);
-
       const hoy = new Date();
       const clientesProximos = [];
 
@@ -66,11 +62,18 @@ const Home = () => {
         }
       });
 
+      // Ordenar por fecha
       clientesProximos.sort((a, b) => {
         const dateA = a.proximaFecha.split('/').reverse().join('-');
         const dateB = b.proximaFecha.split('/').reverse().join('-');
         return new Date(dateA) - new Date(dateB);
       });
+
+      // 🔥 FILTRAR SOLO VENDEDORES CON CLIENTES A COBRAR
+      const vendedoresConClientes = [
+        ...new Set(clientesProximos.map(c => c.vendedor))
+      ];
+      setVendedoresUnicos(vendedoresConClientes);
 
       setClientesConPagosProximos(clientesProximos);
     };

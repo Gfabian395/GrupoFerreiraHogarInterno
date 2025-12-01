@@ -1,7 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { db } from '../../firebaseConfig';
-import { collection, query, where, getDocs, updateDoc, doc, getDoc } from 'firebase/firestore';
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  updateDoc,
+  doc,
+  getDoc
+} from 'firebase/firestore';
 import Load from '../load/Load';
 import './ClienteDetalles.css';
 
@@ -29,19 +37,26 @@ const calcularCuotaConInteres = (monto, cuotas) => {
 const ClienteDetalles = ({ currentUser }) => {
   const { clienteId } = useParams();
   const location = useLocation();
+  const [clienteDireccion, setClienteDireccion] = useState('');
+
   const [expandedVentas, setExpandedVentas] = useState({});
   const [ventas, setVentas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [ventaSeleccionadaId, setVentaSeleccionadaId] = useState(null);
+
   const ventaRefs = useRef({});
   const fechaRef = useRef(null);
   const montoRef = useRef(null);
+
   const [clienteNombre, setClienteNombre] = useState('');
   const [clienteTelefono, setClienteTelefono] = useState('');
   const [clienteBloqueado, setClienteBloqueado] = useState(false);
+
   const [expandir, setExpandir] = useState({});
 
-  // Cargar ventas del cliente
+  // ===========================
+  //   CARGAR VENTAS DEL CLIENTE
+  // ===========================
   useEffect(() => {
     const fetchVentas = async () => {
       try {
@@ -58,19 +73,22 @@ const ClienteDetalles = ({ currentUser }) => {
 
         setVentas(ventasList);
 
-        // 👉 Tomar ventaId desde URL o desde state
+        // ID de venta enviada desde Home o URL
         const queryParams = new URLSearchParams(location.search);
         const ventaIdDesdeURL = queryParams.get("venta");
-        const ventaIdDesdeHome = ventaIdDesdeURL || location.state?.ventaId;
+        const ventaIdDesdeState = location.state?.ventaId;
 
-        if (ventaIdDesdeHome) {
+        const ventaIdSeleccionada = ventaIdDesdeURL || ventaIdDesdeState;
+
+        if (ventaIdSeleccionada) {
           setTimeout(() => {
-            setVentaSeleccionadaId(ventaIdDesdeHome);
+            setVentaSeleccionadaId(ventaIdSeleccionada);
 
-            const ref = ventaRefs.current[ventaIdDesdeHome];
-            if (ref) ref.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            const ref = ventaRefs.current[ventaIdSeleccionada];
+            if (ref) {
+              ref.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
 
-            // Highlight 3 segundos
             setTimeout(() => setVentaSeleccionadaId(null), 3000);
           }, 500);
         }
@@ -80,11 +98,13 @@ const ClienteDetalles = ({ currentUser }) => {
         setLoading(false);
       }
     };
+
     fetchVentas();
   }, [clienteId, location.search, location.state]);
 
-
-  // Cargar datos del cliente
+  // ===========================
+  //   CARGAR DATOS DEL CLIENTE
+  // ===========================
   useEffect(() => {
     const obtenerEstadoCliente = async () => {
       try {
@@ -96,9 +116,19 @@ const ClienteDetalles = ({ currentUser }) => {
 
           setClienteBloqueado(clienteData.bloqueado || false);
           setClienteNombre(clienteData.nombreCompleto || '');
+          setClienteTelefono(
+            clienteData.telefono1 ||
+            clienteData.telefono2 ||
+            ''
+          );
+          setClienteDireccion(
+            clienteData.direccion ||
+            clienteData.domicilio ||
+            clienteData.barrio ||
+            clienteData.calle ||
+            ''
+          );
 
-          // ✅ Teléfono del cliente
-          setClienteTelefono(clienteData.telefono1 || clienteData.telefono2 || '');
         }
       } catch (error) {
         console.error("Error al obtener estado del cliente:", error);
@@ -108,7 +138,9 @@ const ClienteDetalles = ({ currentUser }) => {
     obtenerEstadoCliente();
   }, [clienteId]);
 
-  // Bloquear o desbloquear cliente
+  // ===========================
+  //   BLOQUEAR / DESBLOQUEAR
+  // ===========================
   const handleToggleBloqueo = async () => {
     if (clienteBloqueado) {
       const password = prompt('Ingrese la contraseña para desbloquear al cliente:');
@@ -123,12 +155,14 @@ const ClienteDetalles = ({ currentUser }) => {
       await updateDoc(clienteRef, { bloqueado: !clienteBloqueado });
       setClienteBloqueado(!clienteBloqueado);
     } catch (error) {
-      console.error('Error al cambiar estado de bloqueo del cliente:', error);
+      console.error('Error al cambiar estado de bloqueo:', error);
       alert('No se pudo actualizar el estado del cliente');
     }
   };
 
-  // Cambiar cuotas
+  // ===========================
+  //     CAMBIAR CANTIDAD DE CUOTAS
+  // ===========================
   const handleCuotasChange = async (ventaId, nuevasCuotas) => {
     if (nuevasCuotas < 1) {
       alert("La cantidad de cuotas debe ser al menos 1");
@@ -143,16 +177,27 @@ const ClienteDetalles = ({ currentUser }) => {
 
     try {
       const venta = ventas.find(v => v.id === ventaId);
-      const montoBase = venta.productos.reduce((acc, p) => acc + p.precio * (p.cantidad || 1), 0);
+
+      const montoBase = venta.productos.reduce(
+        (acc, p) => acc + p.precio * (p.cantidad || 1),
+        0
+      );
 
       const { montoConInteres } = calcularCuotaConInteres(montoBase, nuevasCuotas);
       const totalConInteres = Math.round(montoConInteres / 1000) * 1000;
 
       const ventaRef = doc(db, 'ventas', ventaId);
-      await updateDoc(ventaRef, { cuotas: nuevasCuotas, totalCredito: totalConInteres });
+      await updateDoc(ventaRef, {
+        cuotas: nuevasCuotas,
+        totalCredito: totalConInteres
+      });
 
       setVentas(prev =>
-        prev.map(v => (v.id === ventaId ? { ...v, cuotas: nuevasCuotas, totalCredito: totalConInteres } : v))
+        prev.map(v =>
+          v.id === ventaId
+            ? { ...v, cuotas: nuevasCuotas, totalCredito: totalConInteres }
+            : v
+        )
       );
 
       alert('Cantidad de cuotas actualizada correctamente.');
@@ -162,7 +207,9 @@ const ClienteDetalles = ({ currentUser }) => {
     }
   };
 
-  // Agregar pago
+  // ===========================
+  //        AGREGAR PAGO
+  // ===========================
   const agregarPago = async (ventaId, e) => {
     e.preventDefault();
 
@@ -171,10 +218,10 @@ const ClienteDetalles = ({ currentUser }) => {
 
     const venta = ventas.find(v => v.id === ventaId);
 
-    // Redondeo total crédito
+    // Total crédito redondeado
     const totalCredito = Math.round((venta.totalCredito || 0) / 1000) * 1000;
 
-    // Redondeo total pagos ya realizados
+    // Total pagos ya realizados
     const totalPagos = venta.pagos
       ? venta.pagos.reduce(
         (acc, pago) => acc + Math.round(Number(pago.monto) / 1000) * 1000,
@@ -187,7 +234,6 @@ const ClienteDetalles = ({ currentUser }) => {
 
     if (monto > saldo) monto = saldo;
 
-    // Pago nuevo redondeado
     const nuevoPago = {
       fecha,
       monto: Math.round(monto / 1000) * 1000,
@@ -201,13 +247,14 @@ const ClienteDetalles = ({ currentUser }) => {
       await updateDoc(ventaRef, { pagos: nuevosPagos });
 
       setVentas(prev =>
-        prev.map(v => (v.id === ventaId ? { ...v, pagos: nuevosPagos } : v))
+        prev.map(v =>
+          v.id === ventaId ? { ...v, pagos: nuevosPagos } : v
+        )
       );
 
       // Obtener cliente
       const clienteRef = doc(db, "clientes", clienteId);
       const clienteSnap = await getDoc(clienteRef);
-
       const cliente = clienteSnap.exists() ? clienteSnap.data() : null;
 
       const datosCliente = {
@@ -215,30 +262,25 @@ const ClienteDetalles = ({ currentUser }) => {
         dni: cliente?.dni || clienteId,
       };
 
+      // Crear comprobante
       const pagoGenerado = {
         fecha,
         monto: Math.round(monto / 1000) * 1000,
         usuario: currentUser?.username || "Desconocido",
       };
 
-      // Generar ticket
       const ticket = generarComprobantePago(
         datosCliente,
         { ...venta, pagos: nuevosPagos },
         pagoGenerado
       );
 
-      // Elegir teléfono
-      const telefonoCliente =
-        cliente?.telefono1 ||
-        cliente?.telefono2 ||
-        null;
+      const telefonoCliente = cliente?.telefono1 || cliente?.telefono2 || null;
 
       if (telefonoCliente) {
         enviarComprobanteWhatsApp(telefonoCliente, ticket);
       }
 
-      // Al final del try:
       e.target.reset();
       alert("Pago registrado con éxito");
 
@@ -248,13 +290,18 @@ const ClienteDetalles = ({ currentUser }) => {
     }
   };
 
-  // Enviar por WhatsApp
+  // ===========================
+  //  WHATSAPP
+  // ===========================
   const enviarComprobanteWhatsApp = (telefono, texto) => {
     const mensaje = encodeURIComponent(texto);
     const url = `https://wa.me/${telefono}?text=${mensaje}`;
     window.open(url, "_blank");
   };
 
+  // ===========================
+  //  GENERAR COMPROBANTE
+  // ===========================
   const generarComprobantePago = (cliente, venta, pago) => {
     const totalPagado = venta.pagos.reduce((a, p) => a + p.monto, 0);
     const saldoRestante = venta.totalCredito - totalPagado;
@@ -268,7 +315,9 @@ const ClienteDetalles = ({ currentUser }) => {
 *Cliente:* ${cliente.nombre}
 *DNI:* ${cliente.dni}
 
-*Producto(s):* ${venta.productos.map(p => `${p.nombre} x${p.cantidad}`).join(", ")}
+*Producto(s):* ${venta.productos.map(p =>
+      `${p.nombre} x${p.cantidad}`
+    ).join(", ")}
 
 *Pago realizado:*
 *Fecha:* ${new Date(pago.fecha).toLocaleDateString('es-AR')}
@@ -282,45 +331,46 @@ const ClienteDetalles = ({ currentUser }) => {
   `;
   };
 
+  // ===========================
+  //   RECORDATORIO DE CUOTA
+  // ===========================
   const generarRecordatorioCuota = (venta) => {
-    // Mes actual en español
     const meses = [
       "ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO",
       "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"
     ];
-    const mesActual = meses[new Date().getMonth()];
 
-    // Producto (si hay varios, usa el primero)
+    const mesActual = meses[new Date().getMonth()];
     const producto = venta.productos?.[0]?.nombre || "su compra";
 
-    // Monto de la cuota
     const montoCuota = Math.round(
       venta.totalCredito / venta.cuotas / 1000
     ) * 1000;
 
     return `
-
 Este es un mensaje automático.
 
-Le escribimos para recordarle que su cuota correspondiente al mes de *${mesActual}* del producto *${producto}* está próxima a vencer.
+Le recordamos que su cuota del mes de *${mesActual}* del producto *${producto}*
+está próxima a vencer.
 
-El monto a pagar es de *$${montoCuota.toLocaleString("es-AR")}*.
+El monto es *$${montoCuota.toLocaleString("es-AR")}*.
 
-Para su comodidad, puede realizar el pago a través de Mercadopago o efectivo en cualquier sucursal.
-(Recuerde que transferencias y tarjetas tienen un 5% de recargo)
+Si ya pagó, ignore este mensaje.
 
-Si ya ha realizado el pago, por favor, desestime este mensaje.
-
-Att  
+Att
 *GRUPO FERREIRA HOGAR*
 `;
   };
 
+  // ===========================
+  //   EXPANDIR / COLAPSAR
+  // ===========================
   const toggleExpandir = (id) => {
     setExpandir(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
   if (loading) return <Load />;
+
 
   return (
     <div className={`cliente-detalles ${clienteBloqueado ? 'cliente-bloqueado' : ''}`}>
@@ -464,11 +514,11 @@ Gracias por su compra.
               key={venta.id}
               ref={el => (ventaRefs.current[venta.id] = el)}
               className={`venta-detalle 
-          ${isComplete ? "completo" : ""} 
-          ${isComplete && !isExpanded ? "venta-mini" : ""} 
-          ${ventaSeleccionadaId === venta.id ? "venta-seleccionada" : ""}`
-              }
+              ${isComplete ? "completo" : ""} 
+              ${isComplete && !isExpanded ? "venta-mini" : ""} 
+              ${ventaSeleccionadaId === venta.id ? "venta-seleccionada" : ""}`}
             >
+
               {/* BOTÓN PARA EXPANDIR/ACHICAR SI ESTÁ COMPLETA */}
               {isComplete && (
                 <button
@@ -489,6 +539,21 @@ Gracias por su compra.
 
                   <p>Cliente: <strong>{clienteNombre}</strong></p>
                   <p><strong>D.N.I:</strong> {clienteId}</p>
+                  <p><strong>Dirección:</strong> {clienteDireccion || "No registrada"}</p>
+                  <p><strong>Vendedor:</strong> {venta.vendedor}</p>
+                  {venta.sucursal && (
+                    <p><strong>Sucursal:</strong> {venta.sucursal}</p>
+                  )}
+                  {venta.entrega && (
+                    <p><strong>Entrega:</strong> {venta.entrega}</p>
+                  )}
+                  {venta.chofer && typeof venta.chofer === "object" && (
+                    <p>
+                      <strong>Chofer:</strong> {venta.chofer.nombre}
+                      {" - Patente: " + (venta.chofer.patente || "No registrada")}
+                      {" - Tel: " + (venta.chofer.telefono || "No registrado")}
+                    </p>
+                  )}
                   <p><strong>Total Crédito $:</strong> {totalCredito.toLocaleString("es-AR")}</p>
 
                   <p><strong>Cuotas de:</strong> {(Math.round(totalCredito / cuotas / 1000) * 1000).toLocaleString("es-AR")}</p>

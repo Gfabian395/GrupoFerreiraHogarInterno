@@ -29,19 +29,17 @@ const calcularCuotaConInteres = (monto, cuotas) => {
 const ClienteDetalles = ({ currentUser }) => {
   const { clienteId } = useParams();
   const location = useLocation();
-
+  const [expandedVentas, setExpandedVentas] = useState({});
   const [ventas, setVentas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [ventaSeleccionadaId, setVentaSeleccionadaId] = useState(null);
   const ventaRefs = useRef({});
-
   const fechaRef = useRef(null);
   const montoRef = useRef(null);
-
   const [clienteNombre, setClienteNombre] = useState('');
   const [clienteTelefono, setClienteTelefono] = useState('');
-
   const [clienteBloqueado, setClienteBloqueado] = useState(false);
+  const [expandir, setExpandir] = useState({});
 
   // Cargar ventas del cliente
   useEffect(() => {
@@ -256,42 +254,6 @@ const ClienteDetalles = ({ currentUser }) => {
     const url = `https://wa.me/${telefono}?text=${mensaje}`;
     window.open(url, "_blank");
   };
-  /* 
-    const enviarComprobanteCompra = async (venta) => {
-      try {
-        // Obtener datos reales del cliente
-        const clienteRef = doc(db, "clientes", clienteId);
-        const clienteSnap = await getDoc(clienteRef);
-        const cliente = clienteSnap.exists() ? clienteSnap.data() : null;
-  
-        const datosCliente = {
-          nombre: cliente?.nombreCompleto || "Cliente",
-          dni: cliente?.dni || clienteId,
-        };
-  
-        const ticket = generarComprobanteCompra(
-          datosCliente,
-          venta,
-          currentUser?.username || "Vendedor"
-        );
-  
-        const telefonoCliente =
-          cliente?.telefono1 ||
-          cliente?.telefono2 ||
-          null;
-  
-        if (!telefonoCliente) {
-          alert("El cliente no tiene teléfono registrado.");
-          return;
-        }
-  
-        enviarComprobanteWhatsApp(telefonoCliente, ticket);
-  
-      } catch (error) {
-        console.error("Error generando comprobante de compra:", error);
-        alert("No se pudo generar el comprobante.");
-      }
-    }; */
 
   const generarComprobantePago = (cliente, venta, pago) => {
     const totalPagado = venta.pagos.reduce((a, p) => a + p.monto, 0);
@@ -354,6 +316,9 @@ Att
 `;
   };
 
+  const toggleExpandir = (id) => {
+    setExpandir(prev => ({ ...prev, [id]: !prev[id] }));
+  };
 
   if (loading) return <Load />;
 
@@ -412,47 +377,59 @@ Att
 
       <h2 className="CD-Title">Detalles de Ventas</h2>
 
-      {ventas.map(venta => {
-        const totalCredito = Math.round((venta.totalCredito || 0) / 1000) * 1000;
-        const totalPagos = venta.pagos
-          ? venta.pagos.reduce((acc, pago) =>
-            acc + Math.round(pago.monto / 1000) * 1000, 0)
-          : 0;
+      {ventas
+        // ORDENAR: arriba las incompletas, abajo las completas
+        .sort((a, b) => {
+          const totalA = Math.round((a.totalCredito || 0) / 1000) * 1000;
+          const pagosA = a.pagos ? a.pagos.reduce((acc, p) => acc + Math.round(p.monto / 1000) * 1000, 0) : 0;
+          const compA = totalA - pagosA <= 0;
 
-        const cuotas = venta.cuotas || 1;
-        const saldo = totalCredito - totalPagos;
-        const isComplete = saldo <= 0;
-        let saldoRestante = totalCredito;
+          const totalB = Math.round((b.totalCredito || 0) / 1000) * 1000;
+          const pagosB = b.pagos ? b.pagos.reduce((acc, p) => acc + Math.round(p.monto / 1000) * 1000, 0) : 0;
+          const compB = totalB - pagosB <= 0;
 
-        // Calcular valor base
-        const montoBaseCuotas = venta.productos.reduce((acc, p) => {
-          const precio = Math.round(p.precio / 1000) * 1000;
-          return acc + precio * (p.cantidad || 1);
-        }, 0);
+          return compA === compB ? 0 : compA ? 1 : -1;
+        })
+        .map(venta => {
 
-        const { cuotaRedondeada } = calcularCuotaConInteres(montoBaseCuotas, cuotas);
+          const isExpanded = expandedVentas[venta.id] || false;
 
-        const cuotasDisponibles = configuracionCuotas.map(({ cuotas }) => {
+          const totalCredito = Math.round((venta.totalCredito || 0) / 1000) * 1000;
+          const totalPagos = venta.pagos
+            ? venta.pagos.reduce((acc, pago) =>
+              acc + Math.round(pago.monto / 1000) * 1000, 0)
+            : 0;
+
+          const cuotas = venta.cuotas || 1;
+          const saldo = totalCredito - totalPagos;
+          const isComplete = saldo <= 0;
+          let saldoRestante = totalCredito;
+
+          const montoBaseCuotas = venta.productos.reduce((acc, p) => {
+            const precio = Math.round(p.precio / 1000) * 1000;
+            return acc + precio * (p.cantidad || 1);
+          }, 0);
+
           const { cuotaRedondeada } = calcularCuotaConInteres(montoBaseCuotas, cuotas);
-          return { cuotas, valorCuota: cuotaRedondeada };
-        });
 
-        // ================================
-        // GENERAR COMPROBANTE DE COMPRA
-        // ================================
-        const generarComprobanteCompra = () => {
-          const fechaVenta = new Date(venta.fecha.seconds * 1000).toLocaleDateString("es-AR");
+          const cuotasDisponibles = configuracionCuotas.map(({ cuotas }) => {
+            const { cuotaRedondeada } = calcularCuotaConInteres(montoBaseCuotas, cuotas);
+            return { cuotas, valorCuota: cuotaRedondeada };
+          });
 
-          const productosTexto = venta.productos
-            .map(
-              p =>
-                `• ${p.nombre} (Cant: ${p.cantidad}, Precio: $${(
-                  Math.round(p.precio / 1000) * 1000
-                ).toLocaleString("es-AR")})`
-            )
-            .join("\n");
+          const generarComprobanteCompra = () => {
+            const fechaVenta = new Date(venta.fecha.seconds * 1000).toLocaleDateString("es-AR");
 
-          return `
+            const productosTexto = venta.productos
+              .map(
+                p =>
+                  `• ${p.nombre} (Cant: ${p.cantidad}, Precio: $${(
+                    Math.round(p.precio / 1000) * 1000
+                  ).toLocaleString("es-AR")})`
+              )
+              .join("\n");
+
+            return `
 COMPROBANTE DE COMPRA
 
 Cliente: ${clienteNombre}
@@ -470,179 +447,192 @@ Valor por Cuota: $${cuotaRedondeada.toLocaleString("es-AR")}
 Atendido por: ${currentUser?.username || "Vendedor"}
 
 Gracias por su compra.
-    `;
-        };
+      `;
+          };
 
-        const enviarCompraWhatsApp = () => {
-          if (!clienteTelefono) {
-            alert("El cliente no tiene número registrado");
-            return;
-          }
-          const ticket = generarComprobanteCompra();
-          enviarComprobanteWhatsApp(clienteTelefono, ticket);
-        };
+          const enviarCompraWhatsApp = () => {
+            if (!clienteTelefono) {
+              alert("El cliente no tiene número registrado");
+              return;
+            }
+            const ticket = generarComprobanteCompra();
+            enviarComprobanteWhatsApp(clienteTelefono, ticket);
+          };
 
-        // ================================
-
-        return (
-          <div
-            key={venta.id}
-            ref={el => (ventaRefs.current[venta.id] = el)}
-            className={`venta-detalle ${isComplete ? "completo" : ""} ${ventaSeleccionadaId === venta.id ? "venta-seleccionada" : ""
-              }`}
-          >
-            <h3>Venta {venta.id}</h3>
-
-            <p>Cliente: <strong>{clienteNombre}</strong></p>
-            <p><strong>D.N.I:</strong> {clienteId}</p>
-            <p><strong>Total Crédito $:</strong> {totalCredito.toLocaleString("es-AR")}</p>
-
-            <p><strong>Cuotas de:</strong> {(Math.round(totalCredito / cuotas / 1000) * 1000).toLocaleString("es-AR")}</p>
-
-            <p><strong>Su Compra:</strong>{" "}
-              {venta.productos
-                .map(
-                  p =>
-                    `${p.nombre} (Cant: ${p.cantidad}, Precio unitario: $${(
-                      Math.round(p.precio / 1000) * 1000
-                    ).toLocaleString("es-AR")})`
-                )
-                .join(", ")}
-            </p>
-
-            <p><strong>Total:</strong> ${totalCredito.toLocaleString("es-AR")}</p>
-
-            <p><strong>Cuotas:</strong>{" "}
-              <select
-                value={cuotas}
-                onChange={(e) => handleCuotasChange(venta.id, parseInt(e.target.value))}
-                disabled={isComplete}
-                className="form-select"
-              >
-                {cuotasDisponibles.map(op => (
-                  <option key={op.cuotas} value={op.cuotas}>
-                    {op.cuotas} cuota{op.cuotas > 1 ? "s" : ""} - $
-                    {op.valorCuota.toLocaleString("es-AR")}
-                  </option>
-                ))}
-              </select>
-            </p>
-
-            <p><strong>Valor por cuota:</strong> ${cuotaRedondeada.toLocaleString("es-AR")}</p>
-
-            <p><strong>Fecha de Venta:</strong>
-              {new Date(venta.fecha.seconds * 1000).toLocaleDateString("es-AR")}
-            </p>
-
-            {/* =============== BOTÓN PARA ENVIAR COMPROBANTE DE COMPRA =============== */}
-            <button
-              className="btn btn-success mb-3"
-              onClick={enviarCompraWhatsApp}
+          return (
+            <div
+              key={venta.id}
+              ref={el => (ventaRefs.current[venta.id] = el)}
+              className={`venta-detalle 
+          ${isComplete ? "completo" : ""} 
+          ${isComplete && !isExpanded ? "venta-mini" : ""} 
+          ${ventaSeleccionadaId === venta.id ? "venta-seleccionada" : ""}`
+              }
             >
-              Enviar Comprobante de Compra
-            </button>
-            {/* ===================================================================== */}
-
-            <button
-              className="btn btn-warning mb-3"
-              onClick={async () => {
-                try {
-                  if (!clienteTelefono) {
-                    alert("El cliente no tiene teléfono registrado");
-                    return;
+              {/* BOTÓN PARA EXPANDIR/ACHICAR SI ESTÁ COMPLETA */}
+              {isComplete && (
+                <button
+                  className="btn btn-secondary btn-expandir mb-2"
+                  onClick={() =>
+                    setExpandedVentas(prev => ({ ...prev, [venta.id]: !isExpanded }))
                   }
+                >
+                  {isExpanded ? "Contraer" : "Expandir"}
+                </button>
+              )}
 
-                  const mensaje = generarRecordatorioCuota(venta);
+              {/* CONTENIDO SOLO SI NO ESTÁ MINI O ESTÁ EXPANDIDO */}
+              {(!isComplete || isExpanded) && (
+                <>
 
-                  enviarComprobanteWhatsApp(clienteTelefono, mensaje);
-                } catch (error) {
-                  console.error("Error enviando recordatorio:", error);
-                  alert("No se pudo enviar el recordatorio.");
-                }
-              }}
-            >
-              Recordar cuota
-            </button>
+                  <h3>Venta {venta.id}</h3>
 
-            {/* Tabla de pagos */}
-            <h4>Pagos</h4>
-            <div className="table-responsive">
-              <table className="table table-bordered">
-                <thead>
-                  <tr>
-                    <th>Día</th>
-                    <th>Mes</th>
-                    <th>Año</th>
-                    <th>Pago</th>
-                    <th>Saldo</th>
-                    <th>Control</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {venta.pagos &&
-                    [...venta.pagos]
-                      .sort((a, b) => {
-                        const fechaA = new Date(a.fecha);
-                        const fechaB = new Date(b.fecha);
-                        return fechaA - fechaB; // 📌 Orden ascendente por fecha
-                      })
-                      .map((pago, i) => {
-                        saldoRestante -= pago.monto;
+                  <p>Cliente: <strong>{clienteNombre}</strong></p>
+                  <p><strong>D.N.I:</strong> {clienteId}</p>
+                  <p><strong>Total Crédito $:</strong> {totalCredito.toLocaleString("es-AR")}</p>
 
-                        const [y, m, d] = pago.fecha.split("-").map(Number);
-                        const fecha = new Date(y, m - 1, d); // Fecha correcta sin UTC
+                  <p><strong>Cuotas de:</strong> {(Math.round(totalCredito / cuotas / 1000) * 1000).toLocaleString("es-AR")}</p>
 
-                        return (
-                          <tr key={i}>
-                            <td>{fecha.getDate()}</td>
-                            <td>{fecha.getMonth() + 1}</td>
-                            <td>{fecha.getFullYear()}</td>
+                  <p><strong>Su Compra:</strong>{" "}
+                    {venta.productos
+                      .map(
+                        p =>
+                          `${p.nombre} (Cant: ${p.cantidad}, Precio unitario: $${(
+                            Math.round(p.precio / 1000) * 1000
+                          ).toLocaleString("es-AR")})`
+                      )
+                      .join(", ")}
+                  </p>
 
-                            <td>
-                              $
-                              {(Math.round(pago.monto / 1000) * 1000).toLocaleString("es-AR")}
-                            </td>
+                  <p><strong>Total:</strong> ${totalCredito.toLocaleString("es-AR")}</p>
 
-                            <td>
-                              $
-                              {(
-                                Math.round(Math.max(0, saldoRestante) / 1000) * 1000
-                              ).toLocaleString("es-AR")}
-                            </td>
+                  <p><strong>Cuotas:</strong>{" "}
+                    <select
+                      value={cuotas}
+                      onChange={(e) => handleCuotasChange(venta.id, parseInt(e.target.value))}
+                      disabled={isComplete}
+                      className="form-select"
+                    >
+                      {cuotasDisponibles.map(op => (
+                        <option key={op.cuotas} value={op.cuotas}>
+                          {op.cuotas} cuota{op.cuotas > 1 ? "s" : ""} - $
+                          {op.valorCuota.toLocaleString("es-AR")}
+                        </option>
+                      ))}
+                    </select>
+                  </p>
 
-                            <td>{pago.usuario}</td>
-                          </tr>
-                        );
-                      })}
-                </tbody>
+                  <p><strong>Valor por cuota:</strong> ${cuotaRedondeada.toLocaleString("es-AR")}</p>
 
-              </table>
-            </div>
+                  <p><strong>Fecha de Venta:</strong>
+                    {new Date(venta.fecha.seconds * 1000).toLocaleDateString("es-AR")}
+                  </p>
 
-            {/* Form agregar pago */}
-            {!isComplete && (
-              <>
-                <h4>Agregar Pago</h4>
-                <form onSubmit={(e) => agregarPago(venta.id, e)}>
-                  <div className="form-group">
-                    <label htmlFor="fecha">Fecha:</label>
-                    <input type="date" className="form-control" id="fecha" name="fecha" required ref={fechaRef} />
-                  </div>
-
-                  <div className="form-group">
-                    <label htmlFor="monto">Monto:</label>
-                    <input type="number" className="form-control" id="monto" name="monto" required ref={montoRef} />
-                  </div>
-
-                  <button type="submit" className="btn btn-primary mt-2">
-                    Agregar Pago
+                  <button
+                    className="btn btn-success mb-3"
+                    onClick={enviarCompraWhatsApp}
+                  >
+                    Enviar Comprobante de Compra
                   </button>
-                </form>
-              </>
-            )}
-          </div>
-        );
-      })}
+
+                  <button
+                    className="btn btn-warning mb-3"
+                    onClick={async () => {
+                      try {
+                        if (!clienteTelefono) {
+                          alert("El cliente no tiene teléfono registrado");
+                          return;
+                        }
+
+                        const mensaje = generarRecordatorioCuota(venta);
+
+                        enviarComprobanteWhatsApp(clienteTelefono, mensaje);
+                      } catch (error) {
+                        console.error("Error enviando recordatorio:", error);
+                        alert("No se pudo enviar el recordatorio.");
+                      }
+                    }}
+                  >
+                    Recordar cuota
+                  </button>
+
+                  {/* TABLA DE PAGOS */}
+                  <h4>Pagos</h4>
+                  <div className="table-responsive">
+                    <table className="table table-bordered">
+                      <thead>
+                        <tr>
+                          <th>Día</th>
+                          <th>Mes</th>
+                          <th>Año</th>
+                          <th>Pago</th>
+                          <th>Saldo</th>
+                          <th>Control</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {venta.pagos &&
+                          [...venta.pagos]
+                            .sort((a, b) => new Date(a.fecha) - new Date(b.fecha))
+                            .map((pago, i) => {
+                              saldoRestante -= pago.monto;
+
+                              const [y, m, d] = pago.fecha.split("-").map(Number);
+                              const fecha = new Date(y, m - 1, d);
+
+                              return (
+                                <tr key={i}>
+                                  <td>{fecha.getDate()}</td>
+                                  <td>{fecha.getMonth() + 1}</td>
+                                  <td>{fecha.getFullYear()}</td>
+
+                                  <td>
+                                    $
+                                    {(Math.round(pago.monto / 1000) * 1000).toLocaleString("es-AR")}
+                                  </td>
+
+                                  <td>
+                                    $
+                                    {(
+                                      Math.round(Math.max(0, saldoRestante) / 1000) * 1000
+                                    ).toLocaleString("es-AR")}
+                                  </td>
+
+                                  <td>{pago.usuario}</td>
+                                </tr>
+                              );
+                            })}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {!isComplete && (
+                    <>
+                      <h4>Agregar Pago</h4>
+                      <form onSubmit={(e) => agregarPago(venta.id, e)}>
+                        <div className="form-group">
+                          <label htmlFor="fecha">Fecha:</label>
+                          <input type="date" className="form-control" id="fecha" name="fecha" required ref={fechaRef} />
+                        </div>
+
+                        <div className="form-group">
+                          <label htmlFor="monto">Monto:</label>
+                          <input type="number" className="form-control" id="monto" name="monto" required ref={montoRef} />
+                        </div>
+
+                        <button type="submit" className="btn btn-primary mt-2">
+                          Agregar Pago
+                        </button>
+                      </form>
+                    </>
+                  )}
+
+                </>
+              )}
+            </div>
+          );
+        })}
+
 
     </div>
   );

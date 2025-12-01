@@ -239,6 +239,44 @@ h4 {
 .cliente-bloqueado .venta-detalle {
   background-color: transparent !important;
 }
+/* Estado minimizado de ventas completas */
+.venta-mini {
+  max-height: 60px !important;
+  overflow: hidden !important;
+  opacity: 0.6;
+  position: relative;
+  padding: 10px 15px !important;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+/* Oculta todo el contenido excepto el botón de expandir */
+.venta-mini .contenido-venta {
+  display: none !important;
+}
+
+/* Botón de expandir siempre visible */
+.btn-expandir {
+  display: block !important;
+  font-size: 0.9rem;
+  padding: 6px 12px;
+  margin-top: 8px;
+  z-index: 5;
+  position: relative;
+}
+
+/* Estado expandido normal */
+.venta-detalle.expanded {
+  max-height: none !important;
+  opacity: 1 !important;
+  overflow: visible !important;
+}
+
+/* Cuando está expandido debe mostrar todo nuevamente */
+.venta-detalle.expanded .contenido-venta {
+  display: block !important;
+}
+
 
 
 @media (max-width: 768px) {

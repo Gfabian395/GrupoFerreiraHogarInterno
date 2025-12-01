@@ -6,7 +6,9 @@ import './Home.css';
 
 const Home = () => {
   const [clientesConPagosProximos, setClientesConPagosProximos] = useState([]);
-  const [mostrarTabla, setMostrarTabla] = useState(false); // 👈 OCULTA POR DEFECTO
+  const [mostrarTabla, setMostrarTabla] = useState(false);
+  const [vendedorFiltro, setVendedorFiltro] = useState("");
+  const [vendedoresUnicos, setVendedoresUnicos] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -22,13 +24,16 @@ const Home = () => {
       const ventasList = ventasSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       const clientesList = clientesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
+      // VENDEDORES ÚNICOS
+      const vendedores = [...new Set(ventasList.map(v => v.vendedor))];
+      setVendedoresUnicos(vendedores);
+
       const hoy = new Date();
       const clientesProximos = [];
 
       ventasList.forEach(venta => {
         const { clienteId, valorCuota, pagos = [], totalCredito, vendedor, nombreCompleto } = venta;
 
-        // ❌ excluir si está bloqueado
         const clienteInfo = clientesList.find(c => c.dni === clienteId);
         if (clienteInfo?.bloqueado) return;
 
@@ -61,7 +66,6 @@ const Home = () => {
         }
       });
 
-      // Ordenar por fecha
       clientesProximos.sort((a, b) => {
         const dateA = a.proximaFecha.split('/').reverse().join('-');
         const dateB = b.proximaFecha.split('/').reverse().join('-');
@@ -75,19 +79,15 @@ const Home = () => {
   }, []);
 
   const handleDniDobleClick = (clienteId, ventaId) => {
-  marcarRevisado(clienteId);
-  setClientesConPagosProximos(prev => [...prev]);
+    marcarRevisado(clienteId);
+    setClientesConPagosProximos(prev => [...prev]);
 
-  const url = `/clientes/${clienteId}/detalles?venta=${ventaId}`;
-  const win = window.open(url, "_blank");
+    const url = `/clientes/${clienteId}/detalles?venta=${ventaId}`;
+    const win = window.open(url, "_blank");
 
-  if (win) win.focus();
-};
+    if (win) win.focus();
+  };
 
-
-
-
-  // Guarda revisión hasta las 23:59
   const marcarRevisado = (dni) => {
     const reset = new Date();
     reset.setHours(23, 59, 59, 999);
@@ -100,7 +100,6 @@ const Home = () => {
     localStorage.setItem(`rev_${dni}`, JSON.stringify(data));
   };
 
-  // Verifica si sigue siendo válido
   const estaRevisado = (dni) => {
     const item = localStorage.getItem(`rev_${dni}`);
     if (!item) return false;
@@ -119,17 +118,30 @@ const Home = () => {
     <div className="home">
       <h2 className="clientes-title">Clientes que deben pagar en los próximos 7 días</h2>
 
-      {/* 🔘 BOTÓN MOSTRAR / OCULTAR */}
-      <button
-        className="btn-toggle"
-        onClick={() => setMostrarTabla(!mostrarTabla)}
-      >
+      <button className="btn-toggle" onClick={() => setMostrarTabla(!mostrarTabla)}>
         {mostrarTabla ? "Ocultar tabla" : "Mostrar tabla"}
       </button>
 
-      <div className="clientes-pagos-container">
+      {/* FILTRO POR VENDEDOR */}
+      {mostrarTabla && (
+        <div className="filtro-container">
+          <label className="filtro-label">Filtrar por vendedor:</label>
 
-        {mostrarTabla && (  // 👈 SOLO SE MUESTRA SI mostrarTabla = true
+          <select
+            value={vendedorFiltro}
+            onChange={(e) => setVendedorFiltro(e.target.value)}
+            className="filtro-select"
+          >
+            <option value="">Todos</option>
+            {vendedoresUnicos.map((v, index) => (
+              <option key={index} value={v}>{v}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      <div className="clientes-pagos-container">
+        {mostrarTabla && (
           clientesConPagosProximos.length > 0 ? (
             <table className="clientes-table">
               <thead>
@@ -141,47 +153,41 @@ const Home = () => {
                 </tr>
               </thead>
               <tbody>
-                {clientesConPagosProximos.map((cliente, index) => (
-                  <tr
-                    key={`${cliente.clienteId}-${index}`}
-                    className={`cliente-item-row ${cliente.atrasado ? 'cliente-atrasado' : ''}`}
-                  >
-                    <td
-                      className="cliente-dni"
-                      onDoubleClick={() => handleDniDobleClick(cliente.clienteId, cliente.ventaId)}
-                      title="Doble clic para ver y marcar revisado"
-                      style={{
-                        cursor: 'pointer',
-                        fontWeight: 'bold',
-                        color: '#007bff',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px'
-                      }}
+                {clientesConPagosProximos
+                  .filter(c => vendedorFiltro === "" || c.vendedor === vendedorFiltro)
+                  .map((cliente, index) => (
+                    <tr
+                      key={`${cliente.clienteId}-${index}`}
+                      className={`cliente-item-row ${cliente.atrasado ? 'cliente-atrasado' : ''}`}
                     >
-                      <span>{cliente.clienteId}</span>
+                      <td
+                        className="cliente-dni"
+                        onDoubleClick={() => handleDniDobleClick(cliente.clienteId, cliente.ventaId)}
+                        title="Doble clic para ver y marcar revisado"
+                      >
+                        <span>{cliente.clienteId}</span>
 
-                      {/* ✔ si ya fue revisado hoy */}
-                      {estaRevisado(cliente.clienteId) && (
-                        <span style={{ color: 'green', fontSize: '20px' }}>✔</span>
-                      )}
-                    </td>
-                    <td className="cliente-cuota">
-                      ${typeof cliente.valorCuota === 'number'
-                        ? cliente.valorCuota.toLocaleString('es-AR')
-                        : cliente.valorCuota}
-                    </td>
-                    <td className="cliente-vendedor">{cliente.vendedor}</td>
-                    <td className="cliente-fecha">{cliente.proximaFecha}</td>
-                  </tr>
-                ))}
+                        {estaRevisado(cliente.clienteId) && (
+                          <span className="revisado-check">✔</span>
+                        )}
+                      </td>
+
+                      <td className="cliente-cuota">
+                        ${typeof cliente.valorCuota === 'number'
+                          ? cliente.valorCuota.toLocaleString('es-AR')
+                          : cliente.valorCuota}
+                      </td>
+
+                      <td className="cliente-vendedor">{cliente.vendedor}</td>
+                      <td className="cliente-fecha">{cliente.proximaFecha}</td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           ) : (
             <p className="no-clientes">No hay clientes con pagos en los próximos 7 días.</p>
           )
         )}
-
       </div>
     </div>
   );

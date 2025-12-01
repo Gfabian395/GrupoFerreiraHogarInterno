@@ -1,6 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Griffy&display=swap');
 
-
 .home {
   padding: 2rem;
   text-align: center;
@@ -22,8 +21,6 @@
   padding: 10px;
   margin: 11px;
 }
-
-
 
 /* 🏅 Ranking de vendedores */
 .ranking-container {
@@ -145,6 +142,67 @@
   color: #888;
 }
 
+/* ================================
+   FILTRO POR VENDEDOR (ACTUALIZADO)
+================================ */
+.filtro-container {
+  margin: 12px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  max-width: 400px;
+  /* Máximo total del bloque */
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.filtro-label {
+  font-weight: bold;
+  color: #2c3e50;
+  font-size: 1rem;
+}
+
+.filtro-select {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #bbb;
+  font-size: 0.95rem;
+  cursor: pointer;
+  background: #fff;
+  transition: 0.2s ease;
+
+  width: 100%;
+  max-width: 300px;
+  /* 👈 MÁXIMO PARA EL SELECT Y SUS VALUES */
+  box-sizing: border-box;
+  /* Evita que el padding lo haga pasar de 300px */
+}
+
+.filtro-select:hover {
+  border-color: #007bff;
+}
+
+/* ================================
+   COLUMNA DNI + CHECK ✔
+================================ */
+.cliente-dni {
+  cursor: pointer;
+  font-weight: bold;
+  color: #007bff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.revisado-check {
+  color: green;
+  font-size: 20px;
+  font-weight: bold;
+}
+
 /* 📱 Responsive para smartphones */
 @media (max-width: 768px) {
   .home {
@@ -186,5 +244,18 @@
   .clientes-table th,
   .clientes-table td {
     padding: 8px;
+  }
+
+  .filtro-container {
+    flex-direction: column;
+    width: 100%;
+    max-width: 100%;
+    padding: 0 10px;
+  }
+
+  .filtro-select {
+    width: 100%;
+    max-width: 100%;
+    /* En móviles ocupa todo el ancho */
   }
 }

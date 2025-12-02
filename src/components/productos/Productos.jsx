@@ -356,35 +356,102 @@ const Productos = ({ onAddToCart, currentUser }) => {
 
   if (loading) return <Load />;
 
-  const generarPDFStock = async () => {
-    try {
-      const pdf = new jsPDF("p", "mm", "a4");
-      let y = 10; // posición vertical inicial
+const generarPDFStock = async () => {
+  try {
+    // 1️⃣ Crear overlay
+    const overlay = document.createElement("div");
+    overlay.id = "overlayStock";
+    Object.assign(overlay.style, {
+      position: "fixed",
+      top: "0",
+      left: "0",
+      width: "100%",
+      height: "100%",
+      backgroundColor: "rgba(0,0,0,0.5)",
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      zIndex: "9999",
+      color: "#fff",
+      fontSize: "24px",
+      fontWeight: "bold"
+    });
+    overlay.innerText = "Generando PDF de stock, por favor espere...";
+    document.body.appendChild(overlay);
 
-      for (const producto of filteredProductos) {
-        // Evitar que se pase del final de la hoja
-        if (y > 270) {
-          pdf.addPage();
-          y = 10;
-        }
+    // 2️⃣ Crear PDF A4
+    const pdf = new jsPDF("p", "mm", "a4");
 
-        // Obtener imagen como base64
-        const img = await cargarImagenBase64(producto.imagenUrl || 'https://via.placeholder.com/150');
+    // Configuración de cards
+    const cardWidth = 95; // ancho de cada card
+    const cardHeight = 40; // alto de cada card (más alto para imagen + nombre)
+    const padding = 10;
+    const separacionHorizontal = 1;
+    const separacionVertical = 1;
+    const itemsPerRow = 2; // cambiar a 3 si quieres 3 por fila
 
-        // Agregar imagen
-        pdf.addImage(img, "JPEG", 5, y, 15, 15); // X, Y, ancho, alto
+    let x = padding;
+    let y = padding;
+    let contadorFila = 0;
 
-        // Agregar nombre (sin precio)
-        pdf.text(producto.nombre || "Sin nombre", 45, y + 10);
-
-        y += 20; // espacio entre productos
+    for (const producto of filteredProductos) {
+      // Salto de página si se pasa el límite vertical
+      if (y + cardHeight > 290) {
+        pdf.addPage();
+        y = padding;
       }
 
-      pdf.save("control_stock.pdf");
-    } catch (error) {
-      console.error("Error generando PDF:", error);
+      // Obtener imagen base64
+      const img = await cargarImagenBase64(producto.imagenUrl || 'https://via.placeholder.com/150');
+
+      // Dibujar card con borde negro
+      pdf.setDrawColor(0, 0, 0);
+      pdf.setLineWidth(0.5);
+      pdf.rect(x, y, cardWidth, cardHeight, "S");
+
+      // Colocar imagen dentro de la card (30x30)
+      pdf.addImage(img, "JPEG", x + 2, y + 2, 30, 30);
+
+      // Nombre del producto debajo de la imagen, con salto de línea si es largo
+      pdf.setFontSize(11);
+      pdf.setTextColor(0, 0, 0);
+      const textoNombre = producto.nombre || "Sin nombre";
+      const textoAjustado = pdf.splitTextToSize(textoNombre, cardWidth - 35);
+      pdf.text(textoAjustado, x + 35, y + 10); // empieza debajo de la imagen
+
+      // Espacio para stock manual
+      pdf.setFontSize(10);
+      pdf.setTextColor(0, 0, 255);
+      pdf.text("Los andes 4320: ________", x + 35, y + 20);
+      pdf.text("Los andes 4034: ________", x + 35, y + 28);
+
+      // Mover posición a la siguiente card
+      contadorFila++;
+      if (contadorFila >= itemsPerRow) {
+        contadorFila = 0;
+        x = padding;
+        y += cardHeight + separacionVertical;
+      } else {
+        x += cardWidth + separacionHorizontal;
+      }
     }
-  };
+
+    // Guardar PDF
+    pdf.save("control_stock.pdf");
+
+    // Quitar overlay
+    document.body.removeChild(overlay);
+
+  } catch (error) {
+    console.error("Error generando PDF:", error);
+    const overlay = document.getElementById("overlayStock");
+    if (overlay) overlay.remove();
+  }
+};
+
+
+
+
 
   const cargarImagenBase64 = (url) => {
     return new Promise((resolve) => {
@@ -404,23 +471,52 @@ const Productos = ({ onAddToCart, currentUser }) => {
 
   const descargarQRCategoria = async () => {
     try {
+      // 1️⃣ Crear overlay que bloquea la pantalla mientras se genera el PDF
+      const overlay = document.createElement("div");
+      overlay.id = "overlayQR";
+      Object.assign(overlay.style, {
+        position: "fixed",
+        top: "0",
+        left: "0",
+        width: "100%",
+        height: "100%",
+        backgroundColor: "rgba(0,0,0,0.5)",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        zIndex: "9999",
+        color: "#fff",
+        fontSize: "24px",
+        fontWeight: "bold"
+      });
+      overlay.innerText = "Generando QR, por favor espere...";
+      document.body.appendChild(overlay);
+
+      // 2️⃣ Crear PDF A4
       const pdf = new jsPDF("p", "mm", "a4");
-      const qrSize = 30; // QR 3 cm
-      const imgSize = 30; // Imagen 3 cm
-      const padding = 5;
-      const itemsPerRow = 3; // 3 tarjetas por fila
-      const rowHeight = Math.max(qrSize, imgSize) + 15; // altura de cada fila
+
+      // Configuraciones de tamaños y márgenes
+      const qrSize = 30;
+      const imgSize = 30;
+      const separacionQRImg = 1;
+      const padding = 10;
+      const itemsPerRow = 3;
+      const rowHeight = Math.max(qrSize, imgSize) + 15;
+      const separacionVertical = 1; // 3 mm entre filas
+      const separacionHorizontal = 3;
       let x = padding;
       let y = padding;
+
+      pdf.setFont("helvetica", "bold");
 
       for (let i = 0; i < filteredProductos.length; i++) {
         const producto = filteredProductos[i];
 
-        // Generar QR
+        // 3️⃣ Generar QR
         const urlProducto = `${window.location.origin}/producto/${categoriaId}/${producto.id}`;
         const qrDataUrl = await QRCode.toDataURL(urlProducto, { margin: 1, width: 150 });
 
-        // Cargar imagen del producto
+        // 4️⃣ Cargar imagen del producto
         const imgDataUrl = await new Promise((resolve) => {
           const img = new Image();
           img.crossOrigin = "anonymous";
@@ -435,54 +531,57 @@ const Productos = ({ onAddToCart, currentUser }) => {
           img.src = producto.imagenUrl || "https://via.placeholder.com/150";
         });
 
-        // Fondo de tarjeta (NEGRO)
-        pdf.setFillColor(0, 0, 0);
-        pdf.roundedRect(x - 2, y - 2, qrSize + imgSize + 10, rowHeight, 2, 2, "F");
-
-        // ✅ Línea blanca vertical al comienzo de cada QR
-        pdf.setDrawColor(255, 255, 255); // blanco
-        pdf.setLineWidth(1);             // 1 px
-        pdf.line(
-          x - 2,               // un poquito antes del QR
-          y - 2,               // arriba del card
-          x - 2,               // misma X
-          y - 2 + rowHeight    // abajo del card
+        // 5️⃣ Dibujar borde negro de 1px, esquinas cuadradas
+        pdf.setDrawColor(0, 0, 0);
+        pdf.setLineWidth(0.5);
+        pdf.rect(
+          x - 1,
+          y - 1,
+          qrSize + imgSize + separacionQRImg + 2,
+          rowHeight,
+          "S"
         );
 
-        // QR
+        // 6️⃣ Colocar QR
         pdf.addImage(qrDataUrl, "PNG", x, y, qrSize, qrSize);
 
-        // Imagen al lado del QR
-        pdf.addImage(imgDataUrl, "JPEG", x + qrSize + 3, y, imgSize, imgSize);
+        // 7️⃣ Colocar imagen al lado del QR
+        pdf.addImage(imgDataUrl, "JPEG", x + qrSize + separacionQRImg, y, imgSize, imgSize);
 
-        // Nombre del producto debajo (centrado y en blanco)
-        pdf.setFontSize(11);                // ✅ Más grande
-        pdf.setTextColor(255, 255, 255);    // ✅ Blanco
+        // 8️⃣ Colocar nombre del producto debajo
+        pdf.setFontSize(11);
+        pdf.setTextColor(0, 0, 0);
         pdf.text(
           producto.nombre || "Sin nombre",
-          x + (qrSize + imgSize + 5) / 2,   // ✅ Centrado
-          y + rowHeight - 5,
-          { maxWidth: qrSize + imgSize + 5, align: "center" }
+          x + (qrSize + separacionQRImg + imgSize) / 2,
+          y + Math.max(qrSize, imgSize) + 5,
+          { maxWidth: qrSize + separacionQRImg + imgSize, align: "center" }
         );
 
-        // Ajustar posición
+        // 9️⃣ Ajustar posición para siguiente bloque
         if ((i + 1) % itemsPerRow === 0) {
           x = padding;
-          y += rowHeight + 5; // espacio entre filas
-          if (y + rowHeight > 290) { // nueva página
-            pdf.addPage();
-            y = padding;
-          }
+          y += rowHeight + separacionVertical;
+          if (y + rowHeight > 290) pdf.addPage(), y = padding;
         } else {
-          x += qrSize + imgSize + 5; // espacio entre columnas
+          x += qrSize + imgSize + separacionQRImg + separacionHorizontal;
         }
       }
 
-      pdf.save(`QR_${categoriaId}.pdf`);
+      // 10️⃣ Guardar PDF con nombre fijo
+      pdf.save(`QR_Categoria.pdf`);
+
+      // 11️⃣ Quitar overlay
+      document.body.removeChild(overlay);
+
     } catch (error) {
       console.error("Error generando PDF de QRs:", error);
       setAlerta("Ocurrió un error al generar los QRs");
       setTimeout(() => setAlerta(""), 3000);
+
+      // Quitar overlay en caso de error
+      const overlay = document.getElementById("overlayQR");
+      if (overlay) overlay.remove();
     }
   };
 

@@ -117,7 +117,7 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
     });
 
     const resultados = cuotasFiltradas.map(({ cuotas, interes }) => {
-      const montoConInteres = subtotal * (1 + interes / 100);
+      const montoConInteres = Math.round(subtotal * (1 + interes / 100) / 1000) * 1000;
       const montoCuota = Math.round(montoConInteres / cuotas / 1000) * 1000;
       return {
         cuotas,
@@ -129,7 +129,9 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
     setCuotas(resultados);
 
     const cuotaSeleccionadaObj = configuracionCuotas.find(c => c.cuotas === cuotasSeleccionadas) || { interes: 0 };
-    const totalCredito = subtotal * (1 + cuotaSeleccionadaObj.interes / 100);
+    const totalCredito = Math.round(
+      subtotal * (1 + cuotaSeleccionadaObj.interes / 100) / 1000
+    ) * 1000;
     const valorCuotaCalculado = Math.round(totalCredito / cuotasSeleccionadas / 1000) * 1000;
     setValorCuota(valorCuotaCalculado);
 
@@ -173,7 +175,9 @@ const Ventas = ({ carrito, onClearCart, currentUser }) => {
       const cuotaSeleccionadaObj =
         configuracionCuotas.find(c => c.cuotas === cuotasSeleccionadas) || { interes: 0 };
 
-      const totalCredito = subtotal * (1 + cuotaSeleccionadaObj.interes / 100);
+      const totalCredito = Math.round(
+        subtotal * (1 + cuotaSeleccionadaObj.interes / 100) / 1000
+      ) * 1000;
       const valorCuotaCalculado =
         Math.round(totalCredito / cuotasSeleccionadas / 1000) * 1000;
 

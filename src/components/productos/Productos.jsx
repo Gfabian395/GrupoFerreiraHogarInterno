@@ -29,7 +29,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
   const [productoSeleccionado, setProductoSeleccionado] = useState(null);
   const [cuotaSeleccionada, setCuotaSeleccionada] = useState('');
   const [pasoFormulario, setPasoFormulario] = useState(1);
-
+  const [mostrarSinStock, setMostrarSinStock] = useState(false);
   const [retiroOEnvio, setRetiroOEnvio] = useState(''); // 'retiro' o 'envio'
 
   const [sucursalSeleccionada, setSucursalSeleccionada] = useState(''); // 'Andes4034' o 'Andes4320'
@@ -215,9 +215,21 @@ const Productos = ({ onAddToCart, currentUser }) => {
     setSearchQuery(e.target.value);
   };
 
-  const filteredProductos = productos.filter((producto) =>
-    producto.nombre.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredProductos = productos
+    .filter(producto =>
+      producto.nombre.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .filter(producto => {
+      const stock4034 = parseInt(producto.cantidadDisponibleAndes4034 || 0);
+      const stock4320 = parseInt(producto.cantidadDisponibleAndes4320 || 0);
+      const stockTotal = stock4034 + stock4320;
+
+      // Si NO hay stock y NO se quiere mostrar → ocultar
+      if (stockTotal <= 0 && !mostrarSinStock) return false;
+
+      return true;
+    });
+
 
   const confirmarYEliminar = async (productoId) => {
     if (!roles.includes('jefe')) {
@@ -356,102 +368,98 @@ const Productos = ({ onAddToCart, currentUser }) => {
 
   if (loading) return <Load />;
 
-const generarPDFStock = async () => {
-  try {
-    // 1️⃣ Crear overlay
-    const overlay = document.createElement("div");
-    overlay.id = "overlayStock";
-    Object.assign(overlay.style, {
-      position: "fixed",
-      top: "0",
-      left: "0",
-      width: "100%",
-      height: "100%",
-      backgroundColor: "rgba(0,0,0,0.5)",
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      zIndex: "9999",
-      color: "#fff",
-      fontSize: "24px",
-      fontWeight: "bold"
-    });
-    overlay.innerText = "Generando PDF de stock, por favor espere...";
-    document.body.appendChild(overlay);
+  const generarPDFStock = async () => {
+    try {
+      // 1️⃣ Crear overlay
+      const overlay = document.createElement("div");
+      overlay.id = "overlayStock";
+      Object.assign(overlay.style, {
+        position: "fixed",
+        top: "0",
+        left: "0",
+        width: "100%",
+        height: "100%",
+        backgroundColor: "rgba(0,0,0,0.5)",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        zIndex: "9999",
+        color: "#fff",
+        fontSize: "24px",
+        fontWeight: "bold"
+      });
+      overlay.innerText = "Generando PDF de stock, por favor espere...";
+      document.body.appendChild(overlay);
 
-    // 2️⃣ Crear PDF A4
-    const pdf = new jsPDF("p", "mm", "a4");
+      // 2️⃣ Crear PDF A4
+      const pdf = new jsPDF("p", "mm", "a4");
 
-    // Configuración de cards
-    const cardWidth = 95; // ancho de cada card
-    const cardHeight = 40; // alto de cada card (más alto para imagen + nombre)
-    const padding = 10;
-    const separacionHorizontal = 1;
-    const separacionVertical = 1;
-    const itemsPerRow = 2; // cambiar a 3 si quieres 3 por fila
+      // Configuración de cards
+      const cardWidth = 95; // ancho de cada card
+      const cardHeight = 40; // alto de cada card (más alto para imagen + nombre)
+      const padding = 10;
+      const separacionHorizontal = 1;
+      const separacionVertical = 1;
+      const itemsPerRow = 2; // cambiar a 3 si quieres 3 por fila
 
-    let x = padding;
-    let y = padding;
-    let contadorFila = 0;
+      let x = padding;
+      let y = padding;
+      let contadorFila = 0;
 
-    for (const producto of filteredProductos) {
-      // Salto de página si se pasa el límite vertical
-      if (y + cardHeight > 290) {
-        pdf.addPage();
-        y = padding;
+      for (const producto of filteredProductos) {
+        // Salto de página si se pasa el límite vertical
+        if (y + cardHeight > 290) {
+          pdf.addPage();
+          y = padding;
+        }
+
+        // Obtener imagen base64
+        const img = await cargarImagenBase64(producto.imagenUrl || 'https://via.placeholder.com/150');
+
+        // Dibujar card con borde negro
+        pdf.setDrawColor(0, 0, 0);
+        pdf.setLineWidth(0.5);
+        pdf.rect(x, y, cardWidth, cardHeight, "S");
+
+        // Colocar imagen dentro de la card (30x30)
+        pdf.addImage(img, "JPEG", x + 2, y + 2, 30, 30);
+
+        // Nombre del producto debajo de la imagen, con salto de línea si es largo
+        pdf.setFontSize(11);
+        pdf.setTextColor(0, 0, 0);
+        const textoNombre = producto.nombre || "Sin nombre";
+        const textoAjustado = pdf.splitTextToSize(textoNombre, cardWidth - 35);
+        pdf.text(textoAjustado, x + 35, y + 10); // empieza debajo de la imagen
+
+        // Espacio para stock manual
+        pdf.setFontSize(10);
+        pdf.setTextColor(0, 0, 255);
+        pdf.text("Los andes 4320: ________", x + 35, y + 20);
+        pdf.text("Los andes 4034: ________", x + 35, y + 28);
+
+        // Mover posición a la siguiente card
+        contadorFila++;
+        if (contadorFila >= itemsPerRow) {
+          contadorFila = 0;
+          x = padding;
+          y += cardHeight + separacionVertical;
+        } else {
+          x += cardWidth + separacionHorizontal;
+        }
       }
 
-      // Obtener imagen base64
-      const img = await cargarImagenBase64(producto.imagenUrl || 'https://via.placeholder.com/150');
+      // Guardar PDF
+      pdf.save("control_stock.pdf");
 
-      // Dibujar card con borde negro
-      pdf.setDrawColor(0, 0, 0);
-      pdf.setLineWidth(0.5);
-      pdf.rect(x, y, cardWidth, cardHeight, "S");
+      // Quitar overlay
+      document.body.removeChild(overlay);
 
-      // Colocar imagen dentro de la card (30x30)
-      pdf.addImage(img, "JPEG", x + 2, y + 2, 30, 30);
-
-      // Nombre del producto debajo de la imagen, con salto de línea si es largo
-      pdf.setFontSize(11);
-      pdf.setTextColor(0, 0, 0);
-      const textoNombre = producto.nombre || "Sin nombre";
-      const textoAjustado = pdf.splitTextToSize(textoNombre, cardWidth - 35);
-      pdf.text(textoAjustado, x + 35, y + 10); // empieza debajo de la imagen
-
-      // Espacio para stock manual
-      pdf.setFontSize(10);
-      pdf.setTextColor(0, 0, 255);
-      pdf.text("Los andes 4320: ________", x + 35, y + 20);
-      pdf.text("Los andes 4034: ________", x + 35, y + 28);
-
-      // Mover posición a la siguiente card
-      contadorFila++;
-      if (contadorFila >= itemsPerRow) {
-        contadorFila = 0;
-        x = padding;
-        y += cardHeight + separacionVertical;
-      } else {
-        x += cardWidth + separacionHorizontal;
-      }
+    } catch (error) {
+      console.error("Error generando PDF:", error);
+      const overlay = document.getElementById("overlayStock");
+      if (overlay) overlay.remove();
     }
-
-    // Guardar PDF
-    pdf.save("control_stock.pdf");
-
-    // Quitar overlay
-    document.body.removeChild(overlay);
-
-  } catch (error) {
-    console.error("Error generando PDF:", error);
-    const overlay = document.getElementById("overlayStock");
-    if (overlay) overlay.remove();
-  }
-};
-
-
-
-
+  };
 
   const cargarImagenBase64 = (url) => {
     return new Promise((resolve) => {
@@ -753,6 +761,14 @@ const generarPDFStock = async () => {
               <button onClick={handleBajarPrecios} style={{ "--i": 4 }}>
                 <span></span>📉 Bajar precios
               </button>
+
+              <button
+                className="btn-ver-sin-stock" style={{ "--i": 5 }}
+                onClick={() => setMostrarSinStock(!mostrarSinStock)}
+              >
+                {mostrarSinStock ? "Ocultar sin stock" : "Ver sin stock"}
+              </button>
+
             </div>
           </div>
         </div>

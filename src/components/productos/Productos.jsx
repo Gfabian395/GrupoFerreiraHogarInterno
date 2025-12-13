@@ -72,9 +72,9 @@ const Productos = ({ onAddToCart, currentUser }) => {
     { cuotas: 4, interes: 40 },
     { cuotas: 6, interes: 60 },
     { cuotas: 9, interes: 75 },
-    { cuotas: 12, interes: 100 },
-    { cuotas: 18, interes: 150 },
-    { cuotas: 24, interes: 180 }
+    { cuotas: 12, interes: 100 }/* ,
+    { cuotas: 18, interes: 150 },         (ACA MOSTRAR LAS DEMAS CUOTAS DE SER NECESARIO)
+    { cuotas: 24, interes: 180 } */
   ];
 
   const calcularCuotasHover = (precio) => {
@@ -949,19 +949,6 @@ const Productos = ({ onAddToCart, currentUser }) => {
                     )}
                   </>
                 )}
-
-                {/* {roles.includes('jefe') && (
-                  <div className="qr-contenedor">
-                    <QRCodeCanvas
-                      value={`${window.location.origin}/producto/${categoriaId}/${producto.id}`}
-                      size={80}
-                      bgColor="#ffffff"
-                      fgColor="#000000"
-                      includeMargin={true}
-                    />
-                    <p className="qr-texto">Escaneá para ver el producto</p>
-                  </div>
-                )} */}
               </li>
             );
           })}

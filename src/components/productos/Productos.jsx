@@ -895,24 +895,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
 
                   {(['jefe', 'vendedor', 'encargado', 'fotografo',].some((r) => roles.includes(r))) && (
                     <>
-                      <p>
-                        Andes 4034: {stock4034}
-                        <button
-                          onClick={() => handleAddToCart(producto, 'Andes4034')}
-                          disabled={outOfStock4034}
-                          className="boton-agregar"
-                        >
-                          +🛒
-                        </button>
-                        {roles.includes('jefe') || roles.includes('encargado') ? (
-                          <button
-                            onClick={() => handleIncrementStock(producto.id, 'cantidadDisponibleAndes4034')}
-                            className="boton-incrementar"
-                          >
-                            +
-                          </button>
-                        ) : null}
-                      </p>
+
 
                       <p>
                         Andes 4320: {stock4320}
@@ -926,6 +909,25 @@ const Productos = ({ onAddToCart, currentUser }) => {
                         {roles.includes('jefe') || roles.includes('encargado') ? (
                           <button
                             onClick={() => handleIncrementStock(producto.id, 'cantidadDisponibleAndes4320')}
+                            className="boton-incrementar"
+                          >
+                            +
+                          </button>
+                        ) : null}
+                      </p>
+                      
+                      <p>
+                        Andes 4034: {stock4034}
+                        <button
+                          onClick={() => handleAddToCart(producto, 'Andes4034')}
+                          disabled={outOfStock4034}
+                          className="boton-agregar"
+                        >
+                          +🛒
+                        </button>
+                        {roles.includes('jefe') || roles.includes('encargado') ? (
+                          <button
+                            onClick={() => handleIncrementStock(producto.id, 'cantidadDisponibleAndes4034')}
                             className="boton-incrementar"
                           >
                             +

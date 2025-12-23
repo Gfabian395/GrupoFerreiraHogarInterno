@@ -915,7 +915,7 @@ const Productos = ({ onAddToCart, currentUser }) => {
                           </button>
                         ) : null}
                       </p>
-                      
+
                       <p>
                         Andes 4034: {stock4034}
                         <button
@@ -1040,18 +1040,6 @@ const Productos = ({ onAddToCart, currentUser }) => {
                   <input
                     type="number"
                     className="form-control"
-                    placeholder="Stock Andes 4034"
-                    name="cantidadDisponibleAndes4034"
-                    value={currentProduct.cantidadDisponibleAndes4034 || ''}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-
-                <div className="form-group">
-                  <input
-                    type="number"
-                    className="form-control"
                     placeholder="Stock Andes 4320"
                     name="cantidadDisponibleAndes4320"
                     value={currentProduct.cantidadDisponibleAndes4320 || ''}
@@ -1059,6 +1047,18 @@ const Productos = ({ onAddToCart, currentUser }) => {
                     required
                   />
 
+                </div>
+
+                <div className="form-group">
+                  <input
+                    type="number"
+                    className="form-control"
+                    placeholder="Stock Andes 4034"
+                    name="cantidadDisponibleAndes4034"
+                    value={currentProduct.cantidadDisponibleAndes4034 || ''}
+                    onChange={handleInputChange}
+                    required
+                  />
                 </div>
 
                 <div className="form-group">
